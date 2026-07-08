@@ -28,5 +28,9 @@ Just_for_testing/
 .vscode/
 .idea/
 
-
+# Runtime files
 downloaded_files.txt
+
+# Temporary files
+*.tmp
+*.bak
