@@ -1,0 +1,32 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.env/
+.env
+
+# Logs
+logs/
+
+# Generated datasets
+downloads/
+extracted_data/
+weather_data/
+
+# ML / output files
+prediction_results.csv
+
+# Testing folders
+Just_for_testing/
+
+# OS files
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+
+downloaded_files.txt
