@@ -9,10 +9,21 @@ from backend.routes.health import router as health_router
 from backend.routes.system import router as system_router
 from backend.routes.pipeline import router as pipeline_router
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
-    title="Flood Prediction API",
-    description="Cloud-Based Flood Prediction System API",
-    version="1.0.0"
+    title="Cloud-Based Flood Prediction System API"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(weather_router)
