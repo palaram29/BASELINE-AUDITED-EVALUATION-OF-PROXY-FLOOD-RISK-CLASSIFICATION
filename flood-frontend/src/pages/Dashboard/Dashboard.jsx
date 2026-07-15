@@ -3,6 +3,7 @@ import SummarySection from "../../components/dashboard/SummarySection";
 import WeatherTable from "../../components/tables/WeatherTable";
 import RiverTable from "../../components/tables/RiverTable";
 import RainfallChart from "../../components/charts/RainfallChart";
+import PredictionTable from "../../components/tables/PredictionTable";
 
 function Dashboard() {
   const { dashboard, loading, error } = useDashboard();
@@ -28,6 +29,7 @@ function Dashboard() {
       <WeatherTable weather={dashboard.weather} />
       <RiverTable rivers={dashboard.river} />
       <RainfallChart weather={dashboard.weather} />
+      <PredictionTable predictions={dashboard.prediction} />
 
     </div>
     
