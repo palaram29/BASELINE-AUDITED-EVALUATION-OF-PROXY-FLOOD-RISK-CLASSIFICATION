@@ -1,33 +1,23 @@
-import SummarySection from "../../components/dashboard/SummarySection";
-import ChartSection from "../../components/dashboard/ChartSection";
-import WeatherSection from "../../components/dashboard/WeatherSection";
-import RiverSection from "../../components/dashboard/RiverSection";
-import PredictionSection from "../../components/dashboard/PredictionSection";
+import useDashboard from "../../hooks/useDashboard";
 
 function Dashboard() {
+  const { dashboard, loading, error } = useDashboard();
+
+  if (loading) {
+    return <h2>Loading dashboard...</h2>;
+  }
+
+  if (error) {
+    return <h2>{error}</h2>;
+  }
+
   return (
-    <div className="space-y-8">
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
-      <div>
-        <h1 className="text-3xl font-bold text-slate-800">
-          Dashboard
-        </h1>
-
-        <p className="text-slate-500 mt-1">
-          Real-time overview of the Flood Prediction System
-        </p>
-      </div>
-
-      <SummarySection />
-
-      <ChartSection />
-
-      <WeatherSection />
-
-      <RiverSection />
-
-      <PredictionSection />
-
+      <pre className="bg-white p-4 rounded shadow overflow-auto">
+        {JSON.stringify(dashboard, null, 2)}
+      </pre>
     </div>
   );
 }
