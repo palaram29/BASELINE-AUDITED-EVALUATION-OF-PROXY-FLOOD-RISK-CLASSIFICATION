@@ -1,5 +1,6 @@
 import useDashboard from "../../hooks/useDashboard";
 import SummarySection from "../../components/dashboard/SummarySection";
+import WeatherTable from "../../components/tables/WeatherTable";
 
 function Dashboard() {
   const { dashboard, loading, error } = useDashboard();
@@ -22,8 +23,10 @@ function Dashboard() {
       </div>
 
       <SummarySection dashboard={dashboard} />
+      <WeatherTable weather={dashboard.weather} />
 
     </div>
+    
   );
 }
 
