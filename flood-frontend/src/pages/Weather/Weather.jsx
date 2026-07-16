@@ -1,3 +1,4 @@
+import { useState } from "react";
 import useWeather from "../../hooks/useWeather";
 
 import WeatherStats from "../../components/weather/WeatherStats";
@@ -8,31 +9,58 @@ import WeatherTable from "../../components/weather/WeatherTable";
 function Weather() {
   const { weather, loading, error } = useWeather();
 
+  const [search, setSearch] = useState("");
+
   if (loading) {
-    return <div className="text-center p-8">Loading weather data...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg font-medium text-slate-600">
+          Loading weather data...
+        </p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-red-500 p-8">{error}</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg font-medium text-red-600">
+          {error}
+        </p>
+      </div>
+    );
   }
+
+  const filteredWeather = weather.filter((item) =>
+    item.City.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Weather Monitoring</h1>
 
-        <p className="text-slate-500">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-slate-800">
+          Weather Monitoring
+        </h1>
+
+        <p className="text-slate-500 mt-2">
           Latest weather conditions across Sri Lanka
         </p>
       </div>
 
-      <WeatherStats weather={weather} />
+      {/* Weather Statistics */}
+      <WeatherStats weather={filteredWeather} />
 
-      <WeatherSearch />
+      {/* Search */}
+      <WeatherSearch onSearch={setSearch} />
 
-      <WeatherChart weather={weather} />
+      {/* Rainfall Chart */}
+      <WeatherChart weather={filteredWeather} />
 
-      <WeatherTable weather={weather} />
+      {/* Weather Table */}
+      <WeatherTable weather={filteredWeather} />
+
     </div>
   );
 }
