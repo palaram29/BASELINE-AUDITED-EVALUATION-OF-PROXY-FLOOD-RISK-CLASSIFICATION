@@ -2,6 +2,7 @@ import pandas as pd
 import joblib
 import os
 import sys
+from sqlalchemy import text
 sys.path.append(
     os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))
@@ -152,12 +153,60 @@ results = df[[
     "Predicted_Risk"
 ]]
 
-results.to_sql(
-    "prediction_results",
-    engine,
-    if_exists="append",
-    index=False
-)
+with engine.begin() as conn:
+    conn.execute(text("""
+        DELETE FROM prediction_results
+        WHERE id IN (
+            SELECT id
+            FROM (
+                SELECT id,
+                       row_number() OVER (
+                           PARTITION BY "Date", "City"
+                           ORDER BY id
+                       ) AS rn
+                FROM prediction_results
+            ) AS ranked
+            WHERE rn > 1
+        )
+    """))
+
+    conn.execute(text("""
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_prediction_results_date_city
+        ON prediction_results ("Date", "City")
+    """))
+
+    for _, row in results.iterrows():
+        conn.execute(text("""
+            INSERT INTO prediction_results (
+                "Date",
+                "City",
+                "Rainfall_3Day",
+                "Avg_Temperature",
+                "Avg_WindSpeed",
+                "Predicted_Risk"
+            )
+            VALUES (
+                :date,
+                :city,
+                :rainfall_3day,
+                :avg_temperature,
+                :avg_windspeed,
+                :predicted_risk
+            )
+            ON CONFLICT ("Date", "City")
+            DO UPDATE SET
+                "Rainfall_3Day" = EXCLUDED."Rainfall_3Day",
+                "Avg_Temperature" = EXCLUDED."Avg_Temperature",
+                "Avg_WindSpeed" = EXCLUDED."Avg_WindSpeed",
+                "Predicted_Risk" = EXCLUDED."Predicted_Risk"
+        """), {
+            "date": str(row["Date"]),
+            "city": row["City"],
+            "rainfall_3day": float(row["Rainfall_3Day"]),
+            "avg_temperature": float(row["Avg_Temperature"]),
+            "avg_windspeed": float(row["Avg_WindSpeed"]),
+            "predicted_risk": row["Predicted_Risk"]
+        })
 
 # =====================================================
 # OUTPUT

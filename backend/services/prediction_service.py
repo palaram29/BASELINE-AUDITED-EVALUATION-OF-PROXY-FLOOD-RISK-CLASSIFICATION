@@ -7,13 +7,13 @@ engine = get_engine()
 def get_latest_predictions():
 
     query = """
-    SELECT *
+    SELECT DISTINCT ON ("City") *
     FROM prediction_results
     WHERE "Date" = (
         SELECT MAX("Date")
         FROM prediction_results
     )
-    ORDER BY "City";
+    ORDER BY "City", id DESC;
     """
 
     df = pd.read_sql(query, engine)

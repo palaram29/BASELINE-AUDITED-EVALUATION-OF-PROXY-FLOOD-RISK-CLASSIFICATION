@@ -1,13 +1,19 @@
+import LivePulse from "../dashboard/LivePulse";
+
 function Navbar() {
   return (
-    <header className="h-16 bg-white shadow flex items-center justify-between px-6">
-      <h1 className="text-xl font-bold text-blue-700">
-        Cloud Flood Prediction System
-      </h1>
+    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm">
+      <div>
+        <h1 className="text-xl font-semibold text-slate-800">Cloud Flood Prediction System</h1>
+        <p className="text-sm text-slate-500">Final Year Research • Sri Lanka</p>
+      </div>
 
-      <span className="text-gray-500">
-        Final Year Research
-      </span>
+      <div className="flex items-center gap-3">
+        <LivePulse status="live" />
+        <div className="rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+          Monitoring portal
+        </div>
+      </div>
     </header>
   );
 }
