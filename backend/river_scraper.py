@@ -129,15 +129,26 @@ def check_new_pdf():
     except Exception as e:
         logger.error(f"Error: {e}")
 
-# Run every 60 minutes
-schedule.every(60).minutes.do(check_new_pdf)
+def run_daemon():
+    """Continuously poll the DMC website every 60 minutes. Blocks forever -
+    intended for a persistent background process, not a request handler."""
 
-print("Realtime river monitoring started...")
+    schedule.every(60).minutes.do(check_new_pdf)
 
-# First run immediately
-check_new_pdf()
+    print("Realtime river monitoring started...")
 
-# Keep running forever
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+    check_new_pdf()
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+if __name__ == "__main__":
+    if "--once" in sys.argv:
+        # Single check-and-extract cycle, then exit. This is what the
+        # /system/river API endpoint uses - the daemon loop above would
+        # otherwise hang the request forever.
+        check_new_pdf()
+    else:
+        run_daemon()

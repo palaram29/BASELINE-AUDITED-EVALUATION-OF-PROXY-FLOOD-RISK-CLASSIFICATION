@@ -30,7 +30,7 @@ def run_river():
     logger.info("Starting river scraping")
 
     result = subprocess.run(
-        ["python", "backend/river_scraper.py"],
+        ["python", "backend/river_scraper.py", "--once"],
         capture_output=True,
         text=True
     )

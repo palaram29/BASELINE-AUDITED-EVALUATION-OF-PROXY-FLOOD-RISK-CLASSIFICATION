@@ -20,9 +20,12 @@ function useLiveDashboard() {
       try {
         const data = await getDashboard();
         if (isMounted && data) {
-          const weather = Array.isArray(data.weather) && data.weather.length ? simulateWeather(data.weather) : demoWeather;
-          const river = Array.isArray(data.river) && data.river.length ? simulateRiver(data.river) : demoRiver;
-          const prediction = Array.isArray(data.prediction) && data.prediction.length ? simulatePrediction(data.prediction) : demoPredictions;
+          // Real data is shown as-is; the simulate* helpers only apply to
+          // the pure-demo fallback below, so genuine values are never
+          // cosmetically altered.
+          const weather = Array.isArray(data.weather) && data.weather.length ? data.weather : demoWeather;
+          const river = Array.isArray(data.river) && data.river.length ? data.river : demoRiver;
+          const prediction = Array.isArray(data.prediction) && data.prediction.length ? data.prediction : demoPredictions;
 
           setDashboard({ weather, river, prediction });
           setLastUpdated(new Date());
@@ -48,14 +51,9 @@ function useLiveDashboard() {
 
     fetchDashboard();
 
-    const interval = setInterval(() => {
-      setDashboard((prev) => ({
-        weather: simulateWeather(prev.weather),
-        river: simulateRiver(prev.river),
-        prediction: simulatePrediction(prev.prediction),
-      }));
-      setLastUpdated(new Date());
-    }, 8000);
+    // Poll the real backend so the dashboard reflects genuine changes
+    // (e.g. a new pipeline run) instead of only refreshing on page reload.
+    const interval = setInterval(fetchDashboard, 30000);
 
     return () => {
       isMounted = false;
