@@ -7,6 +7,7 @@ const links = [
   { to: "/prediction", label: "Prediction" },
   { to: "/statistics", label: "Statistics" },
   { to: "/pipeline", label: "Pipeline" },
+  { to: "/ml-dashboard", label: "ML Dashboard" },
   { to: "/about", label: "About" },
 ];
 

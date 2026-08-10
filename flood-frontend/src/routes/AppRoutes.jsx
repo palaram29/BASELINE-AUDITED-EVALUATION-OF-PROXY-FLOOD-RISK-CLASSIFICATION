@@ -8,6 +8,7 @@ import River from "../pages/River/River";
 import Prediction from "../pages/Prediction/Prediction";
 import Statistics from "../pages/Statistics/Statistics";
 import Pipeline from "../pages/Pipeline/Pipeline";
+import MLDashboard from "../pages/MLDashboard/MLDashboard";
 import About from "../pages/About/About";
 import NotFound from "../pages/NotFound/NotFound";
 
@@ -22,6 +23,7 @@ function AppRoutes() {
           <Route path="/prediction" element={<Prediction />} />
           <Route path="/statistics" element={<Statistics />} />
           <Route path="/pipeline" element={<Pipeline />} />
+          <Route path="/ml-dashboard" element={<MLDashboard />} />
           <Route path="/about" element={<About />} />
         </Route>
 
