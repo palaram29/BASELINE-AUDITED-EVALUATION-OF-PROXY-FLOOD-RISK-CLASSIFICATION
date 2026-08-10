@@ -8,6 +8,7 @@ export const riskTone = (risk) => {
     case "Medium":
       return "yellow";
     case "High":
+      return "orange";
     case "Very High":
       return "red";
     default:

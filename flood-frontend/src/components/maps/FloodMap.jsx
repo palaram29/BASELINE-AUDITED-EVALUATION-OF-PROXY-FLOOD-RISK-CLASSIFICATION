@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayersControl } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayersControl, LayerGroup, Pane } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import districtGeojson from "../../data/sriLankaDistricts.json";
 import { getLatestPrediction } from "../../services/predictionService";
 import { getLatestRiver } from "../../services/riverService";
 import { getLatestWeather } from "../../services/weatherService";
+import RiskRings, { RISK_RING_HIT_PANE } from "./RiskRings";
+import Badge from "../common/Badge";
+import { riskTone } from "../../utils/riskTone";
+import { RISK_LEVELS, RISK_COLORS, RISK_LABELS, normalizeRisk, statusToRisk } from "../../utils/riskLevels";
 
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -18,13 +22,14 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const riskColors = {
-  Low: "#22c55e",
-  Moderate: "#f59e0b",
-  High: "#ef4444",
-  Severe: "#b91c1c",
-};
+// Refresh live map data on an interval, matching useLiveDashboard's polling
+// cadence, so the map reflects a new pipeline run without a page reload.
+const REFRESH_INTERVAL_MS = 45000;
 
+// Real, approximate coordinates for the named rivers/districts the backend
+// reports on. Stations whose river or city isn't in these lookups are left
+// off the map rather than plotted at a fallback point, so nothing is shown
+// at a location we don't actually know.
 const districtCoordinates = {
   Colombo: [6.9271, 79.8612],
   Gampaha: [7.0873, 79.9991],
@@ -63,19 +68,17 @@ const riverCoordinates = {
   Deduru: [7.50, 80.20],
 };
 
-const normalizeName = (value) => (value || "").toString().trim().toLowerCase();
-
 const districtStyle = (feature, districtRisk = "Low") => ({
   color: "#334155",
   weight: 1,
-  fillColor: riskColors[districtRisk] || riskColors.Low,
-  fillOpacity: 0.45,
+  fillColor: RISK_COLORS[districtRisk] || RISK_COLORS.Low,
+  fillOpacity: 0.4,
 });
 
 const districtPopup = (feature, districtRisk = "Low") => `
   <div>
     <strong>${feature?.properties?.name || "District"}</strong><br />
-    Flood risk: ${districtRisk}
+    Flood risk: ${RISK_LABELS[districtRisk] || districtRisk}
   </div>
 `;
 
@@ -83,6 +86,7 @@ function FloodMap() {
   const [riverStations, setRiverStations] = useState([]);
   const [weatherStations, setWeatherStations] = useState([]);
   const [predictionStations, setPredictionStations] = useState([]);
+  const [omittedCount, setOmittedCount] = useState(0);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -93,7 +97,6 @@ function FloodMap() {
 
     const fetchMapData = async () => {
       try {
-        setLoading(true);
         setError("");
 
         const [predictionResponse, riverResponse, weatherResponse] = await Promise.all([
@@ -102,60 +105,62 @@ function FloodMap() {
           getLatestWeather(),
         ]);
 
-        console.log("Prediction API response:", predictionResponse);
-        console.log("River API response:", riverResponse);
-        console.log("Weather API response:", weatherResponse);
+        let omitted = 0;
 
         const mappedPredictions = Array.isArray(predictionResponse)
-          ? predictionResponse.map((item) => {
-              const cityName = item.City || "";
-              const districtName = cityToDistrict[cityName] || cityName;
-              const coords = districtCoordinates[districtName] || [7.5, 80.7];
-
-              return {
-                ...item,
-                districtName,
-                position: coords,
-              };
-            })
+          ? predictionResponse
+              .map((item) => {
+                const cityName = item.City || "";
+                const districtName = cityToDistrict[cityName] || cityName;
+                const coords = districtCoordinates[districtName];
+                if (!coords) {
+                  omitted += 1;
+                  return null;
+                }
+                return { ...item, districtName, position: coords };
+              })
+              .filter(Boolean)
           : [];
 
         const mappedRiverStations = Array.isArray(riverResponse)
-          ? riverResponse.map((item) => {
-              const riverName = item.River || "";
-              const stationName = item.Station || "";
-              const coords = riverCoordinates[riverName] || [7.5, 80.7];
-
-              return {
-                ...item,
-                stationName,
-                position: coords,
-              };
-            })
+          ? riverResponse
+              .map((item) => {
+                const riverName = item.River || "";
+                const coords = riverCoordinates[riverName];
+                if (!coords) {
+                  omitted += 1;
+                  return null;
+                }
+                return {
+                  ...item,
+                  stationName: item.Station || riverName,
+                  position: coords,
+                  risk: item.RiverRisk || statusToRisk(item.Status),
+                };
+              })
+              .filter(Boolean)
           : [];
 
         const mappedWeatherStations = Array.isArray(weatherResponse)
-          ? weatherResponse.map((item) => {
-              const cityName = item.City || "";
-              const districtName = cityToDistrict[cityName] || cityName;
-              const coords = districtCoordinates[districtName] || [7.5, 80.7];
-
-              return {
-                ...item,
-                districtName,
-                position: coords,
-              };
-            })
+          ? weatherResponse
+              .map((item) => {
+                const cityName = item.City || "";
+                const districtName = cityToDistrict[cityName] || cityName;
+                const coords = districtCoordinates[districtName];
+                if (!coords) {
+                  omitted += 1;
+                  return null;
+                }
+                return { ...item, districtName, position: coords };
+              })
+              .filter(Boolean)
           : [];
-
-        console.log("Mapped prediction markers:", mappedPredictions);
-        console.log("Mapped river markers:", mappedRiverStations);
-        console.log("Mapped weather markers:", mappedWeatherStations);
 
         if (isMounted) {
           setPredictionStations(mappedPredictions);
           setRiverStations(mappedRiverStations);
           setWeatherStations(mappedWeatherStations);
+          setOmittedCount(omitted);
         }
       } catch (err) {
         console.error("Map data fetch failed:", err);
@@ -170,9 +175,11 @@ function FloodMap() {
     };
 
     fetchMapData();
+    const interval = setInterval(fetchMapData, REFRESH_INTERVAL_MS);
 
     return () => {
       isMounted = false;
+      clearInterval(interval);
     };
   }, []);
 
@@ -192,9 +199,7 @@ function FloodMap() {
 
     predictionStations.forEach((station) => {
       if (station.districtName) {
-        const normalizedRisk = normalizeName(station.Predicted_Risk || "Low");
-        const risk = normalizedRisk.includes("high") ? "High" : normalizedRisk.includes("moderate") ? "Moderate" : "Low";
-        riskByDistrict[station.districtName] = risk;
+        riskByDistrict[station.districtName] = normalizeRisk(station.Predicted_Risk);
       }
     });
 
@@ -206,7 +211,9 @@ function FloodMap() {
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h3 className="text-xl font-semibold text-slate-800">Sri Lanka flood monitoring map</h3>
-          <p className="text-sm text-slate-500">Interactive district risk view with river and weather monitoring stations.</p>
+          <p className="text-sm text-slate-500">
+            District risk view with river stations shown as flood-risk rings, plus weather and prediction markers.
+          </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
@@ -240,16 +247,17 @@ function FloodMap() {
         </div>
       ) : null}
 
-      <div className="h-[560px] w-full overflow-hidden rounded-2xl border border-slate-200">
+      <div className="h-[420px] w-full overflow-hidden rounded-2xl border border-slate-200 sm:h-[560px]">
         <MapContainer
           center={[7.5, 80.7]}
           zoom={7}
           scrollWheelZoom
           style={{ height: "100%", width: "100%" }}
-          whenCreated={(map) => {
-            mapRef.current = map;
-          }}
+          ref={mapRef}
         >
+          {/* Dedicated pane, above markerPane, so river-station hit-circles
+              stay clickable even when a weather/prediction pin sits nearby. */}
+          <Pane name={RISK_RING_HIT_PANE} style={{ zIndex: 610 }} />
           <LayersControl position="topright">
             <LayersControl.BaseLayer checked name="OpenStreetMap">
               <TileLayer
@@ -257,7 +265,7 @@ function FloodMap() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
             </LayersControl.BaseLayer>
-            <LayersControl.Overlay checked name="Flood Risk">
+            <LayersControl.Overlay checked name="District risk">
               <GeoJSON
                 data={districtGeojson}
                 style={(feature) => districtStyle(feature, districtRiskMap[feature?.properties?.name] || feature?.properties?.risk || "Low")}
@@ -272,56 +280,92 @@ function FloodMap() {
                 }}
               />
             </LayersControl.Overlay>
-            <LayersControl.Overlay checked name="Rivers">
-              {riverStations.map((station, index) => (
-                <Marker key={`${station.River}-${station.Station}-${index}`} position={station.position}>
-                  <Popup>
-                    <strong>{station.River}</strong>
-                    <br />
-                    {station.Station}
-                    <br />
-                    Water level: {station.WaterLevel} m
-                    <br />
-                    Status: {station.Status}
-                  </Popup>
-                </Marker>
-              ))}
-            </LayersControl.Overlay>
             <LayersControl.Overlay checked name="Weather">
-              {weatherStations.map((station, index) => (
-                <Marker key={`${station.City}-${index}`} position={station.position}>
-                  <Popup>
-                    <strong>{station.City}</strong>
-                    <br />
-                    Rainfall: {station.Rainfall} mm
-                    <br />
-                    Temperature: {station.Temperature} °C
-                  </Popup>
-                </Marker>
-              ))}
+              <LayerGroup>
+                {weatherStations.map((station, index) => (
+                  <Marker key={`${station.City}-${index}`} position={station.position}>
+                    <Popup>
+                      <strong>{station.City}</strong>
+                      <br />
+                      Rainfall: {station.Rainfall} mm
+                      <br />
+                      Temperature: {station.Temperature} °C
+                    </Popup>
+                  </Marker>
+                ))}
+              </LayerGroup>
             </LayersControl.Overlay>
             <LayersControl.Overlay checked name="Predictions">
-              {predictionStations.map((station, index) => (
-                <Marker key={`${station.City}-${index}`} position={station.position}>
-                  <Popup>
-                    <strong>{station.City}</strong>
-                    <br />
-                    Risk: {station.Predicted_Risk}
-                    <br />
-                    Rainfall (3-day): {station.Rainfall_3Day} mm
-                  </Popup>
-                </Marker>
-              ))}
+              <LayerGroup>
+                {predictionStations.map((station, index) => (
+                  <Marker key={`${station.City}-${index}`} position={station.position}>
+                    <Popup>
+                      <strong>{station.City}</strong>
+                      <br />
+                      Risk: {station.Predicted_Risk}
+                      <br />
+                      Rainfall (3-day): {station.Rainfall_3Day} mm
+                    </Popup>
+                  </Marker>
+                ))}
+              </LayerGroup>
+            </LayersControl.Overlay>
+            {/* Rendered last (and pinned to markerPane) so its hit-circles
+                stack above any weather/prediction pin that lands nearby. */}
+            <LayersControl.Overlay checked name="River risk stations">
+              <LayerGroup>
+                {riverStations.map((station, index) => (
+                  <RiskRings
+                    key={`${station.River}-${station.stationName}-${index}`}
+                    position={station.position}
+                    risk={station.risk}
+                    tooltipContent={
+                      <span className="text-xs font-medium text-slate-700">
+                        {station.stationName} ({RISK_LABELS[normalizeRisk(station.risk)]})
+                      </span>
+                    }
+                    popupContent={
+                      <div className="min-w-[190px] space-y-1 text-sm">
+                        <div className="font-semibold text-slate-800">{station.stationName}</div>
+                        <div className="text-slate-500">{station.River} river</div>
+                        <div>
+                          Water level: <strong>{station.WaterLevel ?? "N/A"} m</strong>
+                        </div>
+                        <div>
+                          Rainfall: <strong>{station.Rainfall ?? "N/A"} mm</strong>
+                        </div>
+                        <div className="text-slate-500">Status: {station.Status || "N/A"}</div>
+                        <div className="pt-1">
+                          <Badge tone={riskTone(normalizeRisk(station.risk))}>{RISK_LABELS[normalizeRisk(station.risk)]}</Badge>
+                        </div>
+                      </div>
+                    }
+                  />
+                ))}
+              </LayerGroup>
             </LayersControl.Overlay>
           </LayersControl>
         </MapContainer>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-600">
-        <div className="rounded-full bg-green-50 px-3 py-1">Green — Low risk</div>
-        <div className="rounded-full bg-yellow-50 px-3 py-1">Yellow — Moderate risk</div>
-        <div className="rounded-full bg-orange-50 px-3 py-1">Orange — High risk</div>
-        <div className="rounded-full bg-red-50 px-3 py-1">Red — Severe risk</div>
+      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <p className="mb-2 text-xs text-slate-500">
+          Rings radiate from each river station's real coordinates: the innermost ring is the current risk level, fading outward
+          toward green (safe). Larger, redder rings mean higher risk.
+        </p>
+        <div className="grid grid-cols-2 gap-2 text-sm text-slate-700 sm:flex sm:flex-wrap sm:gap-3">
+          {RISK_LEVELS.map((level) => (
+            <div key={level} className="flex items-center gap-2 rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">
+              <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: RISK_COLORS[level] }} />
+              {RISK_LABELS[level]}
+            </div>
+          ))}
+        </div>
+        {omittedCount > 0 ? (
+          <p className="mt-2 text-xs text-slate-400">
+            {omittedCount} station{omittedCount === 1 ? "" : "s"} not shown — no mapped coordinates for that river/city yet.
+          </p>
+        ) : null}
       </div>
     </div>
   );
