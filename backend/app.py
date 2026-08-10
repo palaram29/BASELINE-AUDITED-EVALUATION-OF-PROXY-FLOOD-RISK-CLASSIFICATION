@@ -8,6 +8,7 @@ from backend.routes.stats import router as stats_router
 from backend.routes.health import router as health_router
 from backend.routes.system import router as system_router
 from backend.routes.pipeline import router as pipeline_router
+from backend.routes.ml import router as ml_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +35,7 @@ app.include_router(stats_router)
 app.include_router(health_router)
 app.include_router(system_router)
 app.include_router(pipeline_router)
+app.include_router(ml_router)
 
 @app.get("/")
 def home():

@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from database.db_connection import get_engine
+from backend.config import MODEL_FILE
 
 engine = get_engine()
 
@@ -23,7 +24,7 @@ def check_health():
 
         pass
 
-    if os.path.exists("ML_Training/flood_prediction_model.pkl"):
+    if os.path.exists(MODEL_FILE):
 
         health["ml_model"] = "Available"
 

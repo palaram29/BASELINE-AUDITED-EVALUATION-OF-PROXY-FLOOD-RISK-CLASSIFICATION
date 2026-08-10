@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 import os
 
@@ -24,3 +24,20 @@ engine = create_engine(
 
 def get_engine():
     return engine
+
+
+def ensure_prediction_result_columns():
+    """Idempotently add the Probability/Model_Used columns used by the
+    ML dashboard's live prediction and prediction-history features.
+    Safe to call on every startup - existing rows just get NULLs until
+    the next prediction run touches them."""
+
+    with engine.begin() as conn:
+        conn.execute(text(
+            'ALTER TABLE prediction_results '
+            'ADD COLUMN IF NOT EXISTS "Probability" DOUBLE PRECISION'
+        ))
+        conn.execute(text(
+            'ALTER TABLE prediction_results '
+            'ADD COLUMN IF NOT EXISTS "Model_Used" TEXT'
+        ))

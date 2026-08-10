@@ -18,6 +18,12 @@ def get_latest_predictions():
 
     df = pd.read_sql(query, engine)
 
+    # NaN (e.g. Probability/Model_Used on rows predicted before those
+    # columns existed) isn't valid JSON - null is. Without this, any
+    # row with a NaN breaks JSON.parse() on the frontend for the whole
+    # response.
+    df = df.astype(object).where(pd.notna(df), None)
+
     return df.to_dict(orient="records")
 
 
@@ -31,5 +37,6 @@ def get_prediction_history():
     """
 
     df = pd.read_sql(query, engine)
+    df = df.astype(object).where(pd.notna(df), None)
 
     return df.to_dict(orient="records")
