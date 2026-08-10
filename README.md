@@ -85,11 +85,29 @@ Flood_Prediction_System/
 │   ├── db_connection.py
 │   └── test_db.py
 │
-├── ML_Training/
+├── ML_Training/                  # legacy training tool (kept for backward compatibility)
 │   ├── ML_Training.py
 │   ├── flood_prediction_model.pkl
 │   ├── city_encoder.pkl
 │   └── flood_label_encoder.pkl
+│
+├── ML/                            # model comparison & selection pipeline
+│   ├── train_models.py            # CLI: trains + compares all registered algorithms
+│   ├── evaluate_models.py         # metrics, confusion matrices, comparison table
+│   ├── model_selector.py          # algorithm registry + best-model selection
+│   ├── predict.py                 # reusable inference (used by backend/predict_flood.py)
+│   ├── utils.py                   # shared constants, paths, logging, preprocessing
+│   ├── models/
+│   │   ├── random_forest.pkl
+│   │   ├── xgboost.pkl
+│   │   ├── lightgbm.pkl
+│   │   ├── best_model.pkl         # auto-selected, loaded by the prediction API
+│   │   ├── city_encoder.pkl
+│   │   └── flood_label_encoder.pkl
+│   └── reports/
+│       ├── model_comparison.csv
+│       ├── metrics.json
+│       └── confusion_matrices/
 │
 ├── requirements.txt
 ├── .env.example
@@ -231,6 +249,40 @@ Prediction Results
 - Medium Risk
 - High Risk
 - Very High Risk
+
+### Model Comparison & Selection
+
+The `ML/` module trains and compares **Random Forest**, **XGBoost**, and **LightGBM**
+on the exact same preprocessing pipeline and train/test split, then automatically
+saves the best-performing model for the prediction API to use.
+
+Run it with your training/test CSVs (same columns as before: `City, Rainfall_3Day,
+Avg_Temperature, Avg_WindSpeed, Elevation, Flood_Risk`):
+
+```bash
+python ML/train_models.py --train-file path/to/train_dataset.csv --test-file path/to/test_dataset.csv
+```
+
+Optionally choose the metric used to pick the winner (default `f1_score`):
+
+```bash
+python ML/train_models.py --train-file train.csv --test-file test.csv --metric roc_auc
+```
+
+This produces, per model: **Accuracy, Precision, Recall, F1 Score, ROC-AUC, Confusion
+Matrix, Training Time, Prediction Time**, written to `ML/reports/model_comparison.csv`
+and `ML/reports/metrics.json`, plus a confusion-matrix image/CSV per model under
+`ML/reports/confusion_matrices/`. Every trained model is saved individually under
+`ML/models/`, and the winner is additionally saved as `ML/models/best_model.pkl`
+along with `city_encoder.pkl` / `flood_label_encoder.pkl`.
+
+`backend/predict_flood.py` (and `POST /system/predict`) automatically load
+`ML/models/best_model.pkl` — no code changes needed after retraining. If that file
+doesn't exist yet, the system falls back to the legacy model in `ML_Training/` so
+existing deployments keep working unmodified.
+
+Adding a new algorithm (e.g. CatBoost) later only requires adding one entry to
+`MODEL_REGISTRY` in `ML/model_selector.py`.
 
 ---
 
