@@ -1,0 +1,276 @@
+{
+  "trained_at": "2026-08-10T07:47:28.385818+00:00",
+  "selection_metric": "f1_score",
+  "best_model": "RandomForest",
+  "dataset": {
+    "train_rows": 103194,
+    "test_rows": 44226
+  },
+  "training_duration_sec": 6.613866567611694,
+  "models": {
+    "RandomForest": {
+      "accuracy": 0.9994347216569439,
+      "precision": 0.9994357310257079,
+      "recall": 0.9994347216569439,
+      "f1_score": 0.9994229579116505,
+      "roc_auc": 0.9999824359778102,
+      "training_time_sec": 2.770571231842041,
+      "prediction_time_sec": 0.0577847957611084,
+      "confusion_matrix": [
+        [
+          5,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          32,
+          0,
+          2
+        ],
+        [
+          0,
+          0,
+          44004,
+          2
+        ],
+        [
+          0,
+          3,
+          16,
+          160
+        ]
+      ],
+      "labels": [
+        "Extreme",
+        "High",
+        "Low",
+        "Medium"
+      ],
+      "classification_report": {
+        "Extreme": {
+          "precision": 1.0,
+          "recall": 0.7142857142857143,
+          "f1-score": 0.8333333333333334,
+          "support": 7.0
+        },
+        "High": {
+          "precision": 0.8648648648648649,
+          "recall": 0.9411764705882353,
+          "f1-score": 0.9014084507042254,
+          "support": 34.0
+        },
+        "Low": {
+          "precision": 0.9996365288505225,
+          "recall": 0.9999545516520475,
+          "f1-score": 0.9997955149614887,
+          "support": 44006.0
+        },
+        "Medium": {
+          "precision": 0.975609756097561,
+          "recall": 0.8938547486033519,
+          "f1-score": 0.9329446064139941,
+          "support": 179.0
+        },
+        "accuracy": 0.9994347216569439,
+        "macro avg": {
+          "precision": 0.960027787453237,
+          "recall": 0.8873178712823372,
+          "f1-score": 0.9168704763532604,
+          "support": 44226.0
+        },
+        "weighted avg": {
+          "precision": 0.9994357310257079,
+          "recall": 0.9994347216569439,
+          "f1-score": 0.9994229579116505,
+          "support": 44226.0
+        }
+      },
+      "feature_importance": {
+        "City_Encoded": 0.025156828716019593,
+        "Rainfall_3Day": 0.8561491618496052,
+        "Avg_Temperature": 0.03531718719523181,
+        "Avg_WindSpeed": 0.0460520369536317,
+        "Elevation": 0.037324785285511725
+      },
+      "status": "Trained"
+    },
+    "XGBoost": {
+      "accuracy": 0.9980780536336092,
+      "precision": 0.9981293903480772,
+      "recall": 0.9980780536336092,
+      "f1_score": 0.9981011658834952,
+      "roc_auc": 0.9998377313763469,
+      "training_time_sec": 0.4366888999938965,
+      "prediction_time_sec": 0.025174856185913086,
+      "confusion_matrix": [
+        [
+          3,
+          2,
+          0,
+          2
+        ],
+        [
+          0,
+          23,
+          0,
+          11
+        ],
+        [
+          0,
+          0,
+          43975,
+          31
+        ],
+        [
+          3,
+          13,
+          23,
+          140
+        ]
+      ],
+      "labels": [
+        "Extreme",
+        "High",
+        "Low",
+        "Medium"
+      ],
+      "classification_report": {
+        "Extreme": {
+          "precision": 0.5,
+          "recall": 0.42857142857142855,
+          "f1-score": 0.46153846153846156,
+          "support": 7.0
+        },
+        "High": {
+          "precision": 0.6052631578947368,
+          "recall": 0.6764705882352942,
+          "f1-score": 0.6388888888888888,
+          "support": 34.0
+        },
+        "Low": {
+          "precision": 0.9994772489658621,
+          "recall": 0.9992955506067355,
+          "f1-score": 0.9993863915276578,
+          "support": 44006.0
+        },
+        "Medium": {
+          "precision": 0.7608695652173914,
+          "recall": 0.7821229050279329,
+          "f1-score": 0.7713498622589532,
+          "support": 179.0
+        },
+        "accuracy": 0.9980780536336092,
+        "macro avg": {
+          "precision": 0.7164024930194977,
+          "recall": 0.7216151181103477,
+          "f1-score": 0.7177909010534904,
+          "support": 44226.0
+        },
+        "weighted avg": {
+          "precision": 0.9981293903480772,
+          "recall": 0.9980780536336092,
+          "f1-score": 0.9981011658834952,
+          "support": 44226.0
+        }
+      },
+      "feature_importance": {
+        "City_Encoded": 0.0068171145394444466,
+        "Rainfall_3Day": 0.9648301005363464,
+        "Avg_Temperature": 0.007906914688646793,
+        "Avg_WindSpeed": 0.0049246493726968765,
+        "Elevation": 0.015521260909736156
+      },
+      "status": "Trained"
+    },
+    "LightGBM": {
+      "accuracy": 0.9905259349703794,
+      "precision": 0.9903868094898557,
+      "recall": 0.9905259349703794,
+      "f1_score": 0.9904503602778708,
+      "roc_auc": 0.5113064047293079,
+      "training_time_sec": 2.6319692134857178,
+      "prediction_time_sec": 0.04630279541015625,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          7,
+          0
+        ],
+        [
+          0,
+          0,
+          34,
+          0
+        ],
+        [
+          0,
+          89,
+          43801,
+          116
+        ],
+        [
+          0,
+          0,
+          173,
+          6
+        ]
+      ],
+      "labels": [
+        "Extreme",
+        "High",
+        "Low",
+        "Medium"
+      ],
+      "classification_report": {
+        "Extreme": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 7.0
+        },
+        "High": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 34.0
+        },
+        "Low": {
+          "precision": 0.9951380211291605,
+          "recall": 0.9953415443348634,
+          "f1-score": 0.9952397723270583,
+          "support": 44006.0
+        },
+        "Medium": {
+          "precision": 0.04918032786885246,
+          "recall": 0.0335195530726257,
+          "f1-score": 0.03986710963455149,
+          "support": 179.0
+        },
+        "accuracy": 0.9905259349703794,
+        "macro avg": {
+          "precision": 0.26107958724950325,
+          "recall": 0.2572152743518723,
+          "f1-score": 0.25877672049040246,
+          "support": 44226.0
+        },
+        "weighted avg": {
+          "precision": 0.9903868094898557,
+          "recall": 0.9905259349703794,
+          "f1-score": 0.9904503602778708,
+          "support": 44226.0
+        }
+      },
+      "feature_importance": {
+        "City_Encoded": 839.0,
+        "Rainfall_3Day": 1586.0,
+        "Avg_Temperature": 1596.0,
+        "Avg_WindSpeed": 1862.0,
+        "Elevation": 644.0
+      },
+      "status": "Trained"
+    }
+  }
+}

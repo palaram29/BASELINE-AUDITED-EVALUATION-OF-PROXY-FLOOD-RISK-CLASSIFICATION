@@ -18,6 +18,9 @@ weather_data/
 # ML / output files
 prediction_results.csv
 
+# ML training data (large, sourced outside the repo - not source code)
+ML/data/*.csv
+
 # Testing folders
 Just_for_testing/
 
