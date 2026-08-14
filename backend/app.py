@@ -10,6 +10,7 @@ from backend.routes.system import router as system_router
 from backend.routes.pipeline import router as pipeline_router
 from backend.routes.ml import router as ml_router
 from backend.routes.auth import router as auth_router
+from backend.routes.alerts import router as alerts_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,6 +39,7 @@ app.include_router(system_router)
 app.include_router(pipeline_router)
 app.include_router(ml_router)
 app.include_router(auth_router)
+app.include_router(alerts_router)
 
 @app.get("/")
 def home():
