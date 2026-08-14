@@ -4,6 +4,7 @@ import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Badge from "../../components/common/Badge";
 import RiskChart from "../../components/charts/RiskChart";
+import { riskTone } from "../../utils/riskTone";
 
 function Prediction() {
   const { prediction, loading, error } = usePrediction();
@@ -56,7 +57,7 @@ function Prediction() {
                     <td className="px-4 py-3">{item.Avg_Temperature} °C</td>
                     <td className="px-4 py-3">{item.Avg_WindSpeed} km/h</td>
                     <td className="px-4 py-3">
-                      <Badge tone={item.Predicted_Risk === "High" ? "red" : item.Predicted_Risk === "Moderate" ? "yellow" : "green"}>{item.Predicted_Risk}</Badge>
+                      <Badge tone={riskTone(item.Predicted_Risk)}>{item.Predicted_Risk}</Badge>
                     </td>
                   </tr>
                 ))}

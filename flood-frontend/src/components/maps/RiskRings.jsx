@@ -1,54 +1,67 @@
 import { Circle, CircleMarker, Popup, Tooltip } from "react-leaflet";
-import { RISK_LEVELS, RISK_COLORS, normalizeRisk } from "../../utils/riskLevels";
+import { computeStationSeverity, severityToColor } from "../../utils/floodSeverity";
 
-const BASE_RADIUS_METERS = 4500;
-const RADIUS_STEP_METERS = 3500;
+const MIN_RADIUS_METERS = 2500;
+const MAX_RADIUS_METERS = 22000;
+const BAND_COUNT = 9;
 
 // Leaflet's default marker icons live in "markerPane" (z-index 600), above
 // the "overlayPane" (z-index 400) where Circle/Polygon vector layers render
 // by default. A weather/prediction pin that happens to sit near a river
-// station would otherwise physically cover the ring's click/hover target, so
+// station would otherwise physically cover the zone's click/hover target, so
 // the (invisible) hit-circle uses a dedicated pane above markerPane instead
 // of relying on DOM mount order within a shared pane. FloodMap declares this
 // pane once via <Pane name={RISK_RING_HIT_PANE} .../>.
 export const RISK_RING_HIT_PANE = "risk-ring-hit-pane";
 
 /**
- * Renders a station's flood risk as concentric rings radiating out from its
- * real lat/lng: the innermost ring is the station's current risk color, and
- * each ring outward steps down the Red -> Orange -> Yellow -> Green scale
- * toward Low, so higher-risk stations end up both redder and physically
- * larger/more prominent on the map.
+ * Renders a station's flood risk as a soft radial gradient zone radiating
+ * out from its real lat/lng: the center is colored by the station's own
+ * continuous severity score (computeStationSeverity - driven by water
+ * level, rate of rise, rainfall and RiverRisk, not a fixed tier), and the
+ * zone fades smoothly toward green at its edge, through many thin
+ * concentric bands instead of a handful of hard-edged rings, so it reads as
+ * a heatmap-style impact zone rather than a stack of colored circles. A
+ * more severe station gets both a redder core AND a larger zone, so
+ * high-risk areas stay visually dominant on the map.
  */
-function RiskRings({ position, risk, tooltipContent, popupContent }) {
-  const currentRisk = normalizeRisk(risk);
-  const startIndex = RISK_LEVELS.indexOf(currentRisk);
-  const ringLevels = RISK_LEVELS.slice(startIndex); // e.g. High -> [High, Medium, Low]
-  const outerRadius = BASE_RADIUS_METERS + (ringLevels.length - 1) * RADIUS_STEP_METERS;
+function RiskRings({ position, station, tooltipContent, popupContent }) {
+  const { score, color } = computeStationSeverity(station);
+  const outerRadius = MIN_RADIUS_METERS + score * (MAX_RADIUS_METERS - MIN_RADIUS_METERS);
 
-  // Draw largest ring first, smallest (current risk) last so it paints on
-  // top - that's what makes the stack read as bands instead of one blob.
-  const ringsLargestFirst = [...ringLevels].map((level, i) => ({ level, i })).reverse();
+  // Bands go from the outer edge (t=0, green) to the core (t=1, this
+  // station's own severity color) - rendering largest-first/smallest-last
+  // so the core paints on top, which is what makes the stack read as a
+  // smooth glow instead of one flat blob.
+  // i=0 is the largest/greenest band (the edge); i=BAND_COUNT-1 is the
+  // smallest/reddest band (the core). Rendered in this order so smaller,
+  // more-central bands paint on top of larger ones - that's what makes the
+  // stack read as a smooth radial gradient instead of one flat color.
+  const bands = Array.from({ length: BAND_COUNT }, (_, i) => {
+    const t = i / (BAND_COUNT - 1); // 0 at edge -> 1 at core
+    const radius = outerRadius * (0.12 + 0.88 * (1 - t));
+    const bandColor = severityToColor(score * t);
+    const fillOpacity = 0.06 + 0.55 * Math.pow(t, 1.6);
+    return { t, radius, bandColor, fillOpacity };
+  });
 
   return (
     <>
-      {ringsLargestFirst.map(({ level, i }) => (
+      {bands.map((band) => (
         <Circle
-          key={level}
+          key={band.t}
           center={position}
-          radius={BASE_RADIUS_METERS + i * RADIUS_STEP_METERS}
+          radius={band.radius}
           pathOptions={{
-            color: RISK_COLORS[level],
-            weight: i === 0 ? 2 : 1,
-            opacity: 0.8 - i * 0.12,
-            fillColor: RISK_COLORS[level],
-            fillOpacity: 0.4 - i * 0.06,
+            stroke: false,
+            fillColor: band.bandColor,
+            fillOpacity: band.fillOpacity,
             interactive: false,
           }}
         />
       ))}
 
-      {/* Solid center dot + the interactive hit area covering all rings */}
+      {/* Solid center dot + the interactive hit area covering the whole zone */}
       <Circle center={position} radius={outerRadius} pane={RISK_RING_HIT_PANE} pathOptions={{ opacity: 0, fillOpacity: 0 }}>
         <Tooltip direction="top" offset={[0, -8]} opacity={0.95} sticky>
           {tooltipContent}
@@ -57,11 +70,11 @@ function RiskRings({ position, risk, tooltipContent, popupContent }) {
       </Circle>
       <CircleMarker
         center={position}
-        radius={7}
+        radius={6}
         pathOptions={{
           color: "#ffffff",
           weight: 2,
-          fillColor: RISK_COLORS[currentRisk],
+          fillColor: color,
           fillOpacity: 0.95,
           interactive: false,
         }}

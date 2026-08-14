@@ -1,4 +1,5 @@
 import SummaryCard from "../cards/SummaryCard";
+import { normalizeRisk } from "../../utils/riskLevels";
 
 function SummarySection({ dashboard }) {
 
@@ -15,9 +16,15 @@ function SummarySection({ dashboard }) {
       item => item.Status !== "Normal"
     ).length;
 
+  // Predicted_Risk's real values are Low/Medium/High/Extreme (the ML
+  // model's training labels) - normalizeRisk() catches "Extreme" too, so
+  // the most severe predictions aren't left out of this count.
   const highRiskPredictions =
     dashboard.prediction.filter(
-      item => item.Predicted_Risk === "High"
+      item => {
+        const risk = normalizeRisk(item.Predicted_Risk);
+        return risk === "High" || risk === "Very High";
+      }
     ).length;
 
   return (

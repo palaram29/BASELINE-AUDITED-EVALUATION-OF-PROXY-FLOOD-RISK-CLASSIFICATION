@@ -1,3 +1,15 @@
+import { normalizeRisk } from "../../utils/riskLevels";
+
+// Predicted_Risk's real values are Low/Medium/High/Extreme (the ML model's
+// training labels), not "Moderate" - a direct string comparison against
+// "Moderate" left both Medium and Extreme predictions colored green.
+const RISK_TEXT_CLASS = {
+  "Very High": "text-red-600",
+  High: "text-orange-600",
+  Medium: "text-yellow-600",
+  Low: "text-green-600",
+};
+
 function PredictionTable({ predictions }) {
   return (
     <div className="bg-white rounded-xl shadow-md p-6">
@@ -34,13 +46,7 @@ function PredictionTable({ predictions }) {
                   {prediction.Avg_WindSpeed} km/h
                 </td>
                 <td
-                  className={`px-4 py-3 font-semibold ${
-                    prediction.Predicted_Risk === "High"
-                      ? "text-red-600"
-                      : prediction.Predicted_Risk === "Moderate"
-                      ? "text-yellow-600"
-                      : "text-green-600"
-                  }`}
+                  className={`px-4 py-3 font-semibold ${RISK_TEXT_CLASS[normalizeRisk(prediction.Predicted_Risk)]}`}
                 >
                   {prediction.Predicted_Risk}
                 </td>

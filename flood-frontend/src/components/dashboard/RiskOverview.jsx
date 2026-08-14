@@ -1,8 +1,16 @@
 import Badge from "../common/Badge";
+import { normalizeRisk } from "../../utils/riskLevels";
 
 function RiskOverview({ prediction = [] }) {
-  const highRiskCount = prediction.filter((item) => item.Predicted_Risk === "High").length;
-  const moderateCount = prediction.filter((item) => item.Predicted_Risk === "Moderate").length;
+  // Predicted_Risk's real values are Low/Medium/High/Extreme (the ML
+  // model's training labels), not "Moderate" - normalizeRisk() maps every
+  // known synonym first so "Extreme" counts as high risk instead of being
+  // silently dropped from both tallies.
+  const highRiskCount = prediction.filter((item) => {
+    const risk = normalizeRisk(item.Predicted_Risk);
+    return risk === "High" || risk === "Very High";
+  }).length;
+  const moderateCount = prediction.filter((item) => normalizeRisk(item.Predicted_Risk) === "Medium").length;
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-blue-900 p-6 text-white shadow-xl">

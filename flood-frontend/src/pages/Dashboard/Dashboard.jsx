@@ -13,6 +13,7 @@ import ErrorMessage from "../../components/common/ErrorMessage";
 import Badge from "../../components/common/Badge";
 import Toast from "../../components/common/Toast";
 import { forecastData } from "../../utils/forecastData";
+import { normalizeRisk } from "../../utils/riskLevels";
 
 function Dashboard() {
   const { dashboard, loading, error, lastUpdated } = useLiveDashboard();
@@ -26,7 +27,14 @@ function Dashboard() {
     }
 
     const criticalRiver = dashboard.river.find((item) => item.Status === "Alert");
-    const highRiskCity = dashboard.prediction.find((item) => item.Predicted_Risk === "High");
+    // Predicted_Risk's real values are Low/Medium/High/Extreme (the ML
+    // model's training labels, not "Moderate"/"Very High") - normalizeRisk()
+    // catches "Extreme" too, so the most severe predictions still raise
+    // this alert instead of being silently ignored.
+    const highRiskCity = dashboard.prediction.find((item) => {
+      const risk = normalizeRisk(item.Predicted_Risk);
+      return risk === "High" || risk === "Very High";
+    });
 
     if (!criticalRiver && !highRiskCity) {
       setToast(null);
