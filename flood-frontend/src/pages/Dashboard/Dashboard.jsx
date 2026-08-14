@@ -12,6 +12,7 @@ import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Badge from "../../components/common/Badge";
 import Toast from "../../components/common/Toast";
+import UserAlertBanner from "../../components/dashboard/UserAlertBanner";
 import { forecastData } from "../../utils/forecastData";
 import { normalizeRisk } from "../../utils/riskLevels";
 
@@ -79,6 +80,8 @@ function Dashboard() {
           </Card>
         </div>
       </div>
+
+      <UserAlertBanner />
 
       <RiskOverview prediction={dashboard.prediction} />
       <SummarySection dashboard={dashboard} />

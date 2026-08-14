@@ -11,6 +11,9 @@ import Pipeline from "../pages/Pipeline/Pipeline";
 import MLDashboard from "../pages/MLDashboard/MLDashboard";
 import About from "../pages/About/About";
 import NotFound from "../pages/NotFound/NotFound";
+import Register from "../pages/Auth/Register";
+import Login from "../pages/Auth/Login";
+import Account from "../pages/Account/Account";
 
 function AppRoutes() {
   return (
@@ -25,6 +28,9 @@ function AppRoutes() {
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/ml-dashboard" element={<MLDashboard />} />
           <Route path="/about" element={<About />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/account" element={<Account />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
