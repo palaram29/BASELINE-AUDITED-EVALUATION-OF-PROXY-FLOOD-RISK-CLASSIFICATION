@@ -43,6 +43,26 @@ def ensure_prediction_result_columns():
         ))
 
 
+def ensure_users_table():
+    """Idempotently create the users table backing registration/login and
+    per-user flood alerts. Safe to call on every startup."""
+
+    with engine.begin() as conn:
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                full_name TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE,
+                phone TEXT,
+                password_hash TEXT NOT NULL,
+                alert_city TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))
+
+
 def ensure_river_data_timestamp_column():
     """Idempotently add a real TIMESTAMP column derived from river_data's
     "DateTime" text field (e.g. "13-Aug-2026 12:30 PM", from the DMC PDF).
