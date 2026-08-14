@@ -41,3 +41,35 @@ def ensure_prediction_result_columns():
             'ALTER TABLE prediction_results '
             'ADD COLUMN IF NOT EXISTS "Model_Used" TEXT'
         ))
+
+
+def ensure_river_data_timestamp_column():
+    """Idempotently add a real TIMESTAMP column derived from river_data's
+    "DateTime" text field (e.g. "13-Aug-2026 12:30 PM", from the DMC PDF).
+
+    Bug this fixes: "DateTime" is stored as free text, and get_latest_river()
+    used to pick the report via MAX("DateTime") - a LEXICOGRAPHIC string
+    comparison, not a chronological one. Since the DMC format doesn't
+    zero-pad the day ("6-Aug-2026" not "06-Aug-2026"), "6-Aug-2026 3:30 PM"
+    sorts AFTER "13-Aug-2026 12:30 PM" as a string (because the character
+    '6' > '1'), so a genuinely week-old report was being served as "latest"
+    - including a real "Alert" status that had long since cleared, which is
+    exactly the false alert this was causing.
+
+    "ReportTimestamp" is backfilled (and re-backfilled on every startup,
+    which is cheap and only touches rows where it's still NULL) by parsing
+    the existing "DateTime" text server-side, so this is safe to run
+    against a table that already has historical rows."""
+
+    with engine.begin() as conn:
+        conn.execute(text(
+            'ALTER TABLE river_data '
+            'ADD COLUMN IF NOT EXISTS "ReportTimestamp" TIMESTAMP'
+        ))
+        conn.execute(text(
+            """
+            UPDATE river_data
+            SET "ReportTimestamp" = to_timestamp("DateTime", 'FMDD-Mon-YYYY FMHH12:MI AM')
+            WHERE "ReportTimestamp" IS NULL
+            """
+        ))

@@ -4,16 +4,18 @@ import glob
 import re
 import os
 import sys
+from datetime import datetime
 sys.path.append(
     os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))
     )
 )
 
-from database.db_connection import get_engine
+from database.db_connection import get_engine, ensure_river_data_timestamp_column
 from backend.utils.logger import logger
 
 engine = get_engine()
+ensure_river_data_timestamp_column()
 
 # =====================================================
 # FIND LATEST PDF
@@ -69,6 +71,18 @@ for line in lines:
         break
 
 logger.info(f"Report: {report_datetime}")
+
+# Real timestamp for correctly finding "the latest report" - see
+# ensure_river_data_timestamp_column()'s docstring for why the raw
+# "DateTime" text can't be used for that (non-zero-padded day breaks
+# lexicographic string comparison). Falls back to None (NULL in the DB,
+# backfilled by ensure_river_data_timestamp_column() on next startup) if
+# the DMC report ever changes this format.
+try:
+    report_timestamp = datetime.strptime(report_datetime, "%d-%b-%Y %I:%M %p")
+except ValueError:
+    logger.warning(f"Could not parse report DateTime '{report_datetime}' into a timestamp.")
+    report_timestamp = None
 
 # =====================================================
 # PROCESS RIVER RECORDS
@@ -157,6 +171,7 @@ for line in lines:
 
         records.append({
             "DateTime": report_datetime,
+            "ReportTimestamp": report_timestamp,
             "River": river,
             "Station": station,
             "WaterLevel": water_level,

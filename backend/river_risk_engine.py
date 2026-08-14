@@ -9,18 +9,27 @@ sys.path.append(
 )
 
 from backend.utils.logger import logger
-from database.db_connection import get_engine
+from database.db_connection import get_engine, ensure_river_data_timestamp_column
 
 engine = get_engine()
+ensure_river_data_timestamp_column()
 
 # ==========================================
 # LOAD DATA
 # ==========================================
 
+# Only the latest report - this used to load every row ever inserted and
+# report the highest risk seen across all of history, so a station that
+# had long since returned to Normal would still be reported as the
+# "current" highest risk for as long as it stayed in the table.
 df = pd.read_sql(
     """
     SELECT *
     FROM river_data
+    WHERE "ReportTimestamp" = (
+        SELECT MAX("ReportTimestamp")
+        FROM river_data
+    )
     """,
     engine
 )
