@@ -58,6 +58,7 @@ except Exception as e:
 
 results = df[[
     "Date",
+    "Predicted_For_Date",
     "City",
     "Rainfall_3Day",
     "Avg_Temperature",
@@ -93,6 +94,7 @@ with engine.begin() as conn:
         conn.execute(text("""
             INSERT INTO prediction_results (
                 "Date",
+                "Predicted_For_Date",
                 "City",
                 "Rainfall_3Day",
                 "Avg_Temperature",
@@ -103,6 +105,7 @@ with engine.begin() as conn:
             )
             VALUES (
                 :date,
+                :predicted_for_date,
                 :city,
                 :rainfall_3day,
                 :avg_temperature,
@@ -113,6 +116,7 @@ with engine.begin() as conn:
             )
             ON CONFLICT ("Date", "City")
             DO UPDATE SET
+                "Predicted_For_Date" = EXCLUDED."Predicted_For_Date",
                 "Rainfall_3Day" = EXCLUDED."Rainfall_3Day",
                 "Avg_Temperature" = EXCLUDED."Avg_Temperature",
                 "Avg_WindSpeed" = EXCLUDED."Avg_WindSpeed",
@@ -121,6 +125,7 @@ with engine.begin() as conn:
                 "Model_Used" = EXCLUDED."Model_Used"
         """), {
             "date": str(row["Date"]),
+            "predicted_for_date": str(row["Predicted_For_Date"]),
             "city": row["City"],
             "rainfall_3day": float(row["Rainfall_3Day"]),
             "avg_temperature": float(row["Avg_Temperature"]),

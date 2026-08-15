@@ -34,10 +34,19 @@ def get_system_statistics():
     WHERE "RiverRisk" IN ('High', 'Very High');
     """
 
+    # Predicted_Risk's real values are Low/Medium/High/Extreme (the ML
+    # model's training labels - see ML/data/train_dataset.csv), NOT
+    # "Very High" (that's river_data's RiverRisk vocabulary, a different
+    # table). Using 'Very High' here silently undercounts every Extreme
+    # prediction - the single most severe class - to 0. See
+    # flood-frontend/src/utils/riskLevels.js's normalizeRisk() and
+    # backend/services/alert_service.py's normalize_risk() for why this
+    # project deliberately keeps the two vocabularies distinct rather
+    # than merging them.
     high_risk_prediction_query = """
     SELECT COUNT(*) AS high_risk_predictions
     FROM prediction_results
-    WHERE "Predicted_Risk" IN ('High', 'Very High')
+    WHERE "Predicted_Risk" IN ('High', 'Extreme')
     AND "Date" = (
         SELECT MAX("Date")
         FROM prediction_results

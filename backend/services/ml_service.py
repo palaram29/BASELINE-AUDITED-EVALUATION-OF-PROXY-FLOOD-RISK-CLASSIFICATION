@@ -38,13 +38,23 @@ def _load_metrics():
 
 def get_all_model_metrics():
     """Return every trained model's metrics, shaped as a list for the
-    Model Overview Cards / Comparison Table."""
+    Model Overview Cards / Comparison Table.
+
+    ML/train_models.py (the production pipeline) only ever trains and
+    reports RandomForest/XGBoost/LightGBM - Majority/Persistence/Seasonal
+    baselines are a separate, optional methodology check
+    (ML/walkforward_validate.py, see
+    docs/ML_METHODOLOGY_AND_LIMITATIONS.md) and never reach metrics.json.
+    The status != "Baseline" filter below is defensive only, in case
+    metrics.json was ever produced by an older run that still included
+    them."""
 
     metrics = _load_metrics()
 
     return [
         {"name": name, **model_metrics}
         for name, model_metrics in metrics["models"].items()
+        if model_metrics.get("status") != "Baseline"
     ]
 
 
@@ -57,13 +67,24 @@ def get_best_model_info():
     best_metrics = metrics["models"][best_name]
     selection_metric = metrics.get("selection_metric", DEFAULT_SELECTION_METRIC)
 
-    metric_value = best_metrics.get(selection_metric)
-    reason = (
-        f"Highest {selection_metric.replace('_', ' ').title()} "
-        f"({metric_value:.3f}) among {len(metrics['models'])} candidates"
-        if metric_value is not None else
-        f"Selected by {selection_metric.replace('_', ' ').title()}"
-    )
+    # Prefer the exact tie-break reasoning ML/model_selector.py already
+    # computed (e.g. "macro-F1 tied with RandomForest, but High-risk
+    # recall is X vs Y - preferred for the dangerous-class recall
+    # margin"). The generic fallback below is only used when that isn't
+    # present (older metrics.json, or a --metric override that bypasses
+    # the tie-break hierarchy) - it must NOT claim "Highest <metric>"
+    # when the selected model doesn't actually have the highest raw
+    # value for that metric, which the tie-break rule can deliberately
+    # override (see docs/ML_METHODOLOGY_AND_LIMITATIONS.md).
+    reason = metrics.get("selection_reason")
+    if not reason:
+        metric_value = best_metrics.get(selection_metric)
+        reason = (
+            f"Selected by {selection_metric.replace('_', ' ').title()} "
+            f"({metric_value:.3f})"
+            if metric_value is not None else
+            f"Selected by {selection_metric.replace('_', ' ').title()}"
+        )
 
     return {
         "name": best_name,
@@ -147,6 +168,7 @@ def predict_with_best_model(city):
 
     row = _latest_features_for_city(city)
     features = {
+        "Date": str(row["Date"]),
         "City": city,
         "Rainfall_3Day": float(row["Rainfall_3Day"]),
         "Avg_Temperature": float(row["Avg_Temperature"]),
@@ -165,15 +187,16 @@ def predict_with_best_model(city):
 
         conn.execute(text("""
             INSERT INTO prediction_results (
-                "Date", "City", "Rainfall_3Day", "Avg_Temperature",
+                "Date", "Predicted_For_Date", "City", "Rainfall_3Day", "Avg_Temperature",
                 "Avg_WindSpeed", "Predicted_Risk", "Probability", "Model_Used"
             )
             VALUES (
-                :date, :city, :rainfall_3day, :avg_temperature,
+                :date, :predicted_for_date, :city, :rainfall_3day, :avg_temperature,
                 :avg_windspeed, :predicted_risk, :probability, :model_used
             )
             ON CONFLICT ("Date", "City")
             DO UPDATE SET
+                "Predicted_For_Date" = EXCLUDED."Predicted_For_Date",
                 "Rainfall_3Day" = EXCLUDED."Rainfall_3Day",
                 "Avg_Temperature" = EXCLUDED."Avg_Temperature",
                 "Avg_WindSpeed" = EXCLUDED."Avg_WindSpeed",
@@ -182,6 +205,7 @@ def predict_with_best_model(city):
                 "Model_Used" = EXCLUDED."Model_Used"
         """), {
             "date": str(row["Date"]),
+            "predicted_for_date": result["predicted_for_date"],
             "city": city,
             "rainfall_3day": features["Rainfall_3Day"],
             "avg_temperature": features["Avg_Temperature"],
@@ -191,11 +215,14 @@ def predict_with_best_model(city):
             "model_used": result["model_used"],
         })
 
-    logger.info(f"Live prediction for {city}: {result['risk']} ({model_name})")
+    logger.info(
+        f"Live prediction for {city}: {result['risk']} for {result['predicted_for_date']} ({model_name})"
+    )
 
     return {
         "city": city,
         "date": str(row["Date"]),
+        "predicted_for_date": result["predicted_for_date"],
         "risk": result["risk"],
         "confidence": result["confidence"],
         "model_used": result["model_used"],

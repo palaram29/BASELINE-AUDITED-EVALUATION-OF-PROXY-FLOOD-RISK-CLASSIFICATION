@@ -27,10 +27,16 @@ def get_engine():
 
 
 def ensure_prediction_result_columns():
-    """Idempotently add the Probability/Model_Used columns used by the
-    ML dashboard's live prediction and prediction-history features.
-    Safe to call on every startup - existing rows just get NULLs until
-    the next prediction run touches them."""
+    """Idempotently add the Probability/Model_Used/Predicted_For_Date
+    columns used by the ML dashboard's live prediction and
+    prediction-history features. Safe to call on every startup - existing
+    rows just get NULLs until the next prediction run touches them.
+
+    Predicted_For_Date: the model now forecasts the day AFTER "Date"
+    (see docs/ML_METHODOLOGY_AND_LIMITATIONS.md) - this column makes that
+    explicit in stored rows and in the dashboard/API, instead of "Date"
+    silently doubling as both "when this was computed" and "what day the
+    risk applies to"."""
 
     with engine.begin() as conn:
         conn.execute(text(
@@ -40,6 +46,10 @@ def ensure_prediction_result_columns():
         conn.execute(text(
             'ALTER TABLE prediction_results '
             'ADD COLUMN IF NOT EXISTS "Model_Used" TEXT'
+        ))
+        conn.execute(text(
+            'ALTER TABLE prediction_results '
+            'ADD COLUMN IF NOT EXISTS "Predicted_For_Date" DATE'
         ))
 
 
