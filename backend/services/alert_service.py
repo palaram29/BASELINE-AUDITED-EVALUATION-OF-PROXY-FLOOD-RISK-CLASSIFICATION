@@ -39,23 +39,30 @@ def get_alert_for_city(city):
             "risk_level": None,
             "risk_label": None,
             "is_alert": False,
-            "message": f"No recent prediction available for {city} yet.",
+            "message": f"No recent flood-risk forecast available for {city} yet.",
             "rainfall_3day": None,
             "date": None,
+            "predicted_for_date": None,
         }
 
     risk_level = normalize_risk(match.get("Predicted_Risk"))
     risk_label = RISK_LABELS[risk_level]
     is_alert = risk_level in ("Medium", "High", "Very High")
+    predicted_for_date = match.get("Predicted_For_Date")
+    when = f"for {predicted_for_date}" if predicted_for_date else "for tomorrow"
 
+    # Wording is deliberately "predicted"/"forecast risk", never "is
+    # flooding" or "flood detected" - the target is a derived next-day
+    # risk index, not an observed flood event. See
+    # docs/ML_METHODOLOGY_AND_LIMITATIONS.md before changing this copy.
     if risk_level == "Very High":
-        message = f"{city} is under CRITICAL flood risk. Take precautions immediately."
+        message = f"{city} has a CRITICAL flood-risk forecast {when}. Take precautions."
     elif risk_level == "High":
-        message = f"{city} is under high flood risk."
+        message = f"{city} has a high flood-risk forecast {when}."
     elif risk_level == "Medium":
-        message = f"{city} is under moderate flood risk. Stay alert."
+        message = f"{city} has a moderate flood-risk forecast {when}. Stay alert."
     else:
-        message = f"{city} currently has low flood risk."
+        message = f"{city} has a low flood-risk forecast {when}."
 
     return {
         "city": city,
@@ -66,4 +73,5 @@ def get_alert_for_city(city):
         "message": message,
         "rainfall_3day": match.get("Rainfall_3Day"),
         "date": match.get("Date"),
+        "predicted_for_date": predicted_for_date,
     }
