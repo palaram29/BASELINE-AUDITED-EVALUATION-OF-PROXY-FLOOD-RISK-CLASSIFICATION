@@ -63,7 +63,7 @@ function MLDashboard() {
         </div>
       )}
 
-      {!loading && models.length ? <ModelComparisonTable models={models} /> : null}
+      {!loading && models.length ? <ModelComparisonTable models={models} bestModelName={bestModel?.name} /> : null}
       {!loading && bestModel ? <BestModelPanel bestModel={bestModel} /> : null}
 
       <LivePredictionPanel bestModelName={bestModel?.name} />

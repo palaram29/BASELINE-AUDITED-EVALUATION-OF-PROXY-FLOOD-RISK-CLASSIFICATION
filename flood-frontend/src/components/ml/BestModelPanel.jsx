@@ -28,10 +28,11 @@ function BestModelPanel({ bestModel }) {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+          <Stat label="Macro-F1" value={`${(bestModel.macro_f1 * 100).toFixed(1)}%`} />
+          <Stat label="High Recall" value={`${(bestModel.high_risk_recall * 100).toFixed(1)}%`} />
+          <Stat label="Extreme Recall" value={`${(bestModel.extreme_risk_recall * 100).toFixed(1)}%`} />
           <Stat label="Accuracy" value={`${(bestModel.accuracy * 100).toFixed(1)}%`} />
-          <Stat label="F1 Score" value={`${(bestModel.f1_score * 100).toFixed(1)}%`} />
           <Stat label="Training Time" value={`${(bestModel.training_time_sec * 1000).toFixed(0)} ms`} />
-          <Stat label="Prediction Time" value={`${(bestModel.prediction_time_sec * 1000).toFixed(1)} ms`} />
           <Stat
             label="Date Trained"
             value={trainedAt ? trainedAt.toLocaleDateString() : "—"}

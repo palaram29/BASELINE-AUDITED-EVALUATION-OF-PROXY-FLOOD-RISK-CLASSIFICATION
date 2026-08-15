@@ -12,11 +12,16 @@ const ICONS = {
   LightGBM: FaLayerGroup,
 };
 
+// Macro-F1 / High Recall / Extreme Recall are the actual selection
+// criteria (ML/model_selector.py) - shown first. Accuracy is included
+// for context but is deliberately NOT part of how "best" is chosen: a
+// model can score ~96% accuracy while missing most High-risk days (see
+// docs/ML_METHODOLOGY_AND_LIMITATIONS.md for why).
 const metricRows = [
-  { key: "accuracy", label: "Accuracy", tone: "blue" },
-  { key: "precision", label: "Precision", tone: "green" },
-  { key: "recall", label: "Recall", tone: "yellow" },
-  { key: "f1_score", label: "F1 Score", tone: "blue" },
+  { key: "macro_f1", label: "Macro-F1", tone: "blue" },
+  { key: "high_risk_recall", label: "High Recall", tone: "yellow" },
+  { key: "extreme_risk_recall", label: "Extreme Recall", tone: "yellow" },
+  { key: "accuracy", label: "Accuracy", tone: "green" },
 ];
 
 function ModelOverviewCard({ model, isBest = false }) {
