@@ -49,6 +49,14 @@ from ML.evaluate_models import (
     build_comparison_table,
 )
 
+# Majority/Persistence/Seasonal baselines are intentionally NOT part of
+# this pipeline - by research decision, the core comparison and the
+# production dashboard/prediction pipeline only ever consider Random
+# Forest, XGBoost and LightGBM. The baselines still exist in ML/baselines.py
+# and are used by ML/walkforward_validate.py as a separate, optional
+# methodology check (see docs/ML_METHODOLOGY_AND_LIMITATIONS.md) - they
+# are not recomputed or reported here.
+
 
 def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
     """Run the full compare-train-evaluate-select-save workflow.
@@ -72,7 +80,7 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
         city_encoder, label_encoder
     ) = prepare_data(train_file, test_file)
 
-    results = []
+    model_results = []
 
     for model_name, build_model in get_model_registry().items():
         try:
@@ -82,7 +90,7 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
                 X_train, X_test, y_train, y_test,
                 label_encoder
             )
-            results.append(result)
+            model_results.append(result)
 
             model_path = os.path.join(MODELS_DIR, MODEL_FILENAMES[model_name])
             joblib.dump(model, model_path)
@@ -95,10 +103,10 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
         except Exception as exc:
             logger.error(f"Training/evaluation failed for {model_name}: {exc}")
 
-    if not results:
+    if not model_results:
         raise RuntimeError("All models failed to train - see logs/ml_pipeline.log")
 
-    best_result = select_best_model(results, metric=metric)
+    best_result = select_best_model(model_results, metric=metric)
 
     # Save best model + both encoders (the artifacts the prediction API loads).
     joblib.dump(best_result["model"], BEST_MODEL_PATH)
@@ -106,8 +114,9 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
     joblib.dump(label_encoder, LABEL_ENCODER_PATH)
     logger.info(f"Saved best model ({best_result['name']}) -> {BEST_MODEL_PATH}")
 
-    # Reports: comparison table + machine-readable metrics.
-    comparison_df = build_comparison_table(results, best_result["name"])
+    # Reports: comparison table + machine-readable metrics. RF/XGBoost/
+    # LightGBM only - see the note at the top of this file.
+    comparison_df = build_comparison_table(model_results, best_result["name"])
     comparison_df.to_csv(MODEL_COMPARISON_CSV, index=False)
     logger.info(f"Saved comparison table -> {MODEL_COMPARISON_CSV}")
 
@@ -115,6 +124,7 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
         "trained_at": datetime.now(timezone.utc).isoformat(),
         "selection_metric": metric,
         "best_model": best_result["name"],
+        "selection_reason": best_result.get("selection_reason"),
         "dataset": {
             "train_rows": len(X_train),
             "test_rows": len(X_test),
@@ -126,6 +136,11 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
                 "precision": r["precision"],
                 "recall": r["recall"],
                 "f1_score": r["f1_score"],
+                "macro_precision": r["macro_precision"],
+                "macro_recall": r["macro_recall"],
+                "macro_f1": r["macro_f1"],
+                "high_risk_recall": r["high_risk_recall"],
+                "extreme_risk_recall": r["extreme_risk_recall"],
                 "roc_auc": r["roc_auc"],
                 "training_time_sec": r["training_time"],
                 "prediction_time_sec": r["prediction_time"],
@@ -135,7 +150,7 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
                 "feature_importance": r["feature_importance"],
                 "status": r["status"],
             }
-            for r in results
+            for r in model_results
         },
     }
     save_json(metrics_payload, METRICS_JSON)
@@ -143,7 +158,7 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
 
     logger.info("===== MODEL COMPARISON PIPELINE COMPLETED =====")
 
-    return results, best_result, comparison_df
+    return model_results, best_result, comparison_df
 
 
 def _print_summary(comparison_df, best_result):
