@@ -14,7 +14,7 @@ function PredictionTable({ predictions }) {
   return (
     <div className="bg-white rounded-xl shadow-md p-6">
       <h2 className="text-xl font-semibold mb-4">
-        Latest Flood Predictions
+        Latest Flood-Risk Forecasts
       </h2>
 
       <div className="overflow-x-auto">
@@ -25,7 +25,8 @@ function PredictionTable({ predictions }) {
               <th className="px-4 py-3 text-left">3-Day Rainfall</th>
               <th className="px-4 py-3 text-left">Temperature</th>
               <th className="px-4 py-3 text-left">Wind Speed</th>
-              <th className="px-4 py-3 text-left">Risk</th>
+              <th className="px-4 py-3 text-left">Predicted For</th>
+              <th className="px-4 py-3 text-left">Predicted Risk</th>
             </tr>
           </thead>
 
@@ -44,6 +45,9 @@ function PredictionTable({ predictions }) {
                 </td>
                 <td className="px-4 py-3">
                   {prediction.Avg_WindSpeed} km/h
+                </td>
+                <td className="px-4 py-3 text-slate-500">
+                  {prediction.Predicted_For_Date || "—"}
                 </td>
                 <td
                   className={`px-4 py-3 font-semibold ${RISK_TEXT_CLASS[normalizeRisk(prediction.Predicted_Risk)]}`}

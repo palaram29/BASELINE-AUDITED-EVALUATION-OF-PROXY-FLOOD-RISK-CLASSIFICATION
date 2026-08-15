@@ -135,7 +135,7 @@ const districtStyle = (feature, districtRisk = "Low") => ({
 const districtPopup = (feature, districtRisk = "Low") => `
   <div>
     <strong>${feature?.properties?.name || "District"}</strong><br />
-    Flood risk: ${RISK_LABELS[districtRisk] || districtRisk}
+    Predicted flood risk (next day): ${RISK_LABELS[districtRisk] || districtRisk}
   </div>
 `;
 

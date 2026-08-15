@@ -4,7 +4,12 @@ import Badge from "../common/Badge";
 import EmptyState from "../common/EmptyState";
 import { riskTone } from "../../utils/riskTone";
 
-// "Prediction History" table: Date, City, Flood Risk, Probability, Model Used.
+// "Prediction History" table: Date, Predicted For, City, Flood Risk,
+// Probability, Model Used. "Date" is when the underlying features were
+// observed; "Predicted For" is the day the risk label actually applies
+// to (Date + 1) - see docs/ML_METHODOLOGY_AND_LIMITATIONS.md. Keeping
+// both columns distinct avoids implying the risk badge describes a
+// condition already observed on "Date".
 function PredictionHistoryTable({ history = [] }) {
   const [visibleCount, setVisibleCount] = useState(15);
   const visible = history.slice(0, visibleCount);
@@ -20,8 +25,9 @@ function PredictionHistoryTable({ history = [] }) {
               <thead>
                 <tr className="bg-slate-100 text-left text-sm text-slate-600">
                   <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Predicted For</th>
                   <th className="px-4 py-3">City</th>
-                  <th className="px-4 py-3">Flood Risk</th>
+                  <th className="px-4 py-3">Predicted Risk</th>
                   <th className="px-4 py-3">Probability</th>
                   <th className="px-4 py-3">Model Used</th>
                 </tr>
@@ -30,6 +36,7 @@ function PredictionHistoryTable({ history = [] }) {
                 {visible.map((row, index) => (
                   <tr key={`${row.City}-${row.Date}-${index}`} className="border-b border-slate-200 text-sm">
                     <td className="px-4 py-3 text-slate-600">{row.Date}</td>
+                    <td className="px-4 py-3 text-slate-600">{row.Predicted_For_Date || "—"}</td>
                     <td className="px-4 py-3 font-medium text-slate-700">{row.City}</td>
                     <td className="px-4 py-3"><Badge tone={riskTone(row.Predicted_Risk)}>{row.Predicted_Risk}</Badge></td>
                     <td className="px-4 py-3 text-slate-600">

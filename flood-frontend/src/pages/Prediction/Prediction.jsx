@@ -23,8 +23,10 @@ function Prediction() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Flood predictions</h1>
-          <p className="mt-2 text-slate-500">Review predicted flood risk for each monitored city.</p>
+          <h1 className="text-3xl font-bold text-slate-800">Flood risk forecast</h1>
+          <p className="mt-2 text-slate-500">
+            Derived flood-risk index predicted for the next day, based on data available today for each monitored city.
+          </p>
         </div>
         <input
           value={search}
@@ -46,7 +48,8 @@ function Prediction() {
                   <th className="px-4 py-3">Rainfall (3d)</th>
                   <th className="px-4 py-3">Temp</th>
                   <th className="px-4 py-3">Wind</th>
-                  <th className="px-4 py-3">Risk</th>
+                  <th className="px-4 py-3">Predicted For</th>
+                  <th className="px-4 py-3">Predicted Risk</th>
                 </tr>
               </thead>
               <tbody>
@@ -56,6 +59,7 @@ function Prediction() {
                     <td className="px-4 py-3">{item.Rainfall_3Day} mm</td>
                     <td className="px-4 py-3">{item.Avg_Temperature} °C</td>
                     <td className="px-4 py-3">{item.Avg_WindSpeed} km/h</td>
+                    <td className="px-4 py-3 text-slate-500">{item.Predicted_For_Date || "—"}</td>
                     <td className="px-4 py-3">
                       <Badge tone={riskTone(item.Predicted_Risk)}>{item.Predicted_Risk}</Badge>
                     </td>

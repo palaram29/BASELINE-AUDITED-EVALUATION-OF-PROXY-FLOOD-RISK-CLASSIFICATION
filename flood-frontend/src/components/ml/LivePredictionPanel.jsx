@@ -67,10 +67,14 @@ function LivePredictionPanel({ bestModelName, onPredicted }) {
       {error ? <div className="mt-4"><ErrorMessage message={error} /></div> : null}
 
       {result ? (
-        <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-5 sm:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-5 sm:grid-cols-5">
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Flood Risk</p>
+            <p className="text-xs uppercase tracking-wide text-slate-500">Predicted Risk</p>
             <div className="mt-1"><Badge tone={riskTone(result.risk)}>{result.risk?.toUpperCase()}</Badge></div>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-wide text-slate-500">Predicted For</p>
+            <p className="mt-1 font-semibold text-slate-800">{result.predicted_for_date || "—"}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">Confidence</p>
