@@ -11,6 +11,7 @@ from backend.routes.pipeline import router as pipeline_router
 from backend.routes.ml import router as ml_router
 from backend.routes.auth import router as auth_router
 from backend.routes.alerts import router as alerts_router
+from backend.scheduler import start_scheduler
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,6 +19,14 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(
     title="Cloud-Based Flood Prediction System API"
 )
+
+
+@app.on_event("startup")
+def _start_live_pipeline_scheduler():
+    """Keep weather/river/ML-feature/prediction data live automatically -
+    see backend/scheduler.py. Does not train or retrain the model."""
+
+    start_scheduler()
 
 app.add_middleware(
     CORSMiddleware,
