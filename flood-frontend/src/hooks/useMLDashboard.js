@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { getModels, getBestModel, trainModels, getMLPredictionHistory } from "../services/mlService";
+import { getModels, getBestModel, getMLPredictionHistory } from "../services/mlService";
 
 // Data-fetching hook for the ML Dashboard page. Polls the backend every
-// 20s so the dashboard picks up a newly-selected best model automatically
-// after a retrain, without requiring a page reload (same pattern as
-// useLiveDashboard's real-polling fix).
+// 20s to reflect any change in prediction history; the production model
+// itself is frozen (see docs/ML_METHODOLOGY_AND_LIMITATIONS.md) and does
+// not change between polls.
 function useMLDashboard() {
   const [models, setModels] = useState([]);
   const [bestModel, setBestModel] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [training, setTraining] = useState(false);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
 
@@ -30,7 +29,7 @@ function useMLDashboard() {
       console.error(err);
       setError(
         err.response?.data?.detail ||
-        "No trained models found yet. Click \"Retrain Models\" to get started."
+        "No frozen production model found yet. Run `python ML/train_models.py` offline to train and freeze one."
       );
     } finally {
       setLoading(false);
@@ -43,29 +42,13 @@ function useMLDashboard() {
     return () => clearInterval(interval);
   }, [fetchAll]);
 
-  const retrain = useCallback(async () => {
-    setTraining(true);
-    setError("");
-    try {
-      await trainModels();
-      await fetchAll();
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.detail || "Training failed. Check the backend logs for details.");
-    } finally {
-      setTraining(false);
-    }
-  }, [fetchAll]);
-
   return {
     models,
     bestModel,
     history,
     loading,
-    training,
     error,
     lastUpdated,
-    retrain,
     refetch: fetchAll,
   };
 }

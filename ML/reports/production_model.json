@@ -1,0 +1,38 @@
+{
+  "model": "RandomForest",
+  "version": "1.1",
+  "status": "frozen",
+  "frozen_at": "2026-08-16T09:16:41.818367+00:00",
+  "selection_reason": "highest macro-F1 (0.5626)",
+  "training_period": "2010-2023",
+  "dataset": {
+    "train_rows": 109470,
+    "test_rows": 37890,
+    "train_date_range": "2010-01-03 to 2019-12-30",
+    "test_date_range": "2020-01-01 to 2023-06-16"
+  },
+  "features": [
+    "City",
+    "Rainfall_3Day",
+    "Avg_Temperature",
+    "Avg_WindSpeed",
+    "Elevation",
+    "Coastal_Flag"
+  ],
+  "evaluation_metrics": {
+    "accuracy": 0.9222222222222223,
+    "macro_precision": 0.5181174810587261,
+    "macro_recall": 0.6603973474823388,
+    "macro_f1": 0.5626016051315863,
+    "weighted_f1": 0.938199769208679,
+    "high_risk_recall": 0.46756152125279643,
+    "extreme_risk_recall": 0.5681818181818182,
+    "roc_auc": 0.9585533522541598
+  },
+  "artifacts": {
+    "model_file": "best_model.pkl",
+    "city_encoder_file": "city_encoder.pkl",
+    "label_encoder_file": "flood_label_encoder.pkl"
+  },
+  "retraining_policy": "Frozen for production inference. Not retrained automatically, on a schedule, or in response to live data. Retraining requires a deliberate manual re-run of ML/train_models.py, followed by review of the new metrics before redeployment."
+}

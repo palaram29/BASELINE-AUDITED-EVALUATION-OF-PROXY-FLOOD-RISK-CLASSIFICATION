@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import joblib
+import pandas as pd
 
 from backend.config import TRAIN_DATA_FILE, TEST_DATA_FILE
 from ML.utils import (
@@ -35,6 +36,8 @@ from ML.utils import (
     LABEL_ENCODER_PATH,
     MODEL_COMPARISON_CSV,
     METRICS_JSON,
+    PRODUCTION_MODEL_JSON,
+    FEATURE_COLUMNS,
 )
 from ML.model_selector import (
     get_model_registry,
@@ -56,6 +59,77 @@ from ML.evaluate_models import (
 # and are used by ML/walkforward_validate.py as a separate, optional
 # methodology check (see docs/ML_METHODOLOGY_AND_LIMITATIONS.md) - they
 # are not recomputed or reported here.
+
+
+def _date_range(csv_path):
+    """Min/max Date in a dataset CSV, for the frozen manifest's
+    training_period field. Reads only the Date column - cheap even for
+    the full historical file."""
+
+    dates = pd.to_datetime(pd.read_csv(csv_path, usecols=["Date"])["Date"])
+    return dates.min().strftime("%Y-%m-%d"), dates.max().strftime("%Y-%m-%d")
+
+
+def _build_production_manifest(best_result, metrics_payload, train_file, test_file):
+    """Freeze the selected model as the production artifact.
+
+    This is the one-time record of "what got deployed and why" - model
+    identity, exact feature list, dataset provenance and the metrics that
+    justified the pick. Written once per (human-triggered) run of this
+    script; the live system only ever reads it, never regenerates it -
+    see docs/ML_METHODOLOGY_AND_LIMITATIONS.md "Production deployment:
+    frozen model policy".
+    """
+
+    model_name = best_result["name"]
+    train_start, train_end = _date_range(train_file)
+    test_start, test_end = _date_range(test_file)
+    model_metrics = metrics_payload["models"][model_name]
+
+    return {
+        "model": model_name,
+        # Bumped by hand on each deliberate, reviewed re-run of this
+        # script (see retraining_policy below) - not auto-incremented,
+        # since a version bump should reflect a human having reviewed the
+        # new metrics, not just that the script ran again. v1.1: XGBoost/
+        # LightGBM regularization fix (see ML/model_selector.py) - the
+        # selected model/weights are unchanged (still RandomForest v1.0's
+        # exact result), but the comparison the selection was made
+        # against is not, so the manifest reflects a new frozen event.
+        "version": "1.1",
+        "status": "frozen",
+        "frozen_at": metrics_payload["trained_at"],
+        "selection_reason": best_result.get("selection_reason"),
+        "training_period": f"{train_start[:4]}-{test_end[:4]}",
+        "dataset": {
+            "train_rows": metrics_payload["dataset"]["train_rows"],
+            "test_rows": metrics_payload["dataset"]["test_rows"],
+            "train_date_range": f"{train_start} to {train_end}",
+            "test_date_range": f"{test_start} to {test_end}",
+        },
+        "features": ["City" if f == "City_Encoded" else f for f in FEATURE_COLUMNS],
+        "evaluation_metrics": {
+            "accuracy": model_metrics["accuracy"],
+            "macro_precision": model_metrics["macro_precision"],
+            "macro_recall": model_metrics["macro_recall"],
+            "macro_f1": model_metrics["macro_f1"],
+            "weighted_f1": model_metrics["f1_score"],
+            "high_risk_recall": model_metrics["high_risk_recall"],
+            "extreme_risk_recall": model_metrics["extreme_risk_recall"],
+            "roc_auc": model_metrics["roc_auc"],
+        },
+        "artifacts": {
+            "model_file": os.path.relpath(BEST_MODEL_PATH, MODELS_DIR),
+            "city_encoder_file": os.path.relpath(CITY_ENCODER_PATH, MODELS_DIR),
+            "label_encoder_file": os.path.relpath(LABEL_ENCODER_PATH, MODELS_DIR),
+        },
+        "retraining_policy": (
+            "Frozen for production inference. Not retrained automatically, "
+            "on a schedule, or in response to live data. Retraining requires "
+            "a deliberate manual re-run of ML/train_models.py, followed by "
+            "review of the new metrics before redeployment."
+        ),
+    }
 
 
 def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
@@ -155,6 +229,14 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
     }
     save_json(metrics_payload, METRICS_JSON)
     logger.info(f"Saved metrics -> {METRICS_JSON}")
+
+    production_payload = _build_production_manifest(
+        best_result, metrics_payload, train_file, test_file
+    )
+    save_json(production_payload, PRODUCTION_MODEL_JSON)
+    logger.info(
+        f"Froze production model ({best_result['name']}) -> {PRODUCTION_MODEL_JSON}"
+    )
 
     logger.info("===== MODEL COMPARISON PIPELINE COMPLETED =====")
 

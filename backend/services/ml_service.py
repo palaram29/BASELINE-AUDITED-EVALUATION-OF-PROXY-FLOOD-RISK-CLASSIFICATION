@@ -1,23 +1,28 @@
 """
 Service layer for the ML model-comparison dashboard.
 
-Reads training results produced by ML/train_models.py (ML/reports/metrics.json),
-triggers retraining, and runs a single "live" prediction using only the
-current best model. All DB access for this feature lives here, keeping
-ML/ itself free of database dependencies (see ML/predict.py).
+Reads training results produced by ML/train_models.py
+(ML/reports/metrics.json, ML/reports/production_model.json) and runs a
+single live prediction using only the frozen production model. All DB
+access for this feature lives here, keeping ML/ itself free of database
+dependencies (see ML/predict.py).
+
+There is intentionally no retraining function here - the production
+model is trained and frozen offline (`python ML/train_models.py`, run by
+a human), never by the live system. See
+docs/ML_METHODOLOGY_AND_LIMITATIONS.md "Production deployment: frozen
+model policy".
 """
 
 import os
 import json
-import subprocess
 
 import pandas as pd
 from sqlalchemy import text
 
 from database.db_connection import get_engine, ensure_prediction_result_columns
 from backend.utils.logger import logger
-from backend.config import TRAIN_DATA_FILE, TEST_DATA_FILE
-from ML.utils import METRICS_JSON
+from ML.utils import METRICS_JSON, PRODUCTION_MODEL_JSON
 from ML.predict import load_best_model, predict_one
 from ML.model_selector import DEFAULT_SELECTION_METRIC
 
@@ -29,7 +34,8 @@ def _load_metrics():
 
     if not os.path.exists(METRICS_JSON):
         raise FileNotFoundError(
-            "No training metrics found yet. Run POST /train first."
+            "No training metrics found yet. Run `python ML/train_models.py` "
+            "offline to train and freeze a production model first."
         )
 
     with open(METRICS_JSON, "r") as f:
@@ -58,14 +64,30 @@ def get_all_model_metrics():
     ]
 
 
+def _load_production_manifest():
+    """Read ML/reports/production_model.json, the frozen production
+    model's manifest. Returns None if the model hasn't been frozen yet
+    (metrics.json can exist from an older run before this manifest
+    existed) - callers treat that as "frozen status unknown", not an
+    error, since /best-model must keep working either way."""
+
+    if not os.path.exists(PRODUCTION_MODEL_JSON):
+        return None
+
+    with open(PRODUCTION_MODEL_JSON, "r") as f:
+        return json.load(f)
+
+
 def get_best_model_info():
-    """Return the currently-selected best model's metrics plus dashboard
-    context (why it was picked, when it was trained)."""
+    """Return the frozen production model's metrics plus dashboard
+    context (why it was picked, when it was frozen, and its frozen/
+    production status)."""
 
     metrics = _load_metrics()
     best_name = metrics["best_model"]
     best_metrics = metrics["models"][best_name]
     selection_metric = metrics.get("selection_metric", DEFAULT_SELECTION_METRIC)
+    manifest = _load_production_manifest()
 
     # Prefer the exact tie-break reasoning ML/model_selector.py already
     # computed (e.g. "macro-F1 tied with RandomForest, but High-risk
@@ -93,49 +115,11 @@ def get_best_model_info():
         "trained_at": metrics.get("trained_at"),
         "dataset": metrics.get("dataset"),
         "training_duration_sec": metrics.get("training_duration_sec"),
+        "production_status": manifest.get("status") if manifest else None,
+        "production_version": manifest.get("version") if manifest else None,
+        "frozen_at": manifest.get("frozen_at") if manifest else None,
+        "retraining_policy": manifest.get("retraining_policy") if manifest else None,
         **best_metrics,
-    }
-
-
-def run_training(train_file=None, test_file=None, metric=None):
-    """Retrain and re-compare all registered models (RandomForest/XGBoost/
-    LightGBM) via ML/train_models.py, reusing the exact CLI the rest of
-    the system already uses. Blocking - same subprocess pattern as
-    system_service.py's other pipeline steps."""
-
-    resolved_train_file = train_file or TRAIN_DATA_FILE
-    resolved_test_file = test_file or TEST_DATA_FILE
-
-    for path in (resolved_train_file, resolved_test_file):
-        if not os.path.exists(path):
-            raise FileNotFoundError(
-                f"Training data not found at '{path}'. Place your train/test "
-                f"CSVs there (or pass train_file/test_file in the request) "
-                f"before retraining."
-            )
-
-    args = [
-        "python", "ML/train_models.py",
-        "--train-file", resolved_train_file,
-        "--test-file", resolved_test_file,
-    ]
-    if metric:
-        args += ["--metric", metric]
-
-    logger.info(f"Starting model training/comparison: {' '.join(args)}")
-
-    result = subprocess.run(args, capture_output=True, text=True)
-
-    if result.returncode == 0:
-        logger.info("Model training/comparison completed successfully")
-    else:
-        logger.error(result.stderr)
-
-    return {
-        "success": result.returncode == 0,
-        "message": "Training completed" if result.returncode == 0 else "Training failed",
-        "stdout": result.stdout,
-        "stderr": result.stderr,
     }
 
 
@@ -160,9 +144,10 @@ def _latest_features_for_city(city):
 
 
 def predict_with_best_model(city):
-    """Run a single live prediction for `city` using only the current
-    best model, then record it in prediction_results (same table and
-    upsert-by-Date/City pattern as the bulk backend/predict_flood.py)."""
+    """Run a single live ML flood-risk prediction for `city` using only
+    the frozen production model, then record it in prediction_results
+    (same table and upsert-by-Date/City pattern as the bulk
+    backend/predict_flood.py)."""
 
     model, city_encoder, label_encoder, model_name = load_best_model()
 

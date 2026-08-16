@@ -3,26 +3,24 @@ ML model-comparison dashboard API.
 
 Endpoints:
   GET  /models       - metrics for every trained model (RandomForest/XGBoost/LightGBM)
-  GET  /best-model    - the currently-selected best model + why it was picked
-  POST /train         - retrain and re-compare all models
-  POST /predict        - single live prediction for one city, using only the best model
+  GET  /best-model    - the frozen production model's metrics + why it was picked
+  POST /predict        - single live prediction for one city, using only the frozen production model
   GET  /history        - prediction history (reuses the existing /prediction/history data)
+
+There is deliberately no training/retraining endpoint here. The production
+model is trained offline once (`python ML/train_models.py`), then frozen -
+see ML/reports/production_model.json and
+docs/ML_METHODOLOGY_AND_LIMITATIONS.md "Production deployment: frozen
+model policy". The live API never triggers training.
 """
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from typing import Optional
 
 from backend.services import ml_service
 from backend.services.prediction_service import get_prediction_history
 
 router = APIRouter(tags=["ML Dashboard"])
-
-
-class TrainRequest(BaseModel):
-    train_file: Optional[str] = Field(None, description="Override the configured training CSV path.")
-    test_file: Optional[str] = Field(None, description="Override the configured test CSV path.")
-    metric: Optional[str] = Field(None, description="Metric used to pick the best model (default: f1_score).")
 
 
 class PredictRequest(BaseModel):
@@ -42,9 +40,9 @@ def list_models():
 
 @router.get("/best-model")
 def best_model():
-    """The current best model's metrics, selection reason, feature
-    importance and confusion matrix - for the Best Model panel,
-    Feature Importance chart and Confusion Matrix view."""
+    """The frozen production model's metrics, selection reason, frozen/
+    version status, feature importance and confusion matrix - for the
+    Best Model panel, Feature Importance chart and Confusion Matrix view."""
 
     try:
         return ml_service.get_best_model_info()
@@ -52,31 +50,9 @@ def best_model():
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("/train")
-def train(payload: TrainRequest = TrainRequest()):
-    """Retrain and re-compare RandomForest/XGBoost/LightGBM. Blocking -
-    returns once training finishes. The dashboard re-fetches /models and
-    /best-model afterward to pick up the new results automatically."""
-
-    try:
-        result = ml_service.run_training(
-            train_file=payload.train_file,
-            test_file=payload.test_file,
-            metric=payload.metric,
-        )
-    except FileNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-    if not result["success"]:
-        detail = result["stderr"].strip() or result["stdout"].strip() or result["message"]
-        raise HTTPException(status_code=500, detail=detail)
-
-    return result
-
-
 @router.post("/predict")
 def predict(payload: PredictRequest):
-    """Predict flood risk for one city using only the current best
+    """Predict flood risk for one city using only the frozen production
     model. Records the result in prediction_results (same table the
     bulk pipeline writes to)."""
 

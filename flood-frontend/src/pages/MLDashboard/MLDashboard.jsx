@@ -28,7 +28,7 @@ function CardSkeletonRow() {
 }
 
 function MLDashboard() {
-  const { models, bestModel, history, loading, training, error, lastUpdated, retrain } = useMLDashboard();
+  const { models, bestModel, history, loading, error, lastUpdated } = useMLDashboard();
 
   return (
     <div className="space-y-8">
@@ -36,19 +36,18 @@ function MLDashboard() {
         <div>
           <h1 className="text-3xl font-bold text-slate-800">ML Model Dashboard</h1>
           <p className="mt-2 text-slate-500">
-            Compare Random Forest, XGBoost and LightGBM, and predict flood risk with the current best model.
+            Random Forest, XGBoost and LightGBM were compared on the historical dataset; the best performer is
+            frozen as the production model and used for all live ML flood-risk predictions below.
           </p>
           {lastUpdated ? (
             <p className="mt-1 text-xs text-slate-400">Last updated {lastUpdated.toLocaleTimeString()}</p>
           ) : null}
         </div>
-        <button
-          onClick={retrain}
-          disabled={training}
-          className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {training ? "Retraining..." : "Retrain Models"}
-        </button>
+        {bestModel?.production_status === "frozen" ? (
+          <span className="inline-flex items-center gap-2 self-start rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200">
+            🔒 Frozen production model{bestModel.production_version ? ` · v${bestModel.production_version}` : ""}
+          </span>
+        ) : null}
       </div>
 
       {error ? <ErrorMessage message={error} /> : null}

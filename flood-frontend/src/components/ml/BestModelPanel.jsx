@@ -22,8 +22,13 @@ function BestModelPanel({ bestModel }) {
             </div>
           </div>
           <p className="mt-3 max-w-xl text-sm text-slate-600">{bestModel.reason_selected}</p>
-          <div className="mt-3">
-            <Badge tone="green">Currently Used for Prediction</Badge>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Badge tone="green">Used for ML Flood-Risk Prediction</Badge>
+            {bestModel.production_status === "frozen" ? (
+              <Badge tone="slate">
+                Frozen{bestModel.production_version ? ` v${bestModel.production_version}` : ""} — not retrained live
+              </Badge>
+            ) : null}
           </div>
         </div>
 

@@ -48,6 +48,14 @@ LABEL_ENCODER_PATH = os.path.join(MODELS_DIR, "flood_label_encoder.pkl")
 
 MODEL_COMPARISON_CSV = os.path.join(REPORTS_DIR, "model_comparison.csv")
 METRICS_JSON = os.path.join(REPORTS_DIR, "metrics.json")
+
+# Frozen production-model manifest - written once by ML/train_models.py
+# after the best-of-three-algorithms selection, then treated as read-only
+# by the live system. There is no code path anywhere that overwrites this
+# except a human deliberately re-running ML/train_models.py; the live API
+# never triggers training (see docs/ML_METHODOLOGY_AND_LIMITATIONS.md
+# "Production deployment: frozen model policy").
+PRODUCTION_MODEL_JSON = os.path.join(REPORTS_DIR, "production_model.json")
 WALKFORWARD_RESULTS_CSV = os.path.join(REPORTS_DIR, "walkforward_results.csv")
 
 # Raw historical files as originally supplied (same-day rainfall-threshold

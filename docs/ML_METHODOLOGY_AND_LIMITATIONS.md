@@ -261,13 +261,38 @@ the dataset described in §4 - none are estimated.
 | Majority Baseline | 0.9549 | 0.2442 | 0.2387 | 0.2500 | 0.9329 | 0.0000 | 0.0000 | - |
 | Persistence Baseline | 0.9613 | **0.6307** | 0.6307 | 0.6307 | 0.9613 | 0.4922 | 0.5682 | - |
 | Seasonal Baseline | 0.9549 | 0.2442 | 0.2387 | 0.2500 | 0.9329 | 0.0000 | 0.0000 | - |
-| Random Forest | 0.9606 | 0.5359 | 0.5959 | 0.5054 | 0.9540 | 0.3669 | 0.4432 | 0.9363 |
-| XGBoost | 0.9014 | 0.5194 | 0.4676 | 0.6492 | 0.9252 | 0.4944 | 0.5341 | 0.9600 |
-| **LightGBM (selected)** | 0.9064 | 0.5221 | 0.4680 | 0.6493 | 0.9281 | **0.4944** | **0.5568** | 0.9595 |
+| **Random Forest (selected)** | 0.9222 | **0.5626** | 0.5181 | 0.6604 | 0.9382 | 0.4676 | 0.5682 | 0.9586 |
+| XGBoost | 0.8954 | 0.5308 | 0.4780 | 0.6693 | 0.9218 | 0.4944 | 0.6023 | 0.9620 |
+| LightGBM | 0.9047 | 0.5276 | 0.4732 | 0.6591 | 0.9271 | 0.5190 | 0.5455 | 0.9596 |
 
-**Persistence beats all three trained models on macro-F1.** This is the
-single most important, and least comfortable, finding in this document
-- see §12.
+Random Forest's numbers above reflect a depth/leaf-size regularization
+fix applied after an earlier version of this table was written (the
+previous, unconstrained-tree config scored 0.5359 macro-F1 here, in line
+with the ~46-point train/test macro-F1 overfitting gap described in
+`ML/model_selector.py`). XGBoost and LightGBM's numbers reflect a second,
+later regularization pass applied specifically to those two algorithms
+(they had never received one - LightGBM in particular ran with fully
+unconstrained tree growth) - `ML/model_selector.py` documents the
+train/test gap each config closed and, for both, a higher-raw-score
+alternative that was tested and rejected because it turned out *more*
+overfit, not less. XGBoost's Extreme recall (0.6023) and LightGBM's High
+recall (0.5190) are each the best of the three algorithms as a result.
+This table was regenerated against the current `ML/reports/metrics.json`
+to keep the two in sync.
+
+Neither improved algorithm closes enough of the gap to change the
+selection outcome: Random Forest's macro-F1 (0.5626) still leads
+XGBoost's (0.5308) and LightGBM's (0.5276) by more than the 0.02 tie
+margin, so Random Forest remains selected on macro-F1 alone, unchanged
+from before this tuning pass (see `ML/reports/production_model.json` -
+the frozen model/weights are byte-identical to the prior version; only
+the comparison it was selected against changed, which is why the
+manifest's version was bumped to 1.1 rather than left at 1.0).
+
+**Persistence still beats all three trained models on macro-F1**, even
+after both tuning passes (0.5626 best-of-three vs. persistence's
+0.6307). This is the single most important, and least comfortable,
+finding in this document - see §12.
 
 ## 12. What the results actually show - reported honestly, not adjusted
 
@@ -307,12 +332,22 @@ per-fold breakdown):
 | Majority Baseline | 0.9536 | 0.2440 | 0.0000 | 0.0000 |
 | **Persistence Baseline** | 0.9595 | **0.6170** | 0.4906 | 0.5441 |
 | Seasonal Baseline | 0.9536 | 0.2440 | 0.0000 | 0.0000 |
-| Random Forest | 0.9582 | 0.5319 | 0.3925 | 0.4262 |
-| XGBoost | 0.8944 | 0.5252 | 0.4864 | 0.5340 |
-| LightGBM | 0.9015 | 0.5254 | 0.5034 | 0.5368 |
+| Random Forest | 0.9176 | 0.5744 | 0.4924 | 0.5817 |
+| XGBoost | 0.8890 | 0.5409 | 0.5115 | 0.5918 |
+| LightGBM | 0.8973 | 0.5391 | 0.5090 | 0.6030 |
+
+Regenerated after the §11 hyperparameter changes (Random Forest's config
+is unchanged; XGBoost/LightGBM were regularized) - every trained model's
+mean macro-F1 improved over the previous version of this table, most of
+all Random Forest's (0.5319 -> 0.5744), which turns out to have been
+stale here for the same reason §11's primary-split table was: this file
+hadn't been regenerated since Random Forest's own depth/leaf fix, so it
+was still reporting an older config's numbers.
 
 Persistence has the highest macro-F1 in every individual fold as well as
-in the mean - confirming §11-12 is not specific to the 2020-2023 window.
+in the mean, both before and after this update - confirming §11-12 is
+not specific to the 2020-2023 window, and that this round of tuning
+narrowed the gap without closing it.
 
 ## 14. Model selection
 
@@ -323,12 +358,25 @@ recall as a second tie-break). Implemented in
 `ML/model_selector.py::select_best_model`.
 
 Applied to §11's results: Random Forest has the highest raw macro-F1
-(0.5359), but LightGBM is within the 0.02 tie margin (0.5221) and beats
-Random Forest's High-risk recall by 0.1275 (0.4944 vs. 0.3669) - well
-over the 0.05 margin. **LightGBM was selected** on this basis, not on
-accuracy (LightGBM's accuracy, 0.9064, is in fact the lowest of the
-three trained models - a direct illustration of why accuracy is not the
-selection metric).
+(0.5626), and neither XGBoost (0.5308) nor LightGBM (0.5276) is within
+the 0.02 tie margin of it (both trail by ~0.03), so the tie-break rule
+never activates - **Random Forest is selected outright on macro-F1**,
+with no recall-based override needed. This holds both before and after
+the XGBoost/LightGBM regularization pass documented in §11 - both
+algorithms improved, but not by enough to close a ~0.03 gap that was
+already too wide to trigger the tie-break before that pass either. This
+is a simpler outcome than an even earlier version of this table (from
+before Random Forest's own regularization fix), which had Random
+Forest's macro-F1 close enough to LightGBM's to trigger the tie-break
+and select LightGBM instead - see the regularization-fix note under
+§11's table for the full history.
+
+Because Random Forest's own config didn't change in this round, its
+frozen artifact (`ML/models/best_model.pkl`) is byte-identical before
+and after the XGBoost/LightGBM tuning pass - only the comparison table
+around it changed. `ML/reports/production_model.json`'s version was
+still bumped to 1.1 to reflect that a new, deliberate, reviewed training
+run happened (see §18).
 
 ## 15. Evaluation metrics reported
 
@@ -383,3 +431,37 @@ the frontend map). Phase 2, once enough history accumulates:
 8. `Extreme` remains a minority class even after the global-percentile
    redesign (548 train / 88 test examples) - a large improvement over
    the original label (8 train / 7 test) but still statistically small.
+
+## 18. Production deployment: frozen model policy
+
+The live system (weather/river ingestion -> feature processing -> ML
+prediction -> dashboard/map) uses a **frozen** production model, not a
+continuously-retrained one.
+
+- Training happens **offline only**, by a human running
+  `python ML/train_models.py` against the historical dataset described
+  above. This is the only code path that fits a model.
+- After the three algorithms are compared, `ML/train_models.py` writes
+  `ML/reports/production_model.json` - a manifest recording the selected
+  model's name, a version number, `"status": "frozen"`, the exact
+  feature list, training/test dataset date ranges, and the evaluation
+  metrics that justified the selection (§14's hierarchy: macro-F1
+  primary, High/Extreme-risk recall as tie-breaks).
+- The live API (`backend/routes/ml.py`, `backend/services/ml_service.py`)
+  only ever **reads** `ML/models/best_model.pkl` and this manifest to
+  score incoming live weather features - there is no training or
+  retraining endpoint. `POST /ml/train` (and the frontend's former
+  "Retrain Models" button) were removed for this reason; a model change
+  now requires a deliberate offline re-run of `ML/train_models.py`
+  followed by a human reviewing the new metrics before redeployment.
+- The live prediction target is unchanged from §2-§5 above: a next-day
+  (t+1) forecast of the same derived `Flood_Risk` index, scored against
+  the latest `Rainfall_3Day`/`Avg_Temperature`/`Avg_WindSpeed` on record
+  for a city plus its static `Elevation`/`Coastal_Flag`. Live river-gauge
+  data (`river_data`) is surfaced on the dashboard/map as an **observed**
+  reading, presented separately from the ML prediction (see the map's
+  "Observed river stations" vs. "ML flood-risk prediction" layers) - it
+  is not yet an ML input feature, since no historical river-gauge archive
+  exists to train against (§16's Phase 2 remains the path to changing
+  that, and would itself require a new offline training run, not a live
+  retrain).
