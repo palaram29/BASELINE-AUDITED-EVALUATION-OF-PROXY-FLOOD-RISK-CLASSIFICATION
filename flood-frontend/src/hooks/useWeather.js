@@ -7,19 +7,28 @@ function useWeather() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchWeather = async () => {
       try {
         const data = await getLatestWeather();
-        setWeather(data);
+        if (isMounted) setWeather(data);
       } catch (err) {
         console.error(err);
-        setError("Failed to load weather data.");
+        if (isMounted) setError("Failed to load weather data.");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchWeather();
+    // Poll so this page reflects each automatic pipeline run (backend/
+    // scheduler.py) without requiring a manual page reload.
+    const interval = setInterval(fetchWeather, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   return { weather, loading, error };

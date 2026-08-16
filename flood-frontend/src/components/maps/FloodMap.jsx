@@ -135,7 +135,7 @@ const districtStyle = (feature, districtRisk = "Low") => ({
 const districtPopup = (feature, districtRisk = "Low") => `
   <div>
     <strong>${feature?.properties?.name || "District"}</strong><br />
-    Predicted flood risk (next day): ${RISK_LABELS[districtRisk] || districtRisk}
+    ML flood-risk prediction (next day): ${RISK_LABELS[districtRisk] || districtRisk}
   </div>
 `;
 
@@ -282,7 +282,9 @@ function FloodMap() {
         <div>
           <h3 className="text-xl font-semibold text-slate-800">Sri Lanka flood monitoring map</h3>
           <p className="text-sm text-slate-500">
-            District risk view with river stations shown as flood-risk rings, plus weather and prediction markers.
+            Observed river/weather conditions (DMC gauge data, live weather readings) alongside the ML model's
+            next-day flood-risk prediction — the district shading and "ML flood-risk prediction" markers are
+            forecasts, everything else on this map is an observed reading.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -350,12 +352,12 @@ function FloodMap() {
                 }}
               />
             </LayersControl.Overlay>
-            <LayersControl.Overlay checked name="Weather">
+            <LayersControl.Overlay checked name="Observed weather">
               <LayerGroup>
                 {weatherStations.map((station, index) => (
                   <Marker key={`${station.City}-${index}`} position={station.position}>
                     <Popup>
-                      <strong>{station.City}</strong>
+                      <strong>{station.City}</strong> — observed condition
                       <br />
                       Rainfall: {station.Rainfall} mm
                       <br />
@@ -365,14 +367,14 @@ function FloodMap() {
                 ))}
               </LayerGroup>
             </LayersControl.Overlay>
-            <LayersControl.Overlay checked name="Predictions">
+            <LayersControl.Overlay checked name="ML flood-risk prediction">
               <LayerGroup>
                 {predictionStations.map((station, index) => (
                   <Marker key={`${station.City}-${index}`} position={station.position}>
                     <Popup>
-                      <strong>{station.City}</strong>
+                      <strong>{station.City}</strong> — ML prediction, not an observed condition
                       <br />
-                      Risk: {station.Predicted_Risk}
+                      ML predicted risk: {station.Predicted_Risk}
                       <br />
                       Rainfall (3-day): {station.Rainfall_3Day} mm
                     </Popup>
@@ -380,7 +382,7 @@ function FloodMap() {
                 ))}
               </LayerGroup>
             </LayersControl.Overlay>
-            <LayersControl.Overlay checked name="River risk stations">
+            <LayersControl.Overlay checked name="Observed river stations">
               <LayerGroup>
                 {riverStationsBySeverity.map(({ station, severity }, index) => (
                   <RiskRings
@@ -395,14 +397,14 @@ function FloodMap() {
                     popupContent={
                       <div className="min-w-[200px] space-y-1 text-sm">
                         <div className="font-semibold text-slate-800">{station.stationName}</div>
-                        <div className="text-slate-500">{station.River} river</div>
+                        <div className="text-slate-500">{station.River} river — observed DMC gauge reading</div>
                         <div>
                           Water level: <strong>{station.WaterLevel ?? "N/A"} m</strong>
                         </div>
                         <div>
                           Rainfall: <strong>{station.Rainfall ?? "N/A"} mm</strong>
                         </div>
-                        <div className="text-slate-500">Status: {station.Status || "N/A"}</div>
+                        <div className="text-slate-500">Observed status: {station.Status || "N/A"}</div>
                         <div className="pt-1">
                           <span
                             className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-white"

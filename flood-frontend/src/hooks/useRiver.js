@@ -14,7 +14,11 @@ function useRiver() {
       try {
         const data = await getLatestRiver();
         if (isMounted) {
-          setRiver(Array.isArray(data) && data.length ? data : demoRiver);
+          // Genuine responses (including a genuinely empty array) are
+          // shown as-is - never silently swapped for demo data. The demo
+          // fallback below is reserved for when the backend is actually
+          // unreachable (visibly labeled via `error`).
+          setRiver(Array.isArray(data) ? data : []);
         }
       } catch (err) {
         if (isMounted) {
@@ -30,9 +34,13 @@ function useRiver() {
     };
 
     fetchRiver();
+    // Poll so this page reflects each automatic pipeline run (backend/
+    // scheduler.py) without requiring a manual page reload.
+    const interval = setInterval(fetchRiver, 30000);
 
     return () => {
       isMounted = false;
+      clearInterval(interval);
     };
   }, []);
 

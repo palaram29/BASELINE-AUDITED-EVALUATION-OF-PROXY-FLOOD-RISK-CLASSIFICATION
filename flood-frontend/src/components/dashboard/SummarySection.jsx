@@ -5,11 +5,12 @@ function SummarySection({ dashboard }) {
 
   const totalCities = dashboard.weather.length;
 
-  const averageRainfall =
-    dashboard.weather.reduce(
-      (sum, item) => sum + item.Rainfall,
-      0
-    ) / totalCities;
+  // Genuinely no weather rows yet is a real, reachable state now (no
+  // longer masked by demo-data fallback) - guard the division so it
+  // reads "0.00 mm" instead of "NaN mm".
+  const averageRainfall = totalCities
+    ? dashboard.weather.reduce((sum, item) => sum + item.Rainfall, 0) / totalCities
+    : 0;
 
   const riversAtRisk =
     dashboard.river.filter(

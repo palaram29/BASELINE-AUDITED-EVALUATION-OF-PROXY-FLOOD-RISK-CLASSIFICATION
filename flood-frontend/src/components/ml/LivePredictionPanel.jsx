@@ -7,8 +7,10 @@ import { CITIES } from "../../constants/cities";
 import { predictBestModel } from "../../services/mlService";
 import { riskTone } from "../../utils/riskTone";
 
-// "Live Flood Prediction" section: predicts using ONLY the current best
-// model for a chosen city.
+// "ML Flood-Risk Prediction" section: scores the latest live weather
+// data for a chosen city through the frozen production model. This is a
+// model OUTPUT (a forecast), not an observed condition - see the River
+// and Weather panels/map layers for observed data.
 function LivePredictionPanel({ bestModelName, onPredicted }) {
   const [city, setCity] = useState(CITIES[0]);
   const [result, setResult] = useState(null);
@@ -38,9 +40,11 @@ function LivePredictionPanel({ bestModelName, onPredicted }) {
           <FaBolt size={16} />
         </span>
         <div>
-          <h3 className="text-lg font-semibold text-slate-800">Live Flood Prediction</h3>
+          <h3 className="text-lg font-semibold text-slate-800">ML Flood-Risk Prediction</h3>
           <p className="text-sm text-slate-500">
-            Predicts using only the current best model{bestModelName ? ` (${bestModelName})` : ""}.
+            A forecast from the frozen production model{bestModelName ? ` (${bestModelName})` : ""}, scored on the
+            latest available weather data — not an observed condition. See the map's River and Weather layers for
+            current observed conditions.
           </p>
         </div>
       </div>

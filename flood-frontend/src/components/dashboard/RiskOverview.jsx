@@ -16,10 +16,10 @@ function RiskOverview({ prediction = [] }) {
     <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-blue-900 p-6 text-white shadow-xl">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-blue-200">Risk outlook</p>
-          <h2 className="mt-2 text-2xl font-semibold">Regional flood alert status</h2>
+          <p className="text-sm uppercase tracking-[0.3em] text-blue-200">ML forecast outlook</p>
+          <h2 className="mt-2 text-2xl font-semibold">Regional flood-risk prediction (next day)</h2>
         </div>
-        <Badge tone="red">Live monitoring</Badge>
+        <Badge tone="blue">Forecast</Badge>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">

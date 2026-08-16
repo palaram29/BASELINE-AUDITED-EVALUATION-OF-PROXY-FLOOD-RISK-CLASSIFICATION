@@ -14,7 +14,10 @@ function useStatistics() {
       try {
         const data = await getStatistics();
         if (isMounted) {
-          setStatistics(data || demoStatistics);
+          // A genuine response is shown as-is. The demo fallback below is
+          // reserved for when the backend is actually unreachable
+          // (visibly labeled via `error`), not for any real response.
+          setStatistics(data);
         }
       } catch (err) {
         if (isMounted) {
@@ -30,9 +33,13 @@ function useStatistics() {
     };
 
     fetchStatistics();
+    // Poll so this page reflects each automatic pipeline run (backend/
+    // scheduler.py) without requiring a manual page reload.
+    const interval = setInterval(fetchStatistics, 30000);
 
     return () => {
       isMounted = false;
+      clearInterval(interval);
     };
   }, []);
 

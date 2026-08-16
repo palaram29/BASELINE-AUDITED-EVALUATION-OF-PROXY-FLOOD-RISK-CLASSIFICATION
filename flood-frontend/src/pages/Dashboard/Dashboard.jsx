@@ -7,13 +7,11 @@ import RainfallChart from "../../components/charts/RainfallChart";
 import PredictionTable from "../../components/tables/PredictionTable";
 import RiskOverview from "../../components/dashboard/RiskOverview";
 import FloodMap from "../../components/maps/FloodMap";
-import ForecastChart from "../../components/charts/ForecastChart";
 import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Badge from "../../components/common/Badge";
 import Toast from "../../components/common/Toast";
 import UserAlertBanner from "../../components/dashboard/UserAlertBanner";
-import { forecastData } from "../../utils/forecastData";
 import { normalizeRisk } from "../../utils/riskLevels";
 
 function Dashboard() {
@@ -72,7 +70,10 @@ function Dashboard() {
               <h1 className="text-3xl font-bold">Flood monitoring dashboard</h1>
               <Badge tone="green">Operational</Badge>
             </div>
-            <p className="mt-3 max-w-2xl text-sm text-blue-100 sm:text-base">Real-time flood intelligence for critical river, weather, and prediction zones across Sri Lanka.</p>
+            <p className="mt-3 max-w-2xl text-sm text-blue-100 sm:text-base">
+              Live river and weather conditions across Sri Lanka, automatically refreshed, plus the ML model's
+              next-day flood-risk forecast built from that data.
+            </p>
           </div>
           <Card className="border-0 bg-white/10 px-4 py-3 text-white backdrop-blur">
             <p className="text-sm text-blue-100">Last update</p>
@@ -83,16 +84,28 @@ function Dashboard() {
 
       <UserAlertBanner />
 
-      <RiskOverview prediction={dashboard.prediction} />
-      <SummarySection dashboard={dashboard} />
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <FloodMap />
-        <ForecastChart data={forecastData} />
+      <div>
+        <h2 className="text-lg font-semibold text-slate-700">Live observed conditions</h2>
+        <p className="text-sm text-slate-500">
+          Directly from the latest automatic weather/river collection — not model output.
+        </p>
       </div>
+      <SummarySection dashboard={dashboard} />
+      <FloodMap />
       <RainfallChart weather={dashboard.weather} />
       <WeatherTable weather={dashboard.weather} />
       <RiverTable rivers={dashboard.river} />
+
+      <div className="pt-2">
+        <h2 className="text-lg font-semibold text-slate-700">ML flood-risk forecast</h2>
+        <p className="text-sm text-slate-500">
+          The frozen production model's forecast for the following day, scored on the live data above — a
+          prediction, not an observed condition.
+        </p>
+      </div>
+      <RiskOverview prediction={dashboard.prediction} />
       <PredictionTable predictions={dashboard.prediction} />
+
       {toast ? <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} /> : null}
     </div>
   );

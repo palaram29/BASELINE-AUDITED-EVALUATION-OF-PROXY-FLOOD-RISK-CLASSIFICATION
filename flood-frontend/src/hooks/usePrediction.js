@@ -14,7 +14,11 @@ function usePrediction() {
       try {
         const data = await getLatestPrediction();
         if (isMounted) {
-          setPrediction(Array.isArray(data) && data.length ? data : demoPredictions);
+          // A genuine, successful response is shown as-is - including a
+          // genuinely empty array - never silently swapped for demo data.
+          // The demo fallback below is reserved for when the backend
+          // itself is unreachable (visibly labeled via `error`).
+          setPrediction(Array.isArray(data) ? data : []);
         }
       } catch (err) {
         if (isMounted) {
@@ -30,9 +34,13 @@ function usePrediction() {
     };
 
     fetchPrediction();
+    // Poll so this page reflects each automatic pipeline run (backend/
+    // scheduler.py) without requiring a manual page reload.
+    const interval = setInterval(fetchPrediction, 30000);
 
     return () => {
       isMounted = false;
+      clearInterval(interval);
     };
   }, []);
 

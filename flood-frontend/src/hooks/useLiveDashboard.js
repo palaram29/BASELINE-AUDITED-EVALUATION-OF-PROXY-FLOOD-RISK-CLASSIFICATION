@@ -20,12 +20,13 @@ function useLiveDashboard() {
       try {
         const data = await getDashboard();
         if (isMounted && data) {
-          // Real data is shown as-is; the simulate* helpers only apply to
-          // the pure-demo fallback below, so genuine values are never
-          // cosmetically altered.
-          const weather = Array.isArray(data.weather) && data.weather.length ? data.weather : demoWeather;
-          const river = Array.isArray(data.river) && data.river.length ? data.river : demoRiver;
-          const prediction = Array.isArray(data.prediction) && data.prediction.length ? data.prediction : demoPredictions;
+          // A genuine response is shown as-is - including any genuinely
+          // empty arrays - never silently swapped for demo data. The
+          // simulate*/demo fallback below is reserved for when the
+          // backend is actually unreachable (visibly labeled via `error`).
+          const weather = Array.isArray(data.weather) ? data.weather : [];
+          const river = Array.isArray(data.river) ? data.river : [];
+          const prediction = Array.isArray(data.prediction) ? data.prediction : [];
 
           setDashboard({ weather, river, prediction });
           setLastUpdated(new Date());
