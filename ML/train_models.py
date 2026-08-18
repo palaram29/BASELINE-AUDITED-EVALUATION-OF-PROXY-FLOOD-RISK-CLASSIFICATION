@@ -275,26 +275,27 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
 
                 with _mlflow_start_run(run_name=model_name, nested=True) as nested_run:
                     model_mlflow_run_ids[model_name] = _active_run_id()
-                    _mlflow_safe(mlflow.log_params, _model_params(model))
-                    _mlflow_safe(mlflow.log_metrics, {
-                        k: v for k, v in {
-                            "accuracy": result["accuracy"],
-                            "precision": result["precision"],
-                            "recall": result["recall"],
-                            "f1_score": result["f1_score"],
-                            "macro_precision": result["macro_precision"],
-                            "macro_recall": result["macro_recall"],
-                            "macro_f1": result["macro_f1"],
-                            "high_risk_recall": result["high_risk_recall"],
-                            "extreme_risk_recall": result["extreme_risk_recall"],
-                            "roc_auc": result["roc_auc"],
-                            "training_time_sec": result["training_time"],
-                            "prediction_time_sec": result["prediction_time"],
-                        }.items() if v is not None
-                    })
-                    _mlflow_safe(mlflow.sklearn.log_model, model, model_name)
-                    _mlflow_safe(mlflow.log_artifact, png_path)
-                    _mlflow_safe(mlflow.log_artifact, csv_path)
+                    if MLFLOW_AVAILABLE:
+                        _mlflow_safe(mlflow.log_params, _model_params(model))
+                        _mlflow_safe(mlflow.log_metrics, {
+                            k: v for k, v in {
+                                "accuracy": result["accuracy"],
+                                "precision": result["precision"],
+                                "recall": result["recall"],
+                                "f1_score": result["f1_score"],
+                                "macro_precision": result["macro_precision"],
+                                "macro_recall": result["macro_recall"],
+                                "macro_f1": result["macro_f1"],
+                                "high_risk_recall": result["high_risk_recall"],
+                                "extreme_risk_recall": result["extreme_risk_recall"],
+                                "roc_auc": result["roc_auc"],
+                                "training_time_sec": result["training_time"],
+                                "prediction_time_sec": result["prediction_time"],
+                            }.items() if v is not None
+                        })
+                        _mlflow_safe(mlflow.sklearn.log_model, model, model_name)
+                        _mlflow_safe(mlflow.log_artifact, png_path)
+                        _mlflow_safe(mlflow.log_artifact, csv_path)
 
             except Exception as exc:
                 logger.error(f"Training/evaluation failed for {model_name}: {exc}")
@@ -364,16 +365,17 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
             f"Froze production model ({best_result['name']}) -> {PRODUCTION_MODEL_JSON}"
         )
 
-        _mlflow_safe(mlflow.set_tag, "best_model", best_result["name"])
-        _mlflow_safe(mlflow.log_artifact, METRICS_JSON)
-        _mlflow_safe(mlflow.log_artifact, MODEL_COMPARISON_CSV)
-        _mlflow_safe(mlflow.log_artifact, PRODUCTION_MODEL_JSON)
-        _mlflow_safe(mlflow.log_artifact, FEATURE_BASELINE_JSON)
-        _mlflow_safe(
-            mlflow.sklearn.log_model,
-            best_result["model"], "best_model",
-            registered_model_name=MLFLOW_REGISTERED_MODEL_NAME,
-        )
+        if MLFLOW_AVAILABLE:
+            _mlflow_safe(mlflow.set_tag, "best_model", best_result["name"])
+            _mlflow_safe(mlflow.log_artifact, METRICS_JSON)
+            _mlflow_safe(mlflow.log_artifact, MODEL_COMPARISON_CSV)
+            _mlflow_safe(mlflow.log_artifact, PRODUCTION_MODEL_JSON)
+            _mlflow_safe(mlflow.log_artifact, FEATURE_BASELINE_JSON)
+            _mlflow_safe(
+                mlflow.sklearn.log_model,
+                best_result["model"], "best_model",
+                registered_model_name=MLFLOW_REGISTERED_MODEL_NAME,
+            )
 
     logger.info("===== MODEL COMPARISON PIPELINE COMPLETED =====")
 
