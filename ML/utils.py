@@ -49,6 +49,19 @@ LABEL_ENCODER_PATH = os.path.join(MODELS_DIR, "flood_label_encoder.pkl")
 MODEL_COMPARISON_CSV = os.path.join(REPORTS_DIR, "model_comparison.csv")
 METRICS_JSON = os.path.join(REPORTS_DIR, "metrics.json")
 
+# Versioned copies of every algorithm's model, one per (human-run)
+# ML/register_run.py call - see docs/MLOPS_INTEGRATION_PLAN.md. Kept
+# separate from BEST_MODEL_PATH (which stays "whichever version is
+# currently Production") so past versions are never deleted/overwritten,
+# which is what makes rollback possible.
+MODEL_VERSIONS_DIR = os.path.join(MODELS_DIR, "versions")
+
+# Per-feature training-distribution baseline (mean/std/percentiles),
+# written by ML/train_models.py from the exact rows a training run used.
+# The one input backend/services/mlops_service.py needs to compute live
+# feature drift (PSI) without duplicating any dataset-prep logic here.
+FEATURE_BASELINE_JSON = os.path.join(REPORTS_DIR, "feature_baseline.json")
+
 # Frozen production-model manifest - written once by ML/train_models.py
 # after the best-of-three-algorithms selection, then treated as read-only
 # by the live system. There is no code path anywhere that overwrites this
@@ -97,6 +110,7 @@ def ensure_dirs():
     os.makedirs(MODELS_DIR, exist_ok=True)
     os.makedirs(REPORTS_DIR, exist_ok=True)
     os.makedirs(CONFUSION_DIR, exist_ok=True)
+    os.makedirs(MODEL_VERSIONS_DIR, exist_ok=True)
 
 
 def resolve_model_paths():
@@ -261,3 +275,37 @@ def save_json(data, path):
     import json
     with open(path, "w") as f:
         json.dump(data, f, indent=2, default=str)
+
+
+# Features that genuinely vary day to day in live data and are therefore
+# meaningful to drift-monitor. Elevation/Coastal_Flag are static per-city
+# lookups (ELEVATION_MAP/COASTAL_MAP above) - their live distribution is
+# identical to their training distribution by construction, so PSI on
+# them would always read ~0 and add no signal; City_Encoded is a
+# categorical id, not a continuous feature PSI is meaningful for.
+DRIFT_MONITORED_FEATURES = ["Rainfall_3Day", "Avg_Temperature", "Avg_WindSpeed"]
+
+
+def compute_feature_distribution(df, columns=DRIFT_MONITORED_FEATURES):
+    """Per-column summary stats (mean, std, and the quintile edges PSI
+    bucketing needs) for the given numeric columns of `df`. Used both to
+    freeze the training-period baseline (ML/train_models.py) and, with a
+    live-data df, to build the comparison distribution
+    (backend/services/mlops_service.py) - identical shape on both sides
+    so PSI is computed apples-to-apples."""
+
+    stats = {}
+    for col in columns:
+        series = df[col].dropna().astype(float)
+        if series.empty:
+            continue
+        stats[col] = {
+            "mean": float(series.mean()),
+            "std": float(series.std()),
+            "min": float(series.min()),
+            "max": float(series.max()),
+            "quantile_edges": [
+                float(series.quantile(q)) for q in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+            ],
+        }
+    return stats

@@ -43,14 +43,16 @@ def _display_name(model):
     return MODEL_CLASS_TO_NAME.get(class_name, class_name)
 
 
-def load_best_model():
-    """Load the current best model + encoders.
+def load_model_from_paths(model_path, city_encoder_path, label_encoder_path):
+    """Load a model + both encoders from explicit paths.
 
     Returns (model, city_encoder, label_encoder, model_name).
-    Raises FileNotFoundError if any required artifact is missing.
-    """
-
-    model_path, city_encoder_path, label_encoder_path = resolve_model_paths()
+    Raises FileNotFoundError if any required artifact is missing. This is
+    the shared implementation behind load_best_model() (file-based
+    resolution, below) and backend/services/ml_service.py's DB-aware
+    production-model lookup (resolves a specific version's artifact_path
+    from ml_model_versions, then calls this directly) - both end up with
+    an identically-shaped result."""
 
     for path in (model_path, city_encoder_path, label_encoder_path):
         if not os.path.exists(path):
@@ -64,6 +66,19 @@ def load_best_model():
     logger.info(f"Loaded model '{model_name}' from {model_path}")
 
     return model, city_encoder, label_encoder, model_name
+
+
+def load_best_model():
+    """Load the current best model + encoders using the existing
+    file-based resolution (ML.utils.resolve_model_paths - ML/models/
+    best_model.pkl, falling back to the legacy ML_Training/ artifacts).
+
+    Returns (model, city_encoder, label_encoder, model_name).
+    Raises FileNotFoundError if any required artifact is missing.
+    """
+
+    model_path, city_encoder_path, label_encoder_path = resolve_model_paths()
+    return load_model_from_paths(model_path, city_encoder_path, label_encoder_path)
 
 
 def add_elevation(df):

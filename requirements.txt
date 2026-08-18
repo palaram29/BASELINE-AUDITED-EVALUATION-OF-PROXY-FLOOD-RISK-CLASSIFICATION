@@ -17,3 +17,5 @@ matplotlib
 bcrypt
 pyjwt
 email-validator
+mlflow
+numpy
