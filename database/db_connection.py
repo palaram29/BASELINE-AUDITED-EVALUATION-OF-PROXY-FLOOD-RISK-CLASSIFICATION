@@ -209,3 +209,97 @@ def ensure_mlops_tables():
             )
             """
         ))
+
+
+def ensure_data_reliability_tables():
+    """Idempotently create the Data Source Reliability layer's tables. Safe
+    to call on every startup.
+
+    data_reliability: one row per (source_type, source, timestamp) scoring
+    event - see reliability/scorer.py for how the four component scores are
+    combined into reliability_score/reliability_level. "source" is a City
+    name for source_type='weather', or "River:Station" for source_type=
+    'river' (see backend/services/reliability_service.py).
+
+    data_validation_log: the audit trail for "mark as invalid/suspicious,
+    never silently delete" (see reliability/validity.py::validate_batch) -
+    weather_data/river_data rows themselves are never modified or dropped;
+    this table only records which field/value was flagged and why, so
+    flagged data stays available for research/audit.
+
+    Distinct from mlops_service.py's data_reliability_score (a simpler
+    missing-rate x city-coverage metric that predates this layer, stored in
+    ml_monitoring_metrics via GET /mlops/data-quality) - that one is left
+    untouched; this is the per-source, C/T/V/H-weighted layer, surfaced via
+    GET /reliability."""
+
+    with engine.begin() as conn:
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS data_reliability (
+                id SERIAL PRIMARY KEY,
+                source_type TEXT NOT NULL,
+                source TEXT NOT NULL,
+                timestamp TIMESTAMP NOT NULL,
+                completeness_score DOUBLE PRECISION NOT NULL,
+                timeliness_score DOUBLE PRECISION NOT NULL,
+                validity_score DOUBLE PRECISION NOT NULL,
+                historical_reliability_score DOUBLE PRECISION NOT NULL,
+                reliability_score DOUBLE PRECISION NOT NULL,
+                reliability_level TEXT NOT NULL,
+                computed_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_data_reliability_source "
+            "ON data_reliability(source)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_data_reliability_timestamp "
+            "ON data_reliability(timestamp)"
+        ))
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS data_validation_log (
+                id SERIAL PRIMARY KEY,
+                source_type TEXT NOT NULL,
+                source TEXT NOT NULL,
+                record_timestamp TIMESTAMP,
+                field_name TEXT NOT NULL,
+                observed_value TEXT,
+                issue_type TEXT NOT NULL,
+                is_suspicious BOOLEAN NOT NULL DEFAULT TRUE,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_data_validation_log_source "
+            "ON data_validation_log(source)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_data_validation_log_timestamp "
+            "ON data_validation_log(record_timestamp)"
+        ))
+
+
+def ensure_ml_features_reliability_columns():
+    """Idempotently add the reliability-aware feature columns to
+    ml_features - see backend/generate_ml_features.py. Existing rows get
+    NULLs until the next feature-generation run touches them, same pattern
+    as ensure_prediction_result_columns()."""
+
+    with engine.begin() as conn:
+        conn.execute(text(
+            'ALTER TABLE ml_features '
+            'ADD COLUMN IF NOT EXISTS "Weather_Reliability" DOUBLE PRECISION'
+        ))
+        conn.execute(text(
+            'ALTER TABLE ml_features '
+            'ADD COLUMN IF NOT EXISTS "River_Reliability" DOUBLE PRECISION'
+        ))
+        conn.execute(text(
+            'ALTER TABLE ml_features '
+            'ADD COLUMN IF NOT EXISTS "Overall_Data_Reliability" DOUBLE PRECISION'
+        ))

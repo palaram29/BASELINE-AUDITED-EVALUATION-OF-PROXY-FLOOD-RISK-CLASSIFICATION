@@ -25,6 +25,8 @@ from backend.utils.logger import logger
 from ML.utils import METRICS_JSON, PRODUCTION_MODEL_JSON, CITY_ENCODER_PATH, LABEL_ENCODER_PATH
 from ML.predict import load_best_model, load_model_from_paths, predict_one
 from ML.model_selector import DEFAULT_SELECTION_METRIC
+from reliability.scorer import classify as classify_reliability
+from reliability.config import RELIABILITY_MEDIUM_THRESHOLD
 
 engine = get_engine()
 
@@ -124,11 +126,17 @@ def get_best_model_info():
 
 
 def _latest_features_for_city(city):
+    # Secondary "id" DESC tiebreak: backend/generate_ml_features.py has no
+    # incremental dedup, so several rows can share the same (max) "Date" -
+    # without this, ORDER BY "Date" DESC LIMIT 1 could non-deterministically
+    # pick an OLDER inserted row among the ties (e.g. one predating the
+    # Weather_Reliability/River_Reliability/Overall_Data_Reliability
+    # columns), silently losing reliability data that genuinely exists.
     query = text("""
         SELECT *
         FROM ml_features
         WHERE "City" = :city
-        ORDER BY "Date" DESC
+        ORDER BY "Date" DESC, id DESC
         LIMIT 1
     """)
 
@@ -237,6 +245,16 @@ def predict_with_best_model(city):
         f"Live prediction for {city}: {result['risk']} for {result['predicted_for_date']} ({model_name})"
     )
 
+    # Data Source Reliability (see backend/services/reliability_service.py),
+    # already present on this ml_features row - additive fields only, kept
+    # visually/semantically distinct from `confidence` (the model's own
+    # probability in its predicted class). Never gates the prediction: a
+    # LOW score still returns a normal prediction plus this warning flag
+    # for the frontend to render (see §14 of the Data Source Reliability
+    # integration).
+    overall_reliability = row.get("Overall_Data_Reliability")
+    has_reliability = overall_reliability is not None and pd.notna(overall_reliability)
+
     return {
         "city": city,
         "date": str(row["Date"]),
@@ -245,4 +263,7 @@ def predict_with_best_model(city):
         "confidence": result["confidence"],
         "model_used": result["model_used"],
         "prediction_time_ms": result["prediction_time_ms"],
+        "data_reliability_score": float(overall_reliability) if has_reliability else None,
+        "data_reliability_level": classify_reliability(overall_reliability) if has_reliability else None,
+        "degraded_data_warning": bool(has_reliability and overall_reliability < RELIABILITY_MEDIUM_THRESHOLD),
     }

@@ -626,11 +626,29 @@ def get_retraining_status(limit=20):
 def get_health_rollup():
     drift = get_drift_status()
     quality = get_data_quality()
-    overall = _worst_status([drift["overall_status"], quality["overall_status"]])
+
+    # Data Source Reliability (see backend/services/reliability_service.py -
+    # distinct from `quality` above, which is the simpler pre-existing
+    # missing-rate score) folds into this rollup too, but degrades
+    # gracefully to UNKNOWN if no source has been scored yet rather than
+    # raising, matching every other signal here.
+    try:
+        from backend.services import reliability_service
+        reliability_status = reliability_service.get_overall_reliability()["overall_level"]
+        # HIGH/MEDIUM/LOW -> NORMAL/WARNING/CRITICAL, the vocabulary this
+        # rollup already uses for every other signal.
+        reliability_status = {"HIGH": "NORMAL", "MEDIUM": "WARNING", "LOW": "CRITICAL"}.get(
+            reliability_status, "UNKNOWN"
+        )
+    except Exception:
+        reliability_status = "UNKNOWN"
+
+    overall = _worst_status([drift["overall_status"], quality["overall_status"], reliability_status])
     return {
         "status": overall,
         "drift_status": drift["overall_status"],
         "data_quality_status": quality["overall_status"],
+        "data_source_reliability_status": reliability_status,
     }
 
 

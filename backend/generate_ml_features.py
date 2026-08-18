@@ -9,6 +9,8 @@ sys.path.append(
 
 from database.db_connection import get_engine
 from backend.utils.logger import logger
+from backend.services import reliability_service
+from reliability.config import WEATHER_SOURCE_WEIGHT, RIVER_SOURCE_WEIGHT
 
 engine = get_engine()
 
@@ -45,6 +47,16 @@ df = df.sort_values(
 feature_rows = []
 
 cities = df["City"].unique()
+
+# Precompute every river source's reliability once (not per city) - see
+# reliability_service.compute_all_river_source_reliability. Reused both for
+# cities with a mapped station and as the network-wide average fallback for
+# unmapped cities.
+_river_scores = reliability_service.compute_all_river_source_reliability()
+_network_avg_river_reliability = (
+    sum(r["reliability_score"] for r in _river_scores.values()) / len(_river_scores)
+    if _river_scores else None
+)
 
 for city in cities:
 
@@ -83,6 +95,31 @@ for city in cities:
         latest_3_days["Date"].max()
     )
 
+    # Reliability features - computed using only weather/river data up to
+    # and including `latest_date` (the same date this feature row is
+    # timestamped as), so there is no look-ahead into the future the t+1
+    # forecast is trying to predict.
+    weather_reliability_result = reliability_service.compute_weather_reliability(
+        city, as_of=latest_date
+    )
+    weather_reliability = (
+        weather_reliability_result["reliability_score"]
+        if weather_reliability_result else None
+    )
+
+    river_source = reliability_service.resolve_river_source_for_city(city)
+    if river_source and river_source in _river_scores:
+        river_reliability = _river_scores[river_source]["reliability_score"]
+    else:
+        river_reliability = _network_avg_river_reliability
+
+    if weather_reliability is not None and river_reliability is not None:
+        overall_reliability = round(
+            WEATHER_SOURCE_WEIGHT * weather_reliability + RIVER_SOURCE_WEIGHT * river_reliability, 4
+        )
+    else:
+        overall_reliability = weather_reliability
+
     feature_rows.append({
 
         "Date": latest_date.strftime("%Y-%m-%d"),
@@ -102,7 +139,17 @@ for city in cities:
         "Avg_WindSpeed": round(
             avg_windspeed,
             2
-        )
+        ),
+
+        "Weather_Reliability": (
+            round(weather_reliability, 4) if weather_reliability is not None else None
+        ),
+
+        "River_Reliability": (
+            round(river_reliability, 4) if river_reliability is not None else None
+        ),
+
+        "Overall_Data_Reliability": overall_reliability,
     })
 
 # =====================================================

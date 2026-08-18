@@ -27,6 +27,7 @@ import schedule
 
 from backend.services.pipeline_service import run_full_pipeline
 from backend.services import mlops_service
+from backend.services import reliability_service
 from backend.utils.logger import logger
 
 # Matches river_scraper.py's own polling interval - weather_data dedups
@@ -94,6 +95,11 @@ def _run_monitoring_job():
         mlops_service.run_monitoring_cycle()
     except Exception as exc:
         logger.error(f"Scheduled MLOps monitoring cycle raised an exception: {exc}")
+
+    try:
+        reliability_service.compute_all_reliability()
+    except Exception as exc:
+        logger.error(f"Scheduled data-reliability computation raised an exception: {exc}")
 
 
 def _run_scheduler_loop():

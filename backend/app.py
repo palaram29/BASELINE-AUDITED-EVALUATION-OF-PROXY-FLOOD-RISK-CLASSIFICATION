@@ -12,8 +12,13 @@ from backend.routes.ml import router as ml_router
 from backend.routes.mlops import router as mlops_router
 from backend.routes.auth import router as auth_router
 from backend.routes.alerts import router as alerts_router
+from backend.routes.reliability import router as reliability_router
 from backend.scheduler import start_scheduler
-from database.db_connection import ensure_mlops_tables
+from database.db_connection import (
+    ensure_mlops_tables,
+    ensure_data_reliability_tables,
+    ensure_ml_features_reliability_columns,
+)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +34,8 @@ def _start_live_pipeline_scheduler():
     see backend/scheduler.py. Does not train or retrain the model."""
 
     ensure_mlops_tables()
+    ensure_data_reliability_tables()
+    ensure_ml_features_reliability_columns()
     start_scheduler()
 
 app.add_middleware(
@@ -53,6 +60,7 @@ app.include_router(ml_router)
 app.include_router(mlops_router)
 app.include_router(auth_router)
 app.include_router(alerts_router)
+app.include_router(reliability_router)
 
 @app.get("/")
 def home():
