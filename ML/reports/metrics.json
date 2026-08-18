@@ -1,16 +1,16 @@
 {
-  "trained_at": "2026-08-18T10:41:02.245543+00:00",
+  "trained_at": "2026-08-18T11:51:25.703503+00:00",
   "selection_metric": "macro_f1",
   "best_model": "RandomForest",
   "selection_reason": "highest macro-F1 (0.5626)",
-  "mlflow_run_id": "a1218e0b67914a7e92ac8bfbc4974790",
+  "mlflow_run_id": "3ab7771d1e8346e4b93082dd90f1e226",
   "train_file": "ML/data/train_dataset.csv",
   "test_file": "ML/data/test_dataset.csv",
   "dataset": {
     "train_rows": 109470,
     "test_rows": 37890
   },
-  "training_duration_sec": 20.279605865478516,
+  "training_duration_sec": 15.655391693115234,
   "models": {
     "RandomForest": {
       "accuracy": 0.9222222222222223,
@@ -23,8 +23,8 @@
       "high_risk_recall": 0.46756152125279643,
       "extreme_risk_recall": 0.5681818181818182,
       "roc_auc": 0.9585533522541598,
-      "training_time_sec": 4.800780534744263,
-      "prediction_time_sec": 0.13875508308410645,
+      "training_time_sec": 4.256205320358276,
+      "prediction_time_sec": 0.12224340438842773,
       "confusion_matrix": [
         [
           50,
@@ -105,7 +105,7 @@
         "Coastal_Flag": 0.05264826533498898
       },
       "status": "Trained",
-      "mlflow_run_id": "04bea8952e56455bb3d991d4baffdcb1"
+      "mlflow_run_id": "5dc4f08657fa4f0f8258a2a1cd1a4f10"
     },
     "XGBoost": {
       "accuracy": 0.8954341514911586,
@@ -118,8 +118,8 @@
       "high_risk_recall": 0.49440715883668906,
       "extreme_risk_recall": 0.6022727272727273,
       "roc_auc": 0.9619869831350837,
-      "training_time_sec": 0.8453049659729004,
-      "prediction_time_sec": 0.02219533920288086,
+      "training_time_sec": 0.8910515308380127,
+      "prediction_time_sec": 0.023883342742919922,
       "confusion_matrix": [
         [
           53,
@@ -200,7 +200,7 @@
         "Coastal_Flag": 0.381648987531662
       },
       "status": "Trained",
-      "mlflow_run_id": "5c09a491998a4be2872ce05baa5f8c38"
+      "mlflow_run_id": "dce95b19ff6f4a2ab5a47cb8a9e3bec5"
     },
     "LightGBM": {
       "accuracy": 0.9046978094484033,
@@ -213,8 +213,8 @@
       "high_risk_recall": 0.5190156599552572,
       "extreme_risk_recall": 0.5454545454545454,
       "roc_auc": 0.9596177729145231,
-      "training_time_sec": 2.056410074234009,
-      "prediction_time_sec": 0.0823369026184082,
+      "training_time_sec": 1.9199960231781006,
+      "prediction_time_sec": 0.08389735221862793,
       "confusion_matrix": [
         [
           48,
@@ -295,7 +295,7 @@
         "Coastal_Flag": 462.0
       },
       "status": "Trained",
-      "mlflow_run_id": "67cf6e902f3740519da2ddbafc467cad"
+      "mlflow_run_id": "ade9719dc1944ff0959591ebd6381bca"
     }
   }
 }

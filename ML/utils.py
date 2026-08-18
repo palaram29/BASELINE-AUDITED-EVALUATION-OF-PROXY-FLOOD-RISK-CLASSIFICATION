@@ -142,6 +142,22 @@ FEATURE_COLUMNS = [
 
 TARGET_COLUMN = "Flood_Risk"
 
+# Baseline vs. reliability-aware feature sets (see ML/train_models.py's
+# --feature-set flag and ML/run_reliability_experiments.py). BASELINE is
+# kept identical to (and an alias of) the pre-existing FEATURE_COLUMNS, so
+# every caller that already imports FEATURE_COLUMNS is unaffected -
+# nothing currently served by ML/predict.py / backend/predict_flood.py
+# changes unless a reliability-aware model is deliberately trained and
+# promoted (see docs/ML_METHODOLOGY_AND_LIMITATIONS.md's frozen-model
+# policy, which this preserves).
+BASELINE_FEATURE_COLUMNS = FEATURE_COLUMNS
+
+RELIABILITY_FEATURE_COLUMNS = FEATURE_COLUMNS + [
+    "Weather_Reliability",
+    "River_Reliability",
+    "Overall_Data_Reliability",
+]
+
 # Historical daily rainfall, river water level and precise river-distance
 # are NOT available for 2010-2023 (verified during methodology review -
 # no daily-granularity rainfall source exists in this project for that
@@ -231,12 +247,18 @@ COASTAL_MAP = {
 # DATA PREPARATION (reused, unchanged behaviour)
 # =====================================================
 
-def prepare_data(train_file, test_file):
+def prepare_data(train_file, test_file, feature_columns=None):
     """
     Load the train/test CSVs and produce the same feature matrix /
     label vector shape the existing prediction pipeline expects:
     [City_Encoded, Rainfall_3Day, Avg_Temperature, Avg_WindSpeed, Elevation].
+
+    `feature_columns` defaults to FEATURE_COLUMNS (unchanged behaviour for
+    every existing caller) - pass RELIABILITY_FEATURE_COLUMNS to train the
+    reliability-aware configuration instead (see ML/train_models.py).
     """
+
+    feature_columns = feature_columns if feature_columns is not None else FEATURE_COLUMNS
 
     logger.info(f"Loading train data from {train_file}")
     logger.info(f"Loading test data from {test_file}")
@@ -255,8 +277,8 @@ def prepare_data(train_file, test_file):
     train_df["City_Encoded"] = city_encoder.transform(train_df["City"])
     test_df["City_Encoded"] = city_encoder.transform(test_df["City"])
 
-    X_train = train_df[FEATURE_COLUMNS]
-    X_test = test_df[FEATURE_COLUMNS]
+    X_train = train_df[feature_columns]
+    X_test = test_df[feature_columns]
 
     label_encoder = LabelEncoder()
     y_train = label_encoder.fit_transform(train_df[TARGET_COLUMN])
@@ -265,7 +287,8 @@ def prepare_data(train_file, test_file):
     logger.info(
         f"Prepared data: {len(X_train)} train rows, {len(X_test)} test rows, "
         f"{len(city_encoder.classes_)} cities, "
-        f"{len(label_encoder.classes_)} risk classes"
+        f"{len(label_encoder.classes_)} risk classes, "
+        f"features={list(feature_columns)}"
     )
 
     return X_train, X_test, y_train, y_test, city_encoder, label_encoder

@@ -40,6 +40,7 @@ from ML.utils import (
     save_json,
     compute_feature_distribution,
     MODELS_DIR,
+    REPORTS_DIR,
     BEST_MODEL_PATH,
     CITY_ENCODER_PATH,
     LABEL_ENCODER_PATH,
@@ -48,6 +49,8 @@ from ML.utils import (
     PRODUCTION_MODEL_JSON,
     FEATURE_BASELINE_JSON,
     FEATURE_COLUMNS,
+    BASELINE_FEATURE_COLUMNS,
+    RELIABILITY_FEATURE_COLUMNS,
 )
 from ML.model_selector import (
     get_model_registry,
@@ -73,6 +76,46 @@ from ML.evaluate_models import (
 
 MLFLOW_EXPERIMENT_NAME = "flood-risk-classifier"
 MLFLOW_REGISTERED_MODEL_NAME = "flood-risk-classifier"
+
+# Baseline vs. reliability-aware configurations (see §9 of the Data Source
+# Reliability integration spec). "baseline" writes to the exact
+# pre-existing paths (BEST_MODEL_PATH, MODEL_COMPARISON_CSV, etc.) so the
+# live prediction pipeline / dashboard is completely unaffected unless a
+# human deliberately promotes a reliability-aware version later (frozen-
+# model policy, docs/ML_METHODOLOGY_AND_LIMITATIONS.md). "reliability_aware"
+# writes to parallel, non-colliding paths under ML/models/reliability_aware/
+# and ML/reports/reliability_aware/ so both configurations can be trained
+# and compared without either overwriting the other.
+FEATURE_SETS = {
+    "baseline": BASELINE_FEATURE_COLUMNS,
+    "reliability_aware": RELIABILITY_FEATURE_COLUMNS,
+}
+
+
+def _resolve_output_paths(config_name):
+    if config_name == "baseline":
+        models_dir = MODELS_DIR
+        reports_dir = REPORTS_DIR
+    else:
+        models_dir = os.path.join(MODELS_DIR, config_name)
+        reports_dir = os.path.join(REPORTS_DIR, config_name)
+        os.makedirs(models_dir, exist_ok=True)
+        os.makedirs(reports_dir, exist_ok=True)
+
+    confusion_dir = os.path.join(reports_dir, "confusion_matrices")
+
+    return {
+        "models_dir": models_dir,
+        "reports_dir": reports_dir,
+        "confusion_dir": confusion_dir,
+        "best_model_path": BEST_MODEL_PATH if config_name == "baseline" else os.path.join(models_dir, "best_model.pkl"),
+        "city_encoder_path": CITY_ENCODER_PATH if config_name == "baseline" else os.path.join(models_dir, "city_encoder.pkl"),
+        "label_encoder_path": LABEL_ENCODER_PATH if config_name == "baseline" else os.path.join(models_dir, "flood_label_encoder.pkl"),
+        "model_comparison_csv": MODEL_COMPARISON_CSV if config_name == "baseline" else os.path.join(reports_dir, "model_comparison.csv"),
+        "metrics_json": METRICS_JSON if config_name == "baseline" else os.path.join(reports_dir, "metrics.json"),
+        "production_model_json": PRODUCTION_MODEL_JSON if config_name == "baseline" else os.path.join(reports_dir, "production_model.json"),
+        "feature_baseline_json": FEATURE_BASELINE_JSON if config_name == "baseline" else os.path.join(reports_dir, "feature_baseline.json"),
+    }
 
 
 def _mlflow_setup():
@@ -150,7 +193,7 @@ def _date_range(csv_path):
     return dates.min().strftime("%Y-%m-%d"), dates.max().strftime("%Y-%m-%d")
 
 
-def _build_production_manifest(best_result, metrics_payload, train_file, test_file):
+def _build_production_manifest(best_result, metrics_payload, train_file, test_file, paths, feature_columns):
     """Freeze the selected model as the production artifact.
 
     This is the one-time record of "what got deployed and why" - model
@@ -187,7 +230,7 @@ def _build_production_manifest(best_result, metrics_payload, train_file, test_fi
             "train_date_range": f"{train_start} to {train_end}",
             "test_date_range": f"{test_start} to {test_end}",
         },
-        "features": ["City" if f == "City_Encoded" else f for f in FEATURE_COLUMNS],
+        "features": ["City" if f == "City_Encoded" else f for f in feature_columns],
         "evaluation_metrics": {
             "accuracy": model_metrics["accuracy"],
             "macro_precision": model_metrics["macro_precision"],
@@ -199,9 +242,9 @@ def _build_production_manifest(best_result, metrics_payload, train_file, test_fi
             "roc_auc": model_metrics["roc_auc"],
         },
         "artifacts": {
-            "model_file": os.path.relpath(BEST_MODEL_PATH, MODELS_DIR),
-            "city_encoder_file": os.path.relpath(CITY_ENCODER_PATH, MODELS_DIR),
-            "label_encoder_file": os.path.relpath(LABEL_ENCODER_PATH, MODELS_DIR),
+            "model_file": os.path.relpath(paths["best_model_path"], paths["models_dir"]),
+            "city_encoder_file": os.path.relpath(paths["city_encoder_path"], paths["models_dir"]),
+            "label_encoder_file": os.path.relpath(paths["label_encoder_path"], paths["models_dir"]),
         },
         "retraining_policy": (
             "Frozen for production inference. Not retrained automatically, "
@@ -212,14 +255,25 @@ def _build_production_manifest(best_result, metrics_payload, train_file, test_fi
     }
 
 
-def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
+def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC, config_name="baseline", feature_columns=None):
     """Run the full compare-train-evaluate-select-save workflow.
+
+    `config_name`/`feature_columns` select baseline (default - the
+    original [City_Encoded, Rainfall_3Day, Avg_Temperature, Avg_WindSpeed,
+    Elevation, Coastal_Flag] set, writing to the exact pre-existing
+    artifact paths) vs. "reliability_aware" (adds Weather_Reliability/
+    River_Reliability/Overall_Data_Reliability, writing to parallel paths
+    under ML/models/reliability_aware/ and ML/reports/reliability_aware/ -
+    see FEATURE_SETS above). Passing an explicit `feature_columns`
+    overrides FEATURE_SETS[config_name]'s default.
 
     Returns (results, best_result) where `results` is a list of per-model
     evaluation dicts and `best_result` is the winning entry.
     """
 
     ensure_dirs()
+    paths = _resolve_output_paths(config_name)
+    feature_columns = feature_columns if feature_columns is not None else FEATURE_SETS[config_name]
 
     if not os.path.exists(train_file):
         raise FileNotFoundError(f"Train file not found: {train_file}")
@@ -229,12 +283,12 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
     _mlflow_setup()
 
     run_start = time.time()
-    logger.info("===== MODEL COMPARISON PIPELINE STARTED =====")
+    logger.info(f"===== MODEL COMPARISON PIPELINE STARTED (config={config_name}) =====")
 
     (
         X_train, X_test, y_train, y_test,
         city_encoder, label_encoder
-    ) = prepare_data(train_file, test_file)
+    ) = prepare_data(train_file, test_file, feature_columns=feature_columns)
 
     # Per-feature training-distribution baseline, for live drift
     # monitoring (backend/services/mlops_service.py) - computed from
@@ -246,8 +300,8 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
         "train_rows": len(X_train),
         "features": compute_feature_distribution(X_train),
     }
-    save_json(feature_baseline, FEATURE_BASELINE_JSON)
-    logger.info(f"Saved feature baseline -> {FEATURE_BASELINE_JSON}")
+    save_json(feature_baseline, paths["feature_baseline_json"])
+    logger.info(f"Saved feature baseline -> {paths['feature_baseline_json']}")
 
     model_results = []
     model_mlflow_run_ids = {}
@@ -265,12 +319,13 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
                 )
                 model_results.append(result)
 
-                model_path = os.path.join(MODELS_DIR, MODEL_FILENAMES[model_name])
+                model_path = os.path.join(paths["models_dir"], MODEL_FILENAMES[model_name])
                 joblib.dump(model, model_path)
                 logger.info(f"Saved {model_name} -> {model_path}")
 
                 png_path, csv_path = save_confusion_matrix(
-                    result["confusion_matrix"], result["labels"], model_name
+                    result["confusion_matrix"], result["labels"], model_name,
+                    output_dir=paths["confusion_dir"],
                 )
 
                 with _mlflow_start_run(run_name=model_name, nested=True) as nested_run:
@@ -306,16 +361,16 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
         best_result = select_best_model(model_results, metric=metric)
 
         # Save best model + both encoders (the artifacts the prediction API loads).
-        joblib.dump(best_result["model"], BEST_MODEL_PATH)
-        joblib.dump(city_encoder, CITY_ENCODER_PATH)
-        joblib.dump(label_encoder, LABEL_ENCODER_PATH)
-        logger.info(f"Saved best model ({best_result['name']}) -> {BEST_MODEL_PATH}")
+        joblib.dump(best_result["model"], paths["best_model_path"])
+        joblib.dump(city_encoder, paths["city_encoder_path"])
+        joblib.dump(label_encoder, paths["label_encoder_path"])
+        logger.info(f"Saved best model ({best_result['name']}) -> {paths['best_model_path']}")
 
         # Reports: comparison table + machine-readable metrics. RF/XGBoost/
         # LightGBM only - see the note at the top of this file.
         comparison_df = build_comparison_table(model_results, best_result["name"])
-        comparison_df.to_csv(MODEL_COMPARISON_CSV, index=False)
-        logger.info(f"Saved comparison table -> {MODEL_COMPARISON_CSV}")
+        comparison_df.to_csv(paths["model_comparison_csv"], index=False)
+        logger.info(f"Saved comparison table -> {paths['model_comparison_csv']}")
 
         metrics_payload = {
             "trained_at": datetime.now(timezone.utc).isoformat(),
@@ -354,40 +409,41 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC):
                 for r in model_results
             },
         }
-        save_json(metrics_payload, METRICS_JSON)
-        logger.info(f"Saved metrics -> {METRICS_JSON}")
+        save_json(metrics_payload, paths["metrics_json"])
+        logger.info(f"Saved metrics -> {paths['metrics_json']}")
 
         production_payload = _build_production_manifest(
-            best_result, metrics_payload, train_file, test_file
+            best_result, metrics_payload, train_file, test_file, paths, feature_columns
         )
-        save_json(production_payload, PRODUCTION_MODEL_JSON)
+        save_json(production_payload, paths["production_model_json"])
         logger.info(
-            f"Froze production model ({best_result['name']}) -> {PRODUCTION_MODEL_JSON}"
+            f"Froze production model ({best_result['name']}) -> {paths['production_model_json']}"
         )
 
         if MLFLOW_AVAILABLE:
             _mlflow_safe(mlflow.set_tag, "best_model", best_result["name"])
-            _mlflow_safe(mlflow.log_artifact, METRICS_JSON)
-            _mlflow_safe(mlflow.log_artifact, MODEL_COMPARISON_CSV)
-            _mlflow_safe(mlflow.log_artifact, PRODUCTION_MODEL_JSON)
-            _mlflow_safe(mlflow.log_artifact, FEATURE_BASELINE_JSON)
+            _mlflow_safe(mlflow.set_tag, "feature_set", config_name)
+            _mlflow_safe(mlflow.log_artifact, paths["metrics_json"])
+            _mlflow_safe(mlflow.log_artifact, paths["model_comparison_csv"])
+            _mlflow_safe(mlflow.log_artifact, paths["production_model_json"])
+            _mlflow_safe(mlflow.log_artifact, paths["feature_baseline_json"])
             _mlflow_safe(
                 mlflow.sklearn.log_model,
                 best_result["model"], "best_model",
-                registered_model_name=MLFLOW_REGISTERED_MODEL_NAME,
+                registered_model_name=MLFLOW_REGISTERED_MODEL_NAME if config_name == "baseline" else None,
             )
 
-    logger.info("===== MODEL COMPARISON PIPELINE COMPLETED =====")
+    logger.info(f"===== MODEL COMPARISON PIPELINE COMPLETED (config={config_name}) =====")
 
     return model_results, best_result, comparison_df
 
 
-def _print_summary(comparison_df, best_result):
+def _print_summary(comparison_df, best_result, paths):
     print("\n===== MODEL COMPARISON TABLE =====\n")
     print(comparison_df.to_string(index=False))
     print("\n===================================")
     print(f"Best Model ({DEFAULT_SELECTION_METRIC} unless overridden): {best_result['name']}")
-    print(f"Artifacts saved to: {MODELS_DIR}")
+    print(f"Artifacts saved to: {paths['models_dir']}")
 
 
 def main():
@@ -406,18 +462,32 @@ def main():
         choices=SELECTABLE_METRICS,
         help="Metric used to pick the best model (default: f1_score)."
     )
+    parser.add_argument(
+        "--feature-set",
+        default="baseline",
+        choices=list(FEATURE_SETS.keys()),
+        help=(
+            "baseline (default): original features, writes to the live "
+            "production paths (ML/models/best_model.pkl etc). "
+            "reliability_aware: adds Weather_Reliability/River_Reliability/"
+            "Overall_Data_Reliability, writes to ML/models/reliability_aware/ "
+            "and ML/reports/reliability_aware/ - never touches the baseline's "
+            "artifacts. See §9 of the Data Source Reliability integration."
+        )
+    )
     args = parser.parse_args()
 
     try:
         results, best_result, comparison_df = train_and_compare(
-            args.train_file, args.test_file, metric=args.metric
+            args.train_file, args.test_file, metric=args.metric,
+            config_name=args.feature_set,
         )
     except Exception as exc:
         logger.error(f"Training pipeline failed: {exc}")
         print(f"Training pipeline failed: {exc}", file=sys.stderr)
         sys.exit(1)
 
-    _print_summary(comparison_df, best_result)
+    _print_summary(comparison_df, best_result, _resolve_output_paths(args.feature_set))
 
 
 if __name__ == "__main__":

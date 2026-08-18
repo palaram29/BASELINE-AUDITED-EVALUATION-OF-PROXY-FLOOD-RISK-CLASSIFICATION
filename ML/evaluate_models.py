@@ -141,14 +141,18 @@ def _safe_roc_auc(model, X_test, y_test, model_name):
         return None
 
 
-def save_confusion_matrix(matrix, labels, model_name):
+def save_confusion_matrix(matrix, labels, model_name, output_dir=None):
     """Persist the confusion matrix both as a PNG heatmap and a raw CSV
-    under ML/reports/confusion_matrices/."""
+    under `output_dir` (default: ML/reports/confusion_matrices/ -
+    unchanged behaviour). ML/train_models.py passes a separate output_dir
+    for the reliability-aware configuration so its confusion matrices
+    never overwrite the baseline's."""
 
-    os.makedirs(CONFUSION_DIR, exist_ok=True)
+    output_dir = output_dir or CONFUSION_DIR
+    os.makedirs(output_dir, exist_ok=True)
     safe_name = model_name.lower().replace(" ", "_")
 
-    csv_path = os.path.join(CONFUSION_DIR, f"{safe_name}.csv")
+    csv_path = os.path.join(output_dir, f"{safe_name}.csv")
     pd.DataFrame(matrix, index=labels, columns=labels).to_csv(csv_path)
 
     fig, ax = plt.subplots(figsize=(6, 5))
@@ -168,7 +172,7 @@ def save_confusion_matrix(matrix, labels, model_name):
     fig.colorbar(im, ax=ax)
     fig.tight_layout()
 
-    png_path = os.path.join(CONFUSION_DIR, f"{safe_name}.png")
+    png_path = os.path.join(output_dir, f"{safe_name}.png")
     fig.savefig(png_path)
     plt.close(fig)
 

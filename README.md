@@ -230,6 +230,104 @@ Prediction Results
 | POST   | `/system/ml`           | Generate ML Features      |
 | POST   | `/system/predict`      | Predict Flood Risk        |
 | POST   | `/system/run-pipeline` | Execute Complete Pipeline |
+| GET    | `/reliability`         | Overall Data Reliability  |
+| GET    | `/reliability/sources` | Per-Source Reliability    |
+| GET    | `/reliability/history` | Reliability Time Series   |
+| GET    | `/reliability/summary` | Dashboard Widget Summary  |
+| GET    | `/reliability/validation-flags` | Flagged/Suspicious Records |
+| GET    | `/mlops/*`             | Model lifecycle, drift, data quality (see `docs/MLOPS_INTEGRATION_PLAN.md`) |
+
+---
+
+## 🛡️ Data Source Reliability
+
+A per-source reliability layer sits between raw data collection and the ML pipeline, scoring every
+environmental data source (one per City for weather, one per River:Station for river) on four
+components:
+
+```
+Reliability Score = 0.25 × Completeness
+                   + 0.25 × Timeliness
+                   + 0.25 × Validity
+                   + 0.25 × Historical Reliability
+```
+
+classified as **HIGH** (≥0.80), **MEDIUM** (≥0.60) or **LOW** (below 0.60). All weights and
+thresholds are configurable via environment variables - see `reliability/config.py`.
+
+- **`reliability/`** - the pure, DB-free scoring engine (completeness/timeliness/validity/
+  historical/scorer/degradation), shared by the live backend, the ML training pipeline and the
+  research experiment runner. Distinct from `backend/services/mlops_service.py`'s simpler,
+  pre-existing `data_reliability_score` (an aggregate missing-rate metric, unaffected/unchanged) -
+  this is the per-source, four-component weighted layer.
+- **`backend/services/reliability_service.py`** / **`backend/routes/reliability.py`** - computes
+  and persists scores into the `data_reliability` / `data_validation_log` PostgreSQL tables (see
+  `database/db_connection.py::ensure_data_reliability_tables`), exposed via `GET /reliability/*`.
+  Suspicious/invalid records are flagged for audit, never deleted from `weather_data`/`river_data`.
+  Runs automatically after every scheduled pipeline cycle (`backend/scheduler.py`), and low scores
+  are logged as monitoring alerts (`ml_monitoring_metrics`, surfaced via `GET /mlops/health`).
+- **`backend/generate_ml_features.py`** attaches `Weather_Reliability` / `River_Reliability` /
+  `Overall_Data_Reliability` to every `ml_features` row, computed only from data available up to
+  that row's own date (no look-ahead leakage).
+- **Dashboard**: a compact reliability widget on the main Dashboard and inline on every prediction
+  row/live-prediction result (clearly separate from the model's own probability - a data-quality
+  signal, never model confidence), plus a full `/reliability` page with per-source detail, a
+  history chart and the validation-flags audit table.
+
+### Baseline vs. reliability-aware models
+
+`ML/train_models.py` can train two feature configurations - **baseline** (the original
+`Rainfall_3Day, Avg_Temperature, Avg_WindSpeed, Elevation, Coastal_Flag`) and
+**reliability_aware** (adds `Weather_Reliability, River_Reliability, Overall_Data_Reliability`) -
+for all three algorithms, to test whether reliability-aware features improve robustness:
+
+```bash
+python ML/train_models.py                                  # baseline (default, unchanged production paths)
+python ML/train_models.py --feature-set reliability_aware   # writes to ML/models/reliability_aware/
+```
+
+The live prediction pipeline always serves the **baseline** model by default (frozen-model
+policy, unchanged) - a reliability-aware model only becomes production via the existing manual
+`POST /mlops/models/{id}/promote` workflow, once the experiment results below justify it.
+
+### Degraded-data research experiments
+
+```bash
+python ML/run_reliability_experiments.py
+```
+
+Trains all 3 algorithms × 2 feature configurations on the same (undegraded) training split, then
+evaluates each on 6 controlled test-set conditions - `normal`, `missing_10/20/30`, `delayed`,
+`invalid` (see `reliability/degradation.py` - all in-memory, non-destructive; `ML/data/*.csv` and
+`ML/models/` are never touched). Writes real, computed results (accuracy/precision/recall/
+F1/ROC-AUC/confusion matrix per condition) to
+`ML/reports/reliability_experiments/comparison_table.csv` (+ `.json`), plus a printed pivot table
+comparing baseline vs. reliability-aware for each condition/algorithm - this is the evidence for
+(or against) the paper's research hypothesis that reliability-aware processing improves robustness
+under degraded data.
+
+### Reproducing the full research evaluation
+
+```bash
+python ML/prepare_dataset.py                                # rebuild train/test CSVs with reliability features
+python ML/train_models.py                                    # baseline
+python ML/train_models.py --feature-set reliability_aware     # reliability-aware
+python ML/run_reliability_experiments.py                      # degraded-data comparison
+```
+
+### Unit tests
+
+```bash
+python -m reliability.tests.test_completeness
+python -m reliability.tests.test_timeliness
+python -m reliability.tests.test_validity
+python -m reliability.tests.test_historical
+python -m reliability.tests.test_scorer
+python -m reliability.tests.test_degradation
+```
+
+Plain-assertion scripts (no new dependency) that also happen to be pytest-discoverable, matching
+the project's existing lightweight test-script convention (`database/test_db.py`).
 
 ---
 

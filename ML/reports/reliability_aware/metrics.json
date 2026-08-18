@@ -1,0 +1,310 @@
+{
+  "trained_at": "2026-08-18T11:51:56.480383+00:00",
+  "selection_metric": "macro_f1",
+  "best_model": "RandomForest",
+  "selection_reason": "highest macro-F1 (0.5589)",
+  "mlflow_run_id": "a1879d7488cb4e348571c77f5cd2a006",
+  "train_file": "ML/data/train_dataset.csv",
+  "test_file": "ML/data/test_dataset.csv",
+  "dataset": {
+    "train_rows": 109470,
+    "test_rows": 37890
+  },
+  "training_duration_sec": 14.950299501419067,
+  "models": {
+    "RandomForest": {
+      "accuracy": 0.9198469253101083,
+      "precision": 0.9615653838786576,
+      "recall": 0.9198469253101083,
+      "f1_score": 0.9367782516651837,
+      "macro_precision": 0.5137632020196967,
+      "macro_recall": 0.659502278258864,
+      "macro_f1": 0.5588682747748288,
+      "high_risk_recall": 0.4697986577181208,
+      "extreme_risk_recall": 0.5681818181818182,
+      "roc_auc": 0.9610259111715206,
+      "training_time_sec": 4.220789909362793,
+      "prediction_time_sec": 0.12144851684570312,
+      "confusion_matrix": [
+        [
+          50,
+          17,
+          4,
+          17
+        ],
+        [
+          39,
+          210,
+          44,
+          154
+        ],
+        [
+          17,
+          127,
+          33813,
+          2226
+        ],
+        [
+          8,
+          202,
+          182,
+          780
+        ]
+      ],
+      "labels": [
+        "Extreme",
+        "High",
+        "Low",
+        "Medium"
+      ],
+      "classification_report": {
+        "Extreme": {
+          "precision": 0.43859649122807015,
+          "recall": 0.5681818181818182,
+          "f1-score": 0.49504950495049505,
+          "support": 88.0
+        },
+        "High": {
+          "precision": 0.3776978417266187,
+          "recall": 0.4697986577181208,
+          "f1-score": 0.4187437686939183,
+          "support": 447.0
+        },
+        "Low": {
+          "precision": 0.9932438386746174,
+          "recall": 0.9344996268966089,
+          "f1-score": 0.9629766753054424,
+          "support": 36183.0
+        },
+        "Medium": {
+          "precision": 0.24551463644948066,
+          "recall": 0.6655290102389079,
+          "f1-score": 0.35870315014945964,
+          "support": 1172.0
+        },
+        "accuracy": 0.9198469253101083,
+        "macro avg": {
+          "precision": 0.5137632020196967,
+          "recall": 0.659502278258864,
+          "f1-score": 0.5588682747748288,
+          "support": 37890.0
+        },
+        "weighted avg": {
+          "precision": 0.9615653838786576,
+          "recall": 0.9198469253101083,
+          "f1-score": 0.9367782516651837,
+          "support": 37890.0
+        }
+      },
+      "feature_importance": {
+        "City_Encoded": 0.03268392649859562,
+        "Rainfall_3Day": 0.5918503037313523,
+        "Avg_Temperature": 0.13340015235790273,
+        "Avg_WindSpeed": 0.13059261967143973,
+        "Elevation": 0.05196109628253421,
+        "Coastal_Flag": 0.057609386906193806,
+        "Weather_Reliability": 0.0009901105853482909,
+        "River_Reliability": 0.0,
+        "Overall_Data_Reliability": 0.0009124039666333057
+      },
+      "status": "Trained",
+      "mlflow_run_id": "4f07c30fc2c34f6e895d587710d92691"
+    },
+    "XGBoost": {
+      "accuracy": 0.8957772499340195,
+      "precision": 0.9604799415671004,
+      "recall": 0.8957772499340195,
+      "f1_score": 0.922029546969415,
+      "macro_precision": 0.47815000799928015,
+      "macro_recall": 0.6652857755361155,
+      "macro_f1": 0.5298300029261405,
+      "high_risk_recall": 0.5055928411633109,
+      "extreme_risk_recall": 0.5795454545454546,
+      "roc_auc": 0.9618037289191633,
+      "training_time_sec": 0.7559688091278076,
+      "prediction_time_sec": 0.023118019104003906,
+      "confusion_matrix": [
+        [
+          51,
+          19,
+          4,
+          14
+        ],
+        [
+          38,
+          226,
+          33,
+          150
+        ],
+        [
+          26,
+          210,
+          32882,
+          3065
+        ],
+        [
+          15,
+          228,
+          147,
+          782
+        ]
+      ],
+      "labels": [
+        "Extreme",
+        "High",
+        "Low",
+        "Medium"
+      ],
+      "classification_report": {
+        "Extreme": {
+          "precision": 0.3923076923076923,
+          "recall": 0.5795454545454546,
+          "f1-score": 0.46788990825688076,
+          "support": 88.0
+        },
+        "High": {
+          "precision": 0.3308931185944363,
+          "recall": 0.5055928411633109,
+          "f1-score": 0.4,
+          "support": 447.0
+        },
+        "Low": {
+          "precision": 0.9944353716808807,
+          "recall": 0.9087693115551502,
+          "f1-score": 0.9496743635287153,
+          "support": 36183.0
+        },
+        "Medium": {
+          "precision": 0.19496384941411118,
+          "recall": 0.6672354948805461,
+          "f1-score": 0.30175573991896587,
+          "support": 1172.0
+        },
+        "accuracy": 0.8957772499340195,
+        "macro avg": {
+          "precision": 0.47815000799928015,
+          "recall": 0.6652857755361155,
+          "f1-score": 0.5298300029261405,
+          "support": 37890.0
+        },
+        "weighted avg": {
+          "precision": 0.9604799415671004,
+          "recall": 0.8957772499340195,
+          "f1-score": 0.922029546969415,
+          "support": 37890.0
+        }
+      },
+      "feature_importance": {
+        "City_Encoded": 0.042709365487098694,
+        "Rainfall_3Day": 0.3067156672477722,
+        "Avg_Temperature": 0.07421961426734924,
+        "Avg_WindSpeed": 0.07178429514169693,
+        "Elevation": 0.06722947210073471,
+        "Coastal_Flag": 0.3560299277305603,
+        "Weather_Reliability": 0.040916558355093,
+        "River_Reliability": 0.0,
+        "Overall_Data_Reliability": 0.040395114570856094
+      },
+      "status": "Trained",
+      "mlflow_run_id": "7e35b4719b194532996e493b1d1e8afb"
+    },
+    "LightGBM": {
+      "accuracy": 0.9015307468989179,
+      "precision": 0.9594462735070958,
+      "recall": 0.9015307468989179,
+      "f1_score": 0.9252148072396515,
+      "macro_precision": 0.46479018142327383,
+      "macro_recall": 0.6604047798769959,
+      "macro_f1": 0.5214991218252344,
+      "high_risk_recall": 0.5033557046979866,
+      "extreme_risk_recall": 0.5909090909090909,
+      "roc_auc": 0.9601492242621572,
+      "training_time_sec": 1.9075756072998047,
+      "prediction_time_sec": 0.06309390068054199,
+      "confusion_matrix": [
+        [
+          52,
+          21,
+          3,
+          12
+        ],
+        [
+          32,
+          225,
+          44,
+          146
+        ],
+        [
+          38,
+          277,
+          33142,
+          2726
+        ],
+        [
+          19,
+          246,
+          167,
+          740
+        ]
+      ],
+      "labels": [
+        "Extreme",
+        "High",
+        "Low",
+        "Medium"
+      ],
+      "classification_report": {
+        "Extreme": {
+          "precision": 0.36879432624113473,
+          "recall": 0.5909090909090909,
+          "f1-score": 0.45414847161572053,
+          "support": 88.0
+        },
+        "High": {
+          "precision": 0.2925877763328999,
+          "recall": 0.5033557046979866,
+          "f1-score": 0.37006578947368424,
+          "support": 447.0
+        },
+        "Low": {
+          "precision": 0.9935843626334093,
+          "recall": 0.9159550064947627,
+          "f1-score": 0.9531917341348021,
+          "support": 36183.0
+        },
+        "Medium": {
+          "precision": 0.2041942604856512,
+          "recall": 0.6313993174061433,
+          "f1-score": 0.3085904920767306,
+          "support": 1172.0
+        },
+        "accuracy": 0.9015307468989179,
+        "macro avg": {
+          "precision": 0.46479018142327383,
+          "recall": 0.6604047798769959,
+          "f1-score": 0.5214991218252344,
+          "support": 37890.0
+        },
+        "weighted avg": {
+          "precision": 0.9594462735070958,
+          "recall": 0.9015307468989179,
+          "f1-score": 0.9252148072396515,
+          "support": 37890.0
+        }
+      },
+      "feature_importance": {
+        "City_Encoded": 535.0,
+        "Rainfall_3Day": 3581.0,
+        "Avg_Temperature": 2603.0,
+        "Avg_WindSpeed": 3755.0,
+        "Elevation": 692.0,
+        "Coastal_Flag": 428.0,
+        "Weather_Reliability": 138.0,
+        "River_Reliability": 0.0,
+        "Overall_Data_Reliability": 32.0
+      },
+      "status": "Trained",
+      "mlflow_run_id": "1df0fcf41b0240e9aca70ca6e8b3c6d2"
+    }
+  }
+}

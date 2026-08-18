@@ -37,6 +37,9 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from collections import deque
+from datetime import timedelta
+
 import numpy as np
 import pandas as pd
 
@@ -52,6 +55,10 @@ from ML.utils import (
     ELEVATION_MAP,
     COASTAL_MAP,
 )
+from reliability import config as rcfg
+from reliability.completeness import compute_completeness, derive_expected_interval_minutes
+from reliability.validity import validate_temperature, validate_windspeed
+from reliability.scorer import compute_reliability
 
 TRAIN_OUT_CSV = os.path.join(DATA_DIR, "train_dataset.csv")
 TEST_OUT_CSV = os.path.join(DATA_DIR, "test_dataset.csv")
@@ -99,6 +106,107 @@ def attach_geography(df):
     mismatched = df.loc[df["Elevation"] != expected_elevation, "City"].unique()
     if len(mismatched) > 0:
         logger.warning(f"Elevation mismatch vs ELEVATION_MAP for: {list(mismatched)}")
+
+    return df
+
+
+def attach_reliability_features(df):
+    """Attach Weather_Reliability, River_Reliability, Overall_Data_Reliability
+    to every (City, End_Date) row of the historical dataset, using the same
+    reliability/ scoring engine as the live pipeline (backend/
+    generate_ml_features.py) - see reliability/scorer.py.
+
+    Two documented differences from the live computation, both because
+    this offline dataset predates the reliability layer and was never
+    collected with it in mind (see docs/ML_METHODOLOGY_AND_LIMITATIONS.md
+    for the project's existing precedent of flagging such gaps rather than
+    silently approximating them):
+
+      - Timeliness is fixed at a neutral 1.0 for every row: there is no
+        stored ingestion/arrival timestamp for this historical data (only
+        the observation date itself), so a genuine delay can't be
+        reconstructed. Live data going forward gets a real timeliness
+        score (see backend/services/reliability_service.py).
+
+      - River_Reliability defaults to the neutral historical-reliability
+        prior (reliability.config.HISTORICAL_RELIABILITY_DEFAULT): this
+        raw historical CSV has no river columns at all, consistent with
+        ML/utils.py's documented fact that DMC river-gauge collection only
+        began in 2026 - there is no historical river signal to score.
+
+    Completeness and Validity ARE genuinely computed from this dataset's
+    own per-city date gaps and Rainfall_3Day/Avg_Temperature/Avg_WindSpeed
+    values. Historical Reliability is a real, incrementally-computed EMA
+    over each city's own past (never current) composite scores - the exact
+    same exponential-moving-average formula as reliability/historical.py,
+    computed here as a running scalar per city instead of by folding a
+    growing list (mathematically identical, O(1) per row instead of O(n))."""
+
+    df = df.sort_values(["City", "End_Date"]).reset_index(drop=True)
+
+    window_days = rcfg.COMPLETENESS_WINDOW_DAYS
+    buffer_days = timedelta(days=window_days * 2 + 5)
+    alpha = rcfg.HISTORICAL_RELIABILITY_EMA_ALPHA
+
+    weather_reliability = [None] * len(df)
+    historical_reliability = [None] * len(df)
+    completeness_col = [None] * len(df)
+    validity_col = [None] * len(df)
+
+    for city, group in df.groupby("City", sort=False):
+        recent_dates = deque()
+        h = rcfg.HISTORICAL_RELIABILITY_DEFAULT
+
+        for idx, row in group.iterrows():
+            end_date = row["End_Date"]
+
+            recent_dates.append(end_date)
+            while recent_dates and recent_dates[0] < end_date - buffer_days:
+                recent_dates.popleft()
+
+            window_start = end_date - timedelta(days=window_days)
+            timestamps = list(recent_dates)
+            completeness, _, _ = compute_completeness(
+                timestamps, window_start, end_date, history_timestamps=timestamps
+            )
+
+            checks = []
+            rainfall = row["Rainfall_3Day"]
+            checks.append(
+                pd.notna(rainfall) and 0 <= float(rainfall) <= rcfg.RAINFALL_3DAY_MAX
+            )
+            checks.append(pd.notna(row["Avg_Temperature"]) and validate_temperature(row["Avg_Temperature"])[0])
+            checks.append(pd.notna(row["Avg_WindSpeed"]) and validate_windspeed(row["Avg_WindSpeed"])[0])
+            validity = sum(checks) / len(checks)
+
+            result = compute_reliability(
+                completeness=completeness, timeliness=1.0, validity=validity, historical=h
+            )
+            score = result["reliability_score"]
+
+            weather_reliability[idx] = score
+            historical_reliability[idx] = h
+            completeness_col[idx] = completeness
+            validity_col[idx] = validity
+
+            # Same EMA update as reliability/historical.py::compute_historical_reliability,
+            # applied incrementally: this row's own score becomes part of
+            # the NEXT row's history, never its own.
+            h = alpha * score + (1 - alpha) * h
+
+    df["Weather_Reliability"] = weather_reliability
+    df["River_Reliability"] = rcfg.HISTORICAL_RELIABILITY_DEFAULT
+    df["Overall_Data_Reliability"] = (
+        rcfg.WEATHER_SOURCE_WEIGHT * df["Weather_Reliability"]
+        + rcfg.RIVER_SOURCE_WEIGHT * df["River_Reliability"]
+    ).round(4)
+    df["Weather_Reliability"] = df["Weather_Reliability"].round(4)
+
+    logger.info(
+        "Attached reliability features: mean Weather_Reliability="
+        f"{df['Weather_Reliability'].mean():.4f}, "
+        f"mean Overall_Data_Reliability={df['Overall_Data_Reliability'].mean():.4f}"
+    )
 
     return df
 
@@ -230,6 +338,9 @@ def build_t_plus_1_pairs(df):
                 "Avg_WindSpeed": row_t["Avg_WindSpeed"],
                 "Elevation": row_t["Elevation"],
                 "Coastal_Flag": row_t["Coastal_Flag"],
+                "Weather_Reliability": row_t["Weather_Reliability"],
+                "River_Reliability": row_t["River_Reliability"],
+                "Overall_Data_Reliability": row_t["Overall_Data_Reliability"],
                 "Flood_Risk_Previous_Day": row_t["Flood_Risk"],
                 "Flood_Risk": row_t1["Flood_Risk"],
                 "Period": row_t["Period"],
@@ -251,6 +362,7 @@ def build_t_plus_1_pairs(df):
 def main():
     df = load_raw()
     df = attach_geography(df)
+    df = attach_reliability_features(df)
     df = assign_period(df)
     df, rainfall_norm = compute_hazard(df)
     df, elevation_norm = compute_vulnerability(df)
