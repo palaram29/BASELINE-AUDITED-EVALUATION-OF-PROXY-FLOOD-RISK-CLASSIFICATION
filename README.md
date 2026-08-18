@@ -299,13 +299,13 @@ The project uses PostgreSQL to store:
 
 ## 📈 Future Improvements
 
-- React Dashboard
 - Interactive Maps
 - Real-time Notifications
 - SMS & Email Alerts
 - Historical Trend Analysis
-- Docker Deployment
-- CI/CD Pipeline
+- MLOps monitoring (model version, feature/prediction drift, missing-data
+  rate, rollback, retraining triggers) and the Docker/CI/CD deployment
+  stack it runs on — see [`docs/MLOPS_INTEGRATION_PLAN.md`](docs/MLOPS_INTEGRATION_PLAN.md)
 
 ---
 

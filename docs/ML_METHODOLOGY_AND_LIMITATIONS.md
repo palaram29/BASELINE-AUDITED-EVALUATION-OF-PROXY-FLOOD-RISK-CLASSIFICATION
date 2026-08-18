@@ -438,6 +438,15 @@ The live system (weather/river ingestion -> feature processing -> ML
 prediction -> dashboard/map) uses a **frozen** production model, not a
 continuously-retrained one.
 
+This policy currently has no monitoring layer behind it - there is no
+tracked evidence for *when* a human should re-run `ML/train_models.py`.
+`docs/MLOPS_INTEGRATION_PLAN.md` designs that evidence layer (feature/
+prediction drift, missing-data rate, versioned rollback via MLflow) as
+an addition that preserves this section's human-gated retraining rule
+unchanged - it turns "a human decides to retrain" into "a human decides
+to retrain, informed by a drift alert" rather than replacing the
+decision with automation.
+
 - Training happens **offline only**, by a human running
   `python ML/train_models.py` against the historical dataset described
   above. This is the only code path that fits a model.
