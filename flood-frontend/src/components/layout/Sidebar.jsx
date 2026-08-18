@@ -9,6 +9,7 @@ const links = [
   { to: "/pipeline", label: "Pipeline" },
   { to: "/ml-dashboard", label: "ML Dashboard" },
   { to: "/mlops", label: "MLOps" },
+  { to: "/reliability", label: "Data Reliability" },
   { to: "/about", label: "About" },
 ];
 

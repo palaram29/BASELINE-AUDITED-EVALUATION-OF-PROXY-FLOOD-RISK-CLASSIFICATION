@@ -6,6 +6,7 @@ import ErrorMessage from "../common/ErrorMessage";
 import { CITIES } from "../../constants/cities";
 import { predictBestModel } from "../../services/mlService";
 import { riskTone } from "../../utils/riskTone";
+import { RELIABILITY_TONE } from "../reliability/ReliabilityScoreCard";
 
 // "ML Flood-Risk Prediction" section: scores the latest live weather
 // data for a chosen city through the frozen production model. This is a
@@ -71,30 +72,53 @@ function LivePredictionPanel({ bestModelName, onPredicted }) {
       {error ? <div className="mt-4"><ErrorMessage message={error} /></div> : null}
 
       {result ? (
-        <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-5 sm:grid-cols-5">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Predicted Risk</p>
-            <div className="mt-1"><Badge tone={riskTone(result.risk)}>{result.risk?.toUpperCase()}</Badge></div>
+        <>
+          <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-5 sm:grid-cols-6">
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Predicted Risk</p>
+              <div className="mt-1"><Badge tone={riskTone(result.risk)}>{result.risk?.toUpperCase()}</Badge></div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Predicted For</p>
+              <p className="mt-1 font-semibold text-slate-800">{result.predicted_for_date || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Confidence (model)</p>
+              <p className="mt-1 font-semibold text-slate-800">
+                {result.confidence != null ? `${(result.confidence * 100).toFixed(0)}%` : "n/a"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Model Used</p>
+              <p className="mt-1 font-semibold text-slate-800">{result.model_used}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Prediction Time</p>
+              <p className="mt-1 font-semibold text-slate-800">{result.prediction_time_ms.toFixed(0)} ms</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Data Reliability</p>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="font-semibold text-slate-800">
+                  {result.data_reliability_score != null ? `${Math.round(result.data_reliability_score * 100)}%` : "n/a"}
+                </span>
+                {result.data_reliability_level ? (
+                  <Badge tone={RELIABILITY_TONE[result.data_reliability_level] || "slate"}>
+                    {result.data_reliability_level}
+                  </Badge>
+                ) : null}
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Predicted For</p>
-            <p className="mt-1 font-semibold text-slate-800">{result.predicted_for_date || "—"}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Confidence</p>
-            <p className="mt-1 font-semibold text-slate-800">
-              {result.confidence != null ? `${(result.confidence * 100).toFixed(0)}%` : "n/a"}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Model Used</p>
-            <p className="mt-1 font-semibold text-slate-800">{result.model_used}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-wide text-slate-500">Prediction Time</p>
-            <p className="mt-1 font-semibold text-slate-800">{result.prediction_time_ms.toFixed(0)} ms</p>
-          </div>
-        </div>
+
+          {result.degraded_data_warning ? (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <strong>Degraded data warning:</strong> the environmental data behind this prediction has LOW
+              reliability. The forecast above is still shown as-is (not discarded) - treat it with reduced
+              confidence and check the Data Reliability page for details.
+            </div>
+          ) : null}
+        </>
       ) : null}
     </Card>
   );

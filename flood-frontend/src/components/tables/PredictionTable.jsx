@@ -1,4 +1,6 @@
 import { normalizeRisk } from "../../utils/riskLevels";
+import Badge from "../common/Badge";
+import { RELIABILITY_TONE } from "../reliability/ReliabilityScoreCard";
 
 // Predicted_Risk's real values are Low/Medium/High/Extreme (the ML model's
 // training labels), not "Moderate" - a direct string comparison against
@@ -27,6 +29,7 @@ function PredictionTable({ predictions }) {
               <th className="px-4 py-3 text-left">Wind Speed</th>
               <th className="px-4 py-3 text-left">Predicted For</th>
               <th className="px-4 py-3 text-left">Predicted Risk</th>
+              <th className="px-4 py-3 text-left">Data Reliability</th>
             </tr>
           </thead>
 
@@ -53,6 +56,22 @@ function PredictionTable({ predictions }) {
                   className={`px-4 py-3 font-semibold ${RISK_TEXT_CLASS[normalizeRisk(prediction.Predicted_Risk)]}`}
                 >
                   {prediction.Predicted_Risk}
+                </td>
+                <td className="px-4 py-3">
+                  {prediction.data_reliability_level ? (
+                    <div className="flex items-center gap-2">
+                      <Badge tone={RELIABILITY_TONE[prediction.data_reliability_level] || "slate"}>
+                        {prediction.data_reliability_level}
+                      </Badge>
+                      {prediction.degraded_data_warning ? (
+                        <span className="text-xs font-medium text-red-600" title="Degraded environmental data behind this forecast">
+                          ⚠ degraded
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
                 </td>
               </tr>
             ))}

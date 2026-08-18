@@ -10,6 +10,7 @@ import Statistics from "../pages/Statistics/Statistics";
 import Pipeline from "../pages/Pipeline/Pipeline";
 import MLDashboard from "../pages/MLDashboard/MLDashboard";
 import MLOps from "../pages/MLOps/MLOps";
+import Reliability from "../pages/Reliability/Reliability";
 import About from "../pages/About/About";
 import NotFound from "../pages/NotFound/NotFound";
 import Register from "../pages/Auth/Register";
@@ -29,6 +30,7 @@ function AppRoutes() {
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/ml-dashboard" element={<MLDashboard />} />
           <Route path="/mlops" element={<MLOps />} />
+          <Route path="/reliability" element={<Reliability />} />
           <Route path="/about" element={<About />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />

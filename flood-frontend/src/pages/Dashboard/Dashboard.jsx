@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import useLiveDashboard from "../../hooks/useLiveDashboard";
+import useReliability from "../../hooks/useReliability";
 import SummarySection from "../../components/dashboard/SummarySection";
 import WeatherTable from "../../components/tables/WeatherTable";
 import RiverTable from "../../components/tables/RiverTable";
@@ -12,10 +13,12 @@ import ErrorMessage from "../../components/common/ErrorMessage";
 import Badge from "../../components/common/Badge";
 import Toast from "../../components/common/Toast";
 import UserAlertBanner from "../../components/dashboard/UserAlertBanner";
+import ReliabilityScoreCard from "../../components/reliability/ReliabilityScoreCard";
 import { normalizeRisk } from "../../utils/riskLevels";
 
 function Dashboard() {
   const { dashboard, loading, error, lastUpdated } = useLiveDashboard();
+  const { summary: reliabilitySummary } = useReliability();
   const [toast, setToast] = useState(null);
   const hasInitialized = useRef(false);
 
@@ -105,6 +108,10 @@ function Dashboard() {
       </div>
       <RiskOverview prediction={dashboard.prediction} />
       <PredictionTable predictions={dashboard.prediction} />
+
+      <div className="xl:w-1/2">
+        <ReliabilityScoreCard summary={reliabilitySummary} />
+      </div>
 
       {toast ? <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} /> : null}
     </div>
