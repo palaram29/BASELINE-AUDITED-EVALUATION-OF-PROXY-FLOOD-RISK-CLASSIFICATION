@@ -103,3 +103,109 @@ def ensure_river_data_timestamp_column():
             WHERE "ReportTimestamp" IS NULL
             """
         ))
+
+
+def ensure_mlops_tables():
+    """Idempotently create the MLOps monitoring/lifecycle tables. Safe to
+    call on every startup.
+
+    These tables are the read model the backend API/dashboard query -
+    MLflow (see ML/train_models.py, ML/register_run.py) is the audit
+    trail/artifact registry, but nothing in the live request path depends
+    on MLflow being reachable; it only ever reads from here. See
+    docs/MLOPS_INTEGRATION_PLAN.md.
+
+    ml_model_versions.status lifecycle: Candidate -> Validation ->
+    Production -> Archived. Promotion/rollback (backend/services/
+    mlops_service.py::promote_model_version) is the only code path that
+    changes a row to/from Production - always a deliberate, human-
+    triggered action, never automatic (see
+    docs/ML_METHODOLOGY_AND_LIMITATIONS.md "Production deployment: frozen
+    model policy", which this preserves rather than replaces)."""
+
+    with engine.begin() as conn:
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS ml_training_runs (
+                id SERIAL PRIMARY KEY,
+                mlflow_run_id TEXT,
+                train_file TEXT,
+                test_file TEXT,
+                dataset_train_rows INTEGER,
+                dataset_test_rows INTEGER,
+                selection_metric TEXT,
+                duration_sec DOUBLE PRECISION,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS ml_model_versions (
+                id SERIAL PRIMARY KEY,
+                training_run_id INTEGER REFERENCES ml_training_runs(id),
+                algorithm TEXT NOT NULL,
+                version INTEGER NOT NULL,
+                mlflow_run_id TEXT,
+                status TEXT NOT NULL DEFAULT 'Candidate',
+                artifact_path TEXT NOT NULL,
+                accuracy DOUBLE PRECISION,
+                macro_f1 DOUBLE PRECISION,
+                high_risk_recall DOUBLE PRECISION,
+                extreme_risk_recall DOUBLE PRECISION,
+                roc_auc DOUBLE PRECISION,
+                selection_reason TEXT,
+                metrics_json TEXT,
+                trained_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                promoted_at TIMESTAMP,
+                UNIQUE (algorithm, version)
+            )
+            """
+        ))
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS ml_drift_metrics (
+                id SERIAL PRIMARY KEY,
+                feature_name TEXT NOT NULL,
+                psi_score DOUBLE PRECISION,
+                status TEXT NOT NULL,
+                window_days INTEGER NOT NULL,
+                computed_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS ml_prediction_monitoring (
+                id SERIAL PRIMARY KEY,
+                risk_level TEXT NOT NULL,
+                count INTEGER NOT NULL,
+                percentage DOUBLE PRECISION NOT NULL,
+                window_days INTEGER NOT NULL,
+                computed_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS ml_monitoring_metrics (
+                id SERIAL PRIMARY KEY,
+                metric_name TEXT NOT NULL,
+                metric_value DOUBLE PRECISION,
+                status TEXT NOT NULL,
+                details_json TEXT,
+                computed_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS ml_retraining_events (
+                id SERIAL PRIMARY KEY,
+                event_type TEXT NOT NULL,
+                details_json TEXT,
+                triggered_by TEXT NOT NULL DEFAULT 'system',
+                created_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))

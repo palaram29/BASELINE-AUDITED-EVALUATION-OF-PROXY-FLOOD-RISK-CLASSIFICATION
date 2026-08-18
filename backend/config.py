@@ -41,6 +41,28 @@ TRAIN_DATA_FILE = os.getenv("TRAIN_DATA_FILE", "ML/data/train_dataset.csv")
 TEST_DATA_FILE = os.getenv("TEST_DATA_FILE", "ML/data/test_dataset.csv")
 
 # =====================================================
+# MLOPS MONITORING
+# =====================================================
+# See docs/MLOPS_INTEGRATION_PLAN.md. PSI (Population Stability Index)
+# thresholds below are the standard literature convention: <0.1 = no
+# meaningful shift, 0.1-0.25 = moderate shift worth a look, >0.25 =
+# significant shift. All configurable so they can be recalibrated once
+# enough live data volume exists to justify tighter/looser bands, without
+# a code change.
+
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
+
+DRIFT_PSI_WARNING_THRESHOLD = float(os.getenv("DRIFT_PSI_WARNING_THRESHOLD", "0.1"))
+DRIFT_PSI_CRITICAL_THRESHOLD = float(os.getenv("DRIFT_PSI_CRITICAL_THRESHOLD", "0.25"))
+
+MISSING_DATA_WARNING_PCT = float(os.getenv("MISSING_DATA_WARNING_PCT", "5"))
+MISSING_DATA_CRITICAL_PCT = float(os.getenv("MISSING_DATA_CRITICAL_PCT", "10"))
+
+# Rolling window (days) used for drift/prediction-distribution/missing-
+# data monitoring queries against live tables.
+MONITORING_WINDOW_DAYS = int(os.getenv("MONITORING_WINDOW_DAYS", "7"))
+
+# =====================================================
 # CITIES
 # =====================================================
 

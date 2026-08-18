@@ -22,8 +22,8 @@ from sqlalchemy import text
 
 from database.db_connection import get_engine, ensure_prediction_result_columns
 from backend.utils.logger import logger
-from ML.utils import METRICS_JSON, PRODUCTION_MODEL_JSON
-from ML.predict import load_best_model, predict_one
+from ML.utils import METRICS_JSON, PRODUCTION_MODEL_JSON, CITY_ENCODER_PATH, LABEL_ENCODER_PATH
+from ML.predict import load_best_model, load_model_from_paths, predict_one
 from ML.model_selector import DEFAULT_SELECTION_METRIC
 
 engine = get_engine()
@@ -143,13 +143,46 @@ def _latest_features_for_city(city):
     return df.iloc[0]
 
 
+def _resolve_production_model():
+    """DB-aware production-model lookup: prefers whichever version is
+    marked Production in the MLOps registry (ml_model_versions - see
+    backend/services/mlops_service.py::promote_model_version), falling
+    straight through to the existing file-based load_best_model() if no
+    row is promoted yet, the DB is unreachable, or the artifact is
+    missing - see docs/MLOPS_INTEGRATION_PLAN.md decision 5. This is the
+    only place a DB dependency enters model loading; ML/ itself stays
+    database-free.
+
+    Encoders aren't versioned per model version (they're fit once per
+    training run and shared by all three algorithms in that run), so
+    CITY_ENCODER_PATH/LABEL_ENCODER_PATH - the latest run's encoders,
+    same as today - are used regardless of which version is Production."""
+
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(text("""
+                SELECT artifact_path FROM ml_model_versions
+                WHERE status = 'Production'
+                ORDER BY promoted_at DESC LIMIT 1
+            """)).mappings().first()
+        if row and os.path.exists(row["artifact_path"]):
+            return load_model_from_paths(row["artifact_path"], CITY_ENCODER_PATH, LABEL_ENCODER_PATH)
+    except Exception as exc:
+        logger.warning(
+            f"MLOps production-model DB lookup failed, falling back to "
+            f"file-based resolution: {exc}"
+        )
+
+    return load_best_model()
+
+
 def predict_with_best_model(city):
     """Run a single live ML flood-risk prediction for `city` using only
     the frozen production model, then record it in prediction_results
     (same table and upsert-by-Date/City pattern as the bulk
     backend/predict_flood.py)."""
 
-    model, city_encoder, label_encoder, model_name = load_best_model()
+    model, city_encoder, label_encoder, model_name = _resolve_production_model()
 
     row = _latest_features_for_city(city)
     features = {
