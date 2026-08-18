@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 import schedule
 
 from backend.services.pipeline_service import run_full_pipeline
+from backend.services import mlops_service
 from backend.utils.logger import logger
 
 # Matches river_scraper.py's own polling interval - weather_data dedups
@@ -63,6 +64,7 @@ def _run_pipeline_job():
             _status["last_result"] = "success"
             _status["last_success_at"] = _status["last_run_at"]
             _status["last_error"] = None
+            _run_monitoring_job()
         else:
             logger.error(f"Scheduled live pipeline run failed at step '{result.get('step')}'")
             _status["last_result"] = "failed"
@@ -74,6 +76,24 @@ def _run_pipeline_job():
         logger.error(f"Scheduled live pipeline run raised an exception: {exc}")
         _status["last_result"] = "error"
         _status["last_error"] = str(exc)
+
+
+def _run_monitoring_job():
+    """Snapshot feature drift / data quality / prediction distribution
+    after every successful pipeline run, and log an alert event on any
+    threshold breach - see backend/services/mlops_service.py::
+    run_monitoring_cycle. Never trains or promotes anything; a breach is
+    only ever a logged signal for a human to act on (see
+    docs/ML_METHODOLOGY_AND_LIMITATIONS.md "Production deployment: frozen
+    model policy"). Errors here must not affect pipeline status, so this
+    is called only after the pipeline itself has already been marked
+    successful, and any failure inside it is swallowed by
+    run_monitoring_cycle itself (per-signal try/except)."""
+
+    try:
+        mlops_service.run_monitoring_cycle()
+    except Exception as exc:
+        logger.error(f"Scheduled MLOps monitoring cycle raised an exception: {exc}")
 
 
 def _run_scheduler_loop():

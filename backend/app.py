@@ -9,9 +9,11 @@ from backend.routes.health import router as health_router
 from backend.routes.system import router as system_router
 from backend.routes.pipeline import router as pipeline_router
 from backend.routes.ml import router as ml_router
+from backend.routes.mlops import router as mlops_router
 from backend.routes.auth import router as auth_router
 from backend.routes.alerts import router as alerts_router
 from backend.scheduler import start_scheduler
+from database.db_connection import ensure_mlops_tables
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +28,7 @@ def _start_live_pipeline_scheduler():
     """Keep weather/river/ML-feature/prediction data live automatically -
     see backend/scheduler.py. Does not train or retrain the model."""
 
+    ensure_mlops_tables()
     start_scheduler()
 
 app.add_middleware(
@@ -47,6 +50,7 @@ app.include_router(health_router)
 app.include_router(system_router)
 app.include_router(pipeline_router)
 app.include_router(ml_router)
+app.include_router(mlops_router)
 app.include_router(auth_router)
 app.include_router(alerts_router)
 
