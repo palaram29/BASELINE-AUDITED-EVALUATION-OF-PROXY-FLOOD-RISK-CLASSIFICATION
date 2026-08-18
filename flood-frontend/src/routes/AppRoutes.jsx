@@ -9,6 +9,7 @@ import Prediction from "../pages/Prediction/Prediction";
 import Statistics from "../pages/Statistics/Statistics";
 import Pipeline from "../pages/Pipeline/Pipeline";
 import MLDashboard from "../pages/MLDashboard/MLDashboard";
+import MLOps from "../pages/MLOps/MLOps";
 import About from "../pages/About/About";
 import NotFound from "../pages/NotFound/NotFound";
 import Register from "../pages/Auth/Register";
@@ -27,6 +28,7 @@ function AppRoutes() {
           <Route path="/statistics" element={<Statistics />} />
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/ml-dashboard" element={<MLDashboard />} />
+          <Route path="/mlops" element={<MLOps />} />
           <Route path="/about" element={<About />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
