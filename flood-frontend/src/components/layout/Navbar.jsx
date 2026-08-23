@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import LivePulse from "../dashboard/LivePulse";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import usePipelineStatus from "../../hooks/usePipelineStatus";
 
 // Derives the Navbar's live-status pill from the scheduler's real run

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import { getCities } from "../../services/authService";
 
 function Register() {

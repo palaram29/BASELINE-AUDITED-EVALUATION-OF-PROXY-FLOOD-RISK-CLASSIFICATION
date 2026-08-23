@@ -2,13 +2,7 @@ import Card from "../common/Card";
 import Badge from "../common/Badge";
 import ProgressBar from "../common/ProgressBar";
 import EmptyState from "../common/EmptyState";
-
-// HIGH/MEDIUM/LOW -> green/yellow/red, the same 3-tone convention the
-// MLOps panels use for NORMAL/WARNING/CRITICAL (components/mlops/*).
-// Never used alone - every score below also prints the numeric percentage
-// and the level text, so nothing here relies on color alone to be
-// understood (spec requirement).
-export const RELIABILITY_TONE = { HIGH: "green", MEDIUM: "yellow", LOW: "red" };
+import { RELIABILITY_TONE } from "../../utils/reliabilityTone";
 
 function pct(value) {
   return value != null ? `${Math.round(value * 100)}%` : "—";

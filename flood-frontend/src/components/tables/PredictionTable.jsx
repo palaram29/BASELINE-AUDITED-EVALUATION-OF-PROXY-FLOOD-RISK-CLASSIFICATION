@@ -1,6 +1,6 @@
 import { normalizeRisk } from "../../utils/riskLevels";
 import Badge from "../common/Badge";
-import { RELIABILITY_TONE } from "../reliability/ReliabilityScoreCard";
+import { RELIABILITY_TONE } from "../../utils/reliabilityTone";
 
 // Predicted_Risk's real values are Low/Medium/High/Extreme (the ML model's
 // training labels), not "Moderate" - a direct string comparison against

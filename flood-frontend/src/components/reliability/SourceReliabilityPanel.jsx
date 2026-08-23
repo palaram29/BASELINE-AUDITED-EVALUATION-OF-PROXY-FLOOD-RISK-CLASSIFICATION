@@ -1,7 +1,7 @@
 import Card from "../common/Card";
 import Badge from "../common/Badge";
 import EmptyState from "../common/EmptyState";
-import { RELIABILITY_TONE } from "./ReliabilityScoreCard";
+import { RELIABILITY_TONE } from "../../utils/reliabilityTone";
 
 function pct(value) {
   return value != null ? `${Math.round(value * 100)}%` : "—";

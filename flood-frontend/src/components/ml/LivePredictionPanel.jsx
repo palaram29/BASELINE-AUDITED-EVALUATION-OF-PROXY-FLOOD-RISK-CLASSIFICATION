@@ -6,7 +6,7 @@ import ErrorMessage from "../common/ErrorMessage";
 import { CITIES } from "../../constants/cities";
 import { predictBestModel } from "../../services/mlService";
 import { riskTone } from "../../utils/riskTone";
-import { RELIABILITY_TONE } from "../reliability/ReliabilityScoreCard";
+import { RELIABILITY_TONE } from "../../utils/reliabilityTone";
 
 // "ML Flood-Risk Prediction" section: scores the latest live weather
 // data for a chosen city through the frozen production model. This is a

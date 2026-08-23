@@ -1,19 +1,20 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { AuthContext } from "./authContextObject";
 import { TOKEN_STORAGE_KEY } from "../services/api";
 import { login as loginRequest, register as registerRequest, getMe } from "../services/authService";
 
-const AuthContext = createContext(null);
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Only genuinely "loading" if there's a token to validate against
+  // getMe() - otherwise there's no async work and the logged-out state
+  // is already known on the first render.
+  const [loading, setLoading] = useState(() => Boolean(localStorage.getItem(TOKEN_STORAGE_KEY)));
 
   useEffect(() => {
     let isMounted = true;
     const token = localStorage.getItem(TOKEN_STORAGE_KEY);
 
     if (!token) {
-      setLoading(false);
       return;
     }
 
@@ -63,12 +64,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return ctx;
 }

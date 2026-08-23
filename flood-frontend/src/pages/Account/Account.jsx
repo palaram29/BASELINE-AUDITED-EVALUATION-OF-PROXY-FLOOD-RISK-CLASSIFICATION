@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import ErrorMessage from "../../components/common/ErrorMessage";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import { getCities, updateAlertCity } from "../../services/authService";
 import { getMyAlert } from "../../services/alertService";
 import { riskTone } from "../../utils/riskTone";
