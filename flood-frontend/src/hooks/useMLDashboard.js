@@ -37,6 +37,9 @@ function useMLDashboard() {
   }, []);
 
   useEffect(() => {
+    // fetchAll's setState calls all happen after an `await`, so this is
+    // the standard fetch-on-mount pattern, not a synchronous render cascade.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
     const interval = setInterval(fetchAll, 20000);
     return () => clearInterval(interval);

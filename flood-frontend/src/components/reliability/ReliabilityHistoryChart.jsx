@@ -11,13 +11,24 @@ import { getReliabilityHistory } from "../../services/reliabilityService";
 function ReliabilityHistoryChart({ source }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Clears the chart the moment `source` is deselected, adjusted during
+  // render rather than in the effect below (React's documented pattern
+  // for "reset state when a prop changes").
+  const [syncedSource, setSyncedSource] = useState(source);
+  if (source !== syncedSource) {
+    setSyncedSource(source);
+    if (!source) setHistory([]);
+  }
 
   useEffect(() => {
     if (!source) {
-      setHistory([]);
       return;
     }
     let cancelled = false;
+    // Shows the loading state immediately when a new source is picked; the
+    // fetch itself resolves setHistory/setLoading(false) asynchronously
+    // below via .then/.finally.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getReliabilityHistory(source, 30)
       .then((data) => {

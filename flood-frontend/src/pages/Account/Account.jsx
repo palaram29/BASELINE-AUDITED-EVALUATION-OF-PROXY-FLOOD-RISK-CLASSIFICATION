@@ -20,6 +20,15 @@ function Account() {
 
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState(user?.alert_city || "");
+  // Keeps selectedCity synced to user.alert_city (e.g. once `user` loads
+  // async, or after a save elsewhere updates it) without an effect - this
+  // adjusts state during render, React's documented pattern for "reset
+  // state when a prop changes" (see "You Might Not Need an Effect").
+  const [syncedUser, setSyncedUser] = useState(user);
+  if (user !== syncedUser) {
+    setSyncedUser(user);
+    if (user) setSelectedCity(user.alert_city);
+  }
   const [alert, setAlert] = useState(null);
   const [alertLoading, setAlertLoading] = useState(true);
   const [alertError, setAlertError] = useState("");
@@ -29,10 +38,6 @@ function Account() {
   useEffect(() => {
     getCities().then(setCities).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (user) setSelectedCity(user.alert_city);
-  }, [user]);
 
   const fetchAlert = () => {
     setAlertLoading(true);
@@ -44,6 +49,11 @@ function Account() {
   };
 
   useEffect(() => {
+    // fetchAlert's synchronous setAlertLoading(true)/setAlertError("") are
+    // no-ops here (they match the initial state above); fetchAlert also
+    // doubles as the interval/manual-refresh handler below, not an
+    // effect-only function.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAlert();
     // Refresh alongside the rest of the app's live data so a change in
     // conditions for the user's city shows up without a manual reload.

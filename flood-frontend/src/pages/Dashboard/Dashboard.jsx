@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import useLiveDashboard from "../../hooks/useLiveDashboard";
 import useReliability from "../../hooks/useReliability";
 import SummarySection from "../../components/dashboard/SummarySection";
@@ -20,37 +20,39 @@ function Dashboard() {
   const { dashboard, loading, error, lastUpdated } = useLiveDashboard();
   const { summary: reliabilitySummary } = useReliability();
   const [toast, setToast] = useState(null);
-  const hasInitialized = useRef(false);
+  // Recomputes the toast from `dashboard` during render (not in an effect)
+  // whenever it changes, skipping the very first render so mount doesn't
+  // flash a toast for already-known conditions. React's documented pattern
+  // for adjusting state when a prop/value changes.
+  const [announcedDashboard, setAnnouncedDashboard] = useState(null);
+  if (dashboard !== announcedDashboard) {
+    const isFirstRun = announcedDashboard === null;
+    setAnnouncedDashboard(dashboard);
 
-  useEffect(() => {
-    if (!hasInitialized.current) {
-      hasInitialized.current = true;
-      return;
+    if (!isFirstRun) {
+      const criticalRiver = dashboard.river.find((item) => item.Status === "Alert");
+      // Predicted_Risk's real values are Low/Medium/High/Extreme (the ML
+      // model's training labels, not "Moderate"/"Very High") - normalizeRisk()
+      // catches "Extreme" too, so the most severe predictions still raise
+      // this alert instead of being silently ignored.
+      const highRiskCity = dashboard.prediction.find((item) => {
+        const risk = normalizeRisk(item.Predicted_Risk);
+        return risk === "High" || risk === "Very High";
+      });
+
+      if (!criticalRiver && !highRiskCity) {
+        setToast(null);
+      } else {
+        const message = criticalRiver && highRiskCity
+          ? `${criticalRiver.River} is at a critical level and ${highRiskCity.City} is under high risk.`
+          : criticalRiver
+            ? `${criticalRiver.River} has reached a critical level.`
+            : `${highRiskCity.City} has moved into high risk.`;
+
+        setToast({ message, type: "danger" });
+      }
     }
-
-    const criticalRiver = dashboard.river.find((item) => item.Status === "Alert");
-    // Predicted_Risk's real values are Low/Medium/High/Extreme (the ML
-    // model's training labels, not "Moderate"/"Very High") - normalizeRisk()
-    // catches "Extreme" too, so the most severe predictions still raise
-    // this alert instead of being silently ignored.
-    const highRiskCity = dashboard.prediction.find((item) => {
-      const risk = normalizeRisk(item.Predicted_Risk);
-      return risk === "High" || risk === "Very High";
-    });
-
-    if (!criticalRiver && !highRiskCity) {
-      setToast(null);
-      return;
-    }
-
-    const message = criticalRiver && highRiskCity
-      ? `${criticalRiver.River} is at a critical level and ${highRiskCity.City} is under high risk.`
-      : criticalRiver
-        ? `${criticalRiver.River} has reached a critical level.`
-        : `${highRiskCity.City} has moved into high risk.`;
-
-    setToast({ message, type: "danger" });
-  }, [dashboard]);
+  }
 
   if (loading) {
     return (
