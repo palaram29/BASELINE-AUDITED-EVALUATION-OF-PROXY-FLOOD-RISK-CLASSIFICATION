@@ -28,6 +28,15 @@ The Flood Prediction System automates the complete flood prediction workflow by:
 - ⚡ FastAPI REST APIs
 - 🔄 Automated Prediction Pipeline
 - 📝 Centralized Logging
+- 🔐 User Authentication (JWT) & Per-City Alert Subscriptions
+- 🔔 Personalized Flood-Risk Alerts (`/alerts/me`)
+- 🛡 Per-Source Data Reliability Scoring (Completeness/Timeliness/Validity/History)
+- 🧪 MLOps Monitoring - model versioning, drift detection, data-quality checks,
+  retraining status and a manual model-promotion workflow
+- 🖥 React (Vite) Frontend - Dashboard, Weather, River, Prediction, Reliability,
+  MLOps, Pipeline, Statistics, Account/Auth and About pages
+- 🗺 Interactive Risk Maps (Leaflet) of monitored cities/rivers
+- 📈 Historical Trend Charts (rainfall, risk, reliability, status timeline)
 
 ---
 
@@ -61,6 +70,20 @@ The Flood Prediction System automates the complete flood prediction workflow by:
 
 - Python Dotenv
 
+### Auth
+
+- PyJWT (JWT bearer tokens)
+- bcrypt (password hashing)
+
+### Frontend
+
+- React 19 + Vite
+- React Router
+- Tailwind CSS
+- Axios
+- Leaflet / React-Leaflet (interactive maps)
+- Recharts (charts & trend analysis)
+
 ---
 
 ## 📂 Project Structure
@@ -69,17 +92,41 @@ The Flood Prediction System automates the complete flood prediction workflow by:
 Flood_Prediction_System/
 │
 ├── backend/
-│   ├── routes/
-│   ├── services/
+│   ├── routes/                    # weather, river, prediction, dashboard, stats,
+│   │                               # system, pipeline, health, reliability, mlops,
+│   │                               # auth, alerts
+│   ├── services/                  # one service per route module above
 │   ├── utils/
 │   ├── app.py
 │   ├── config.py
+│   ├── scheduler.py
 │   ├── weather_collector.py
 │   ├── river_scraper.py
 │   ├── extract_river_data.py
 │   ├── river_risk_engine.py
 │   ├── generate_ml_features.py
 │   └── predict_flood.py
+│
+├── reliability/                    # pure, DB-free reliability scoring engine
+│   ├── completeness.py
+│   ├── timeliness.py
+│   ├── validity.py
+│   ├── historical.py
+│   ├── scorer.py
+│   ├── degradation.py
+│   └── tests/
+│
+├── flood-frontend/                 # React (Vite) SPA
+│   └── src/
+│       ├── pages/                  # Dashboard, Weather, River, Prediction,
+│       │                           # Statistics, Reliability, MLDashboard, MLOps,
+│       │                           # Pipeline, Account, Auth, About, NotFound
+│       ├── components/             # cards, charts, common, dashboard, layout,
+│       │                           # maps, ml, mlops, reliability, tables, weather
+│       ├── context/                # AuthContext
+│       ├── hooks/
+│       ├── routes/
+│       └── services/
 │
 ├── database/
 │   ├── db_connection.py
@@ -236,10 +283,18 @@ Prediction Results
 | GET    | `/reliability/summary` | Dashboard Widget Summary  |
 | GET    | `/reliability/validation-flags` | Flagged/Suspicious Records |
 | GET    | `/mlops/*`             | Model lifecycle, drift, data quality (see `docs/MLOPS_INTEGRATION_PLAN.md`) |
+| GET    | `/auth/cities`         | Cities Available for Alert Subscription |
+| POST   | `/auth/register`       | Register a New User               |
+| POST   | `/auth/login`          | Log In (returns JWT)              |
+| GET    | `/auth/me`             | Current User Profile (JWT-protected) |
+| PUT    | `/auth/me/alert-city`  | Update the User's Alert City       |
+| GET    | `/alerts/me`           | Current User's Flood-Alert Status (JWT-protected) |
 
 ---
 
 ## 🛡️ Data Source Reliability
+
+Full design, architecture, and the degraded-data experiment results are documented in [`docs/DATA_RELIABILITY_LAYER.md`](docs/DATA_RELIABILITY_LAYER.md).
 
 A per-source reliability layer sits between raw data collection and the ML pipeline, scoring every
 environmental data source (one per City for weather, one per River:Station for river) on four
@@ -335,18 +390,27 @@ the project's existing lightweight test-script convention (`database/test_db.py`
 
 ### Input Features
 
+**Baseline** (production, default):
+
 - City
 - 3-Day Rainfall
 - Average Temperature
 - Average Wind Speed
 - Elevation
+- Coastal Flag
+
+**Reliability-aware** (research configuration, adds):
+
+- Weather Reliability
+- River Reliability
+- Overall Data Reliability
 
 ### Output
 
 - Low Risk
 - Medium Risk
 - High Risk
-- Very High Risk
+- Extreme Risk
 
 ### Model Comparison & Selection
 
@@ -397,13 +461,15 @@ The project uses PostgreSQL to store:
 
 ## 📈 Future Improvements
 
-- Interactive Maps
-- Real-time Notifications
-- SMS & Email Alerts
-- Historical Trend Analysis
-- MLOps monitoring (model version, feature/prediction drift, missing-data
-  rate, rollback, retraining triggers) and the Docker/CI/CD deployment
-  stack it runs on — see [`docs/MLOPS_INTEGRATION_PLAN.md`](docs/MLOPS_INTEGRATION_PLAN.md)
+- Push/SMS/Email delivery for flood alerts (currently pull-based via
+  `GET /alerts/me`, not yet pushed to the user)
+- Push-alerting (email/Slack/GitHub issue) when drift or data-quality
+  breaches a threshold — today those events land in
+  `GET /mlops/retraining-status` for a human to check on request, there's
+  no automatic notification yet
+- Docker/CI-CD deployment stack for the backend + frontend — see
+  [`docs/MLOPS_INTEGRATION_PLAN.md`](docs/MLOPS_INTEGRATION_PLAN.md) §0
+  for exactly what's already built vs. still planned
 
 ---
 

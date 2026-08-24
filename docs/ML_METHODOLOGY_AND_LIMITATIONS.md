@@ -438,14 +438,20 @@ The live system (weather/river ingestion -> feature processing -> ML
 prediction -> dashboard/map) uses a **frozen** production model, not a
 continuously-retrained one.
 
-This policy currently has no monitoring layer behind it - there is no
-tracked evidence for *when* a human should re-run `ML/train_models.py`.
-`docs/MLOPS_INTEGRATION_PLAN.md` designs that evidence layer (feature/
-prediction drift, missing-data rate, versioned rollback via MLflow) as
-an addition that preserves this section's human-gated retraining rule
-unchanged - it turns "a human decides to retrain" into "a human decides
-to retrain, informed by a drift alert" rather than replacing the
-decision with automation.
+**Update: the evidence layer described below now exists and is live.**
+`docs/MLOPS_INTEGRATION_PLAN.md` originally designed this as future work;
+Phase 1 of that plan (and the model-registry/rollback half of Phase 2)
+has since been implemented as `backend/services/mlops_service.py` /
+`backend/routes/mlops.py` (`GET /mlops/drift`, `/mlops/data-quality`,
+`/mlops/retraining-status`, `/mlops/models`, `POST
+/mlops/models/{id}/promote`), backed by the `ml_*` Postgres tables and
+surfaced on the frontend's MLDashboard/MLOps pages - see that document's
+"Implementation status" section for exactly what's live vs. still
+planned (Prometheus/Grafana push-alerting and the Docker/CI-CD stack
+remain not implemented). This turns "a human decides to retrain" into "a
+human decides to retrain, informed by a drift alert" without replacing
+the decision with automation - this section's human-gated retraining
+rule is unchanged.
 
 - Training happens **offline only**, by a human running
   `python ML/train_models.py` against the historical dataset described

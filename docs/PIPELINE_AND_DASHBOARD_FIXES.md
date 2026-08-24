@@ -103,12 +103,13 @@ No database schema, routes, or other frontend pages were touched.
 - The main Dashboard page now genuinely re-polls the backend every 30
   seconds, so it will pick up new pipeline runs automatically without
   requiring a page reload.
-- The **Weather, River, Prediction, and Statistics pages still only fetch
-  once per page visit** (`useWeather`, `useRiver`, `usePrediction`,
-  `useStatistics` — none of them poll on an interval). They'll show fresh
-  data whenever navigated to, but not while sitting on the page. Extending
-  the same 30-second polling pattern to those hooks is a natural follow-up
-  if continuous live updates are wanted there too.
+- **Update (since this fix landed): the Weather, River, Prediction, and
+  Statistics pages now poll too.** `useWeather`, `useRiver`,
+  `usePrediction`, and `useStatistics` each carry the same
+  `setInterval(fetch..., 30000)` pattern as `useLiveDashboard`, so every
+  page that shows live pipeline data re-fetches every 30 seconds while
+  it's open, not just on navigation. The follow-up this document
+  originally suggested has been completed.
 - `river_scraper.py`'s daemon mode (`python backend/river_scraper.py`, no
   args) is still the intended way to keep river data continuously fresh in
   the background — it is not started automatically by anything in this

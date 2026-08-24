@@ -11,6 +11,72 @@ dissertation's system-design chapter.
 
 ---
 
+## 0. Implementation status (update - this plan is now partly built)
+
+Sections 1-9 below are kept as originally written, since the reasoning
+still holds and is meant to be lifted into the dissertation. This section
+records what has actually been implemented since, so the rest of the
+document can be read as "design intent," not "current state."
+
+**Built and live today:**
+
+- `ML/train_models.py` logs every run to MLflow (`mlflow.start_run`,
+  `log_params`/`log_metrics`, `mlflow.sklearn.log_model`) against
+  `sqlite:///mlflow.db` - requirement 7 (training history) and half of
+  requirement 1 (model version) from §2's table.
+- Feature drift (PSI vs. a stored training baseline), live prediction-
+  class distribution vs. the training-period reference, and per-source
+  missing-data rate are all computed for real (not stubbed) by
+  `backend/services/mlops_service.py` and exposed via `GET /mlops/drift`,
+  `GET /mlops/predictions`, and `GET /mlops/data-quality` - requirements
+  2, 3, 4 and 5.
+- Rollback (requirement 8) works, but the design in §6 changed: **Postgres
+  is the source of truth, not the MLflow Model Registry.** Every training
+  run's candidate versions are written to a new `ml_model_versions` table
+  (`database/db_connection.py::ensure_mlops_tables`); `POST
+  /mlops/models/{id}/promote` flips one row's `status` to `Production`
+  (archiving whichever was previously `Production`) and copies that
+  artifact over `ML/models/best_model.pkl` - the same function handles a
+  fresh promotion and a rollback, since promoting an older `Archived`
+  version *is* a rollback. The MLflow Model Registry stage is still
+  updated too (`_mlflow_transition_stage_best_effort`), but only as a
+  best-effort audit mirror - if MLflow is unreachable, promotion still
+  succeeds, which the original §6 design (MLflow Registry as the
+  authority the live app reads from) didn't allow for.
+- Retraining triggers (requirement 9) are implemented as designed: drift/
+  quality threshold breaches write a row to `ml_retraining_events`
+  (`event_type='drift_alert'`/`'quality_alert'`), surfaced via `GET
+  /mlops/retraining-status`. There is still no automatic call to
+  `ML/train_models.py` anywhere - matches §2's "signal a human acts on,
+  never an automatic retrain" rule exactly.
+- `flood-frontend/src/pages/MLDashboard` and the newer `MLOps` page
+  render all of the above (model version/registry, training history,
+  drift, data quality, prediction distribution, retraining status,
+  health rollup, promote/rollback action).
+- Model-performance monitoring (requirement 6) is implemented exactly as
+  §5 below says it honestly can be: `GET /mlops/performance` returns the
+  offline train/test metrics tagged `ground_truth_available: false`,
+  never a fabricated live accuracy.
+
+**Still not implemented (§8's Phase 2 push-alerting and Phase 3):**
+
+- No `GET /metrics` / `prometheus_client` exposition endpoint.
+- No Prometheus, Grafana, or Alertmanager - drift/quality breaches are
+  visible on `/mlops/retraining-status` and the MLOps page on request,
+  not pushed to a human (no email/Slack/GitHub-issue notification yet).
+- No `docker-compose.yml` and no `.github/workflows/` CI - the Phase 3
+  items, and the Docker/CI-CD line in `README.md`'s "Future
+  Improvements", are unchanged from the original plan.
+
+In short: **Phase 1 shipped in full, plus the registry/rollback half of
+Phase 2** - implemented against Postgres instead of the MLflow Model
+Registry as the system of record, with MLflow kept as a best-effort
+audit trail rather than a hard dependency of the live request path.
+Phase 2's push-alerting half and all of Phase 3 remain exactly as
+designed below.
+
+---
+
 ## 1. Why MLOps, distinct from DevOps
 
 DevOps (already covered elsewhere in this project's documentation: the
@@ -121,20 +187,23 @@ threshold is breached).
 
 ## 4. New components this would add (when implementation is scoped)
 
-| Component | Type | Purpose |
-|---|---|---|
-| `ML/train_models.py` | modified | add `mlflow.start_run()` around each candidate model's fit/eval, `mlflow.log_metrics(...)` for the §11 table's columns, `mlflow.sklearn.log_model(...)`, register to Model Registry with stage `Staging` |
-| `ML/baseline_stats.py` | new | computes and saves per-feature mean/std/percentile buckets on the training set, for the PSI calculation to compare live data against |
-| `ML/reports/feature_baseline.json` | new artifact | output of the above; frozen alongside `production_model.json` at training time |
-| `backend/services/monitoring_service.py` | new | reads `ml_features`/`prediction_results`/pipeline run logs; computes PSI, missing-data rate, prediction distribution |
-| `backend/routes/monitoring.py` | new | `GET /monitoring/drift`, `GET /monitoring/data-quality`, `GET /monitoring/predictions` - feeds both the dashboard and `/metrics` |
-| `GET /metrics` | new (in `backend/app.py`) | `prometheus_client` exposition endpoint, scraped by Prometheus |
-| `flood-frontend/src/pages/MLDashboard` | extended | new panel: drift score per feature, missing-data rate trend, prediction-distribution chart, model version/rollback history - alongside the existing Model Comparison / Best Model panels |
-| `docker-compose.yml` | new | `backend`, `postgres`, `mlflow` (tracking server + registry backed by Postgres/S3-compatible artifact store), `prometheus`, `grafana` |
-| `.github/workflows/ci.yml` | new | test/lint on push; optional scheduled drift-check job |
+| Component | Type | Purpose | Status |
+|---|---|---|---|
+| `ML/train_models.py` | modified | add `mlflow.start_run()` around each candidate model's fit/eval, `mlflow.log_metrics(...)`, `mlflow.sklearn.log_model(...)` | **Done** |
+| `ML/register_run.py` | new (not in the original plan) | registers a completed training run's candidate versions into the `ml_model_versions` Postgres table, ready to be promoted | **Done** |
+| `ML/baseline_stats.py` (shipped as part of `ML/prepare_dataset.py`'s output) | new | per-feature quantile buckets on the training set for the PSI calculation | **Done**, as `ML/reports/feature_baseline.json` |
+| `backend/services/monitoring_service.py` | new | reads `ml_features`/`prediction_results`; computes PSI, missing-data rate, prediction distribution | **Done**, shipped as `backend/services/mlops_service.py` (broader scope - also owns the model registry/promotion) |
+| `backend/routes/monitoring.py` | new | drift/data-quality/prediction endpoints | **Done**, shipped as `backend/routes/mlops.py` (`GET /mlops/drift`, `/mlops/data-quality`, `/mlops/predictions`, plus registry/promote endpoints not in the original scope) |
+| `GET /metrics` | new (in `backend/app.py`) | `prometheus_client` exposition endpoint, scraped by Prometheus | Not built |
+| `flood-frontend/src/pages/MLDashboard` | extended | drift/missing-data/prediction-distribution panels, model version/rollback history | **Done**, plus a dedicated `MLOps` page beyond the original one-page scope |
+| `docker-compose.yml` | new | `backend`, `postgres`, `mlflow`, `prometheus`, `grafana` | Not built |
+| `.github/workflows/ci.yml` | new | test/lint on push; optional scheduled drift-check job | Not built |
 
-None of these exist yet - this section is the implementation checklist
-for whenever the "in-app monitoring" or "full stack" scope is greenlit.
+Everything marked **Done** above shipped without the MLflow Model
+Registry acting as the system of record - see §0 for why Postgres took
+that role instead. The remaining rows (Prometheus/Grafana/Alertmanager
+and the Docker/CI stack) are still an open implementation checklist for
+whenever that scope is greenlit.
 
 ---
 
@@ -169,9 +238,20 @@ doc).
 
 ## 6. Rollback design
 
-Today, "rollback" means manually restoring an old `best_model.pkl` from
-git history or a backup - not tracked, not documented, no manifest for
-it. With MLflow Model Registry:
+**As designed below** (kept for the dissertation's design-rationale
+narrative). **As actually built** (see §0): the same outcome was
+implemented against Postgres instead of the MLflow Model Registry -
+`ml_model_versions.status` (`Candidate`/`Production`/`Archived`) is the
+source of truth, `POST /mlops/models/{id}/promote`
+(`backend/services/mlops_service.py::promote_model_version`) is the one
+function that both promotes a fresh candidate and performs a rollback
+(promoting an `Archived` version), and it copies the target artifact
+over `ML/models/best_model.pkl` directly rather than the live app
+resolving `models:/flood-risk-classifier/Production` from MLflow at
+inference time - step 4 below did not end up happening this way, so
+`backend/predict_flood.py` keeps reading the plain `.pkl` file
+unchanged, and a rollback takes effect via that file copy instead of a
+registry-stage read.
 
 1. Every training run registers a new model version (v1, v2, v3, ...)
    under a registered model name (e.g. `flood-risk-classifier`),
@@ -196,18 +276,27 @@ it. With MLflow Model Registry:
 
 ## 7. Retraining trigger design
 
-Trigger conditions (initial, tunable thresholds - would need calibration
-once live data volume is sufficient):
+**As built:** the trigger conditions and "alert, not automation" rule
+below are implemented, writing to `ml_retraining_events`
+(`event_type='drift_alert'`/`'quality_alert'`) - the delivery mechanism
+differs (no Alertmanager yet, so the event is visible on `GET
+/mlops/retraining-status` and the MLOps page on request, not pushed to a
+human via email/Slack/GitHub issue), and the shipped thresholds
+(`backend/config.py`, overridable via env vars) are stricter than
+originally proposed here:
 
-- **Feature drift**: PSI > 0.2 for any of `Rainfall_3Day`,
-  `Avg_Temperature`, `Avg_WindSpeed` (0.2 is the commonly cited
-  "moderate drift, investigate" PSI threshold in the MLOps literature).
-- **Missing-data rate**: > 10% of expected daily rows missing across any
-  pipeline stage over a rolling 7-day window.
-- **Prediction distribution shift**: live High+Extreme share deviates
-  from the training-period 2.01% (§4's table) by more than a
-  to-be-calibrated margin, sustained over multiple pipeline runs (not a
-  single spike, which is expected - flood risk is seasonal).
+- **Feature drift**: PSI **> 0.1** = WARNING, **> 0.25** = CRITICAL
+  (`DRIFT_PSI_WARNING_THRESHOLD` / `DRIFT_PSI_CRITICAL_THRESHOLD`) for
+  each of `Rainfall_3Day`, `Avg_Temperature`, `Avg_WindSpeed` - not the
+  single 0.2 cutoff first proposed here.
+- **Missing-data rate**: **> 5%** = WARNING, **> 10%** = CRITICAL
+  (`MISSING_DATA_WARNING_PCT` / `MISSING_DATA_CRITICAL_PCT`) over the
+  monitoring window, computed per source.
+- **Prediction distribution shift**: live High+Extreme share vs. the
+  training-period reference (§4's table) is surfaced via `GET
+  /mlops/predictions` for a human to read, but does not yet feed its own
+  WARNING/CRITICAL threshold or `ml_retraining_events` row - only drift
+  and missing-data currently raise alerts.
 
 Action on trigger: Alertmanager notification (email/Slack/GitHub issue)
 naming which condition fired and its current value. **No automatic
@@ -239,10 +328,9 @@ tools named in the requirement.
 ## 9. Where this fits in the existing documentation
 
 - `docs/ML_METHODOLOGY_AND_LIMITATIONS.md` §18 ("Production deployment:
-  frozen model policy") should gain a forward reference to this
-  document once any phase is implemented, since MLOps monitoring is the
-  evidence layer that policy currently lacks.
-- `README.md`'s "Future Improvements" list (Docker Deployment, CI/CD
-  Pipeline) should be updated to reference Phase 3 here rather than
-  standing alone, since this plan supersedes them with a fuller scope
-  (MLflow, Prometheus/Grafana) than what was originally listed.
+  frozen model policy") now references this document and §0 above,
+  since Phase 1 is implemented and is no longer a gap that policy lacks.
+- `README.md`'s "Future Improvements" list now names Phase 2's
+  push-alerting and the Phase 3 Docker/CI-CD stack specifically, rather
+  than the original generic "Docker Deployment, CI/CD Pipeline" bullets,
+  since Phase 1 (and part of Phase 2) is no longer future work.
