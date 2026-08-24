@@ -10,6 +10,7 @@ import RiskOverview from "../../components/dashboard/RiskOverview";
 import FloodMap from "../../components/maps/FloodMap";
 import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
+import Skeleton from "../../components/common/Skeleton";
 import Badge from "../../components/common/Badge";
 import Toast from "../../components/common/Toast";
 import ViewToggle from "../../components/common/ViewToggle";
@@ -18,7 +19,7 @@ import ReliabilityScoreCard from "../../components/reliability/ReliabilityScoreC
 import { normalizeRisk } from "../../utils/riskLevels";
 
 function Dashboard() {
-  const { dashboard, loading, error, lastUpdated } = useLiveDashboard();
+  const { dashboard, loading, error, lastUpdated, retry } = useLiveDashboard();
   const { summary: reliabilitySummary } = useReliability();
   const [toast, setToast] = useState(null);
   const [view, setView] = useState("live");
@@ -58,18 +59,26 @@ function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-2xl bg-white shadow-sm">
-        <p className="text-lg font-medium text-slate-600">Loading dashboard insights...</p>
+      <div className="space-y-8">
+        <Skeleton className="h-40 w-full rounded-3xl sm:h-32" />
+        <Skeleton className="h-72 w-full rounded-2xl" />
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-24 rounded-2xl" />
+          <Skeleton className="h-24 rounded-2xl" />
+          <Skeleton className="h-24 rounded-2xl" />
+        </div>
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     );
   }
 
-  if (error) {
-    return <ErrorMessage message={error} />;
-  }
-
   return (
     <div className="space-y-8">
+      {/* Backend errors still leave `dashboard` populated with simulated
+          data (see useLiveDashboard), so the page stays usable behind
+          this banner instead of being replaced by it. */}
+      {error ? <ErrorMessage message={error} onRetry={retry} /> : null}
+
       <div className="rounded-3xl border border-blue-100 bg-gradient-to-r from-slate-900 via-blue-900 to-cyan-800 p-6 text-white shadow-2xl">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>

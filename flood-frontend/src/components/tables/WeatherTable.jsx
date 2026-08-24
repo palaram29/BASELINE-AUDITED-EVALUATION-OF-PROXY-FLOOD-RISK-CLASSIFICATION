@@ -1,6 +1,8 @@
+import Card from "../common/Card";
+
 function WeatherTable({ weather }) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <Card>
       <h2 className="text-xl font-semibold mb-4">
         Latest Weather Data
       </h2>
@@ -17,9 +19,9 @@ function WeatherTable({ weather }) {
           </thead>
 
           <tbody>
-            {weather.map((item) => (
+            {weather.map((item, index) => (
               <tr
-                key={item.id}
+                key={item.id ?? `${item.City}-${index}`}
                 className="border-b hover:bg-slate-50"
               >
                 <td className="px-4 py-3">{item.City}</td>
@@ -31,7 +33,7 @@ function WeatherTable({ weather }) {
           </tbody>
         </table>
       </div>
-    </div>
+    </Card>
   );
 }
 

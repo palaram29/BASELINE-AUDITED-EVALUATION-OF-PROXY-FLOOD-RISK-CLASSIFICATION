@@ -5,7 +5,7 @@ import WeatherHero from "../../components/weather/WeatherHero";
 import WeatherSearch from "../../components/weather/WeatherSearch";
 import WeatherForecastCard from "../../components/weather/WeatherForecastCard";
 import WeatherChart from "../../components/weather/WeatherChart";
-import WeatherTable from "../../components/weather/WeatherTable";
+import WeatherTable from "../../components/tables/WeatherTable";
 import PredictionTable from "../../components/tables/PredictionTable";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Badge from "../../components/common/Badge";

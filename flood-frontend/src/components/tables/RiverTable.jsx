@@ -1,6 +1,8 @@
+import Card from "../common/Card";
+
 function RiverTable({ rivers }) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <Card>
       <h2 className="text-xl font-semibold mb-4">
         River Monitoring
       </h2>
@@ -18,9 +20,9 @@ function RiverTable({ rivers }) {
           </thead>
 
           <tbody>
-            {rivers.map((river) => (
+            {rivers.map((river, index) => (
               <tr
-                key={river.id}
+                key={river.id ?? `${river.River}-${river.Station}-${index}`}
                 className="border-b hover:bg-slate-50"
               >
                 <td className="px-4 py-3">{river.River}</td>
@@ -39,7 +41,7 @@ function RiverTable({ rivers }) {
           </tbody>
         </table>
       </div>
-    </div>
+    </Card>
   );
 }
 

@@ -13,10 +13,14 @@ function useLiveDashboard() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
+  const [retryToken, setRetryToken] = useState(0);
+
   useEffect(() => {
     let isMounted = true;
 
     const fetchDashboard = async () => {
+      if (isMounted) setLoading(true);
+
       try {
         const data = await getDashboard();
         if (isMounted && data) {
@@ -60,9 +64,11 @@ function useLiveDashboard() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [retryToken]);
 
-  return { dashboard, loading, error, lastUpdated };
+  const retry = () => setRetryToken((token) => token + 1);
+
+  return { dashboard, loading, error, lastUpdated, retry };
 }
 
 export default useLiveDashboard;

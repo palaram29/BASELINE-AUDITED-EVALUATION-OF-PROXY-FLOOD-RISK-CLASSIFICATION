@@ -1,5 +1,13 @@
-function ViewToggle({ value, onChange, liveLabel = "Live", tomorrowLabel = "Tomorrow", className = "" }) {
-  const options = [
+function ViewToggle({
+  value,
+  onChange,
+  liveLabel = "Live",
+  tomorrowLabel = "Tomorrow",
+  options: customOptions,
+  ariaLabel = "Live or tomorrow view",
+  className = "",
+}) {
+  const options = customOptions || [
     { key: "live", label: liveLabel },
     { key: "tomorrow", label: tomorrowLabel },
   ];
@@ -7,7 +15,7 @@ function ViewToggle({ value, onChange, liveLabel = "Live", tomorrowLabel = "Tomo
   return (
     <div
       role="tablist"
-      aria-label="Live or tomorrow view"
+      aria-label={ariaLabel}
       className={`inline-flex shrink-0 rounded-full bg-slate-100 p-1 ${className}`}
     >
       {options.map((option) => {

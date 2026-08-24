@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import { useAuth } from "../../hooks/useAuth";
@@ -10,6 +11,7 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,26 +42,40 @@ function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
+            <label htmlFor="login-email" className="mb-1 block text-sm font-medium text-slate-700">Email</label>
             <input
+              id="login-email"
               required
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              aria-invalid={error ? "true" : undefined}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="jane@example.com"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Password</label>
-            <input
-              required
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label htmlFor="login-password" className="mb-1 block text-sm font-medium text-slate-700">Password</label>
+            <div className="relative">
+              <input
+                id="login-password"
+                required
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                aria-invalid={error ? "true" : undefined}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <button

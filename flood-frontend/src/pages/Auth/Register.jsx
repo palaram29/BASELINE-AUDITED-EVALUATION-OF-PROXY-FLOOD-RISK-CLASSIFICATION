@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import { useAuth } from "../../hooks/useAuth";
@@ -20,6 +21,11 @@ function Register() {
   });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const passwordTooShort = form.password.length > 0 && form.password.length < 8;
+  const confirmMismatch = form.confirmPassword.length > 0 && form.password !== form.confirmPassword;
 
   useEffect(() => {
     let isMounted = true;
@@ -85,8 +91,9 @@ function Register() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Full name</label>
+            <label htmlFor="reg-name" className="mb-1 block text-sm font-medium text-slate-700">Full name</label>
             <input
+              id="reg-name"
               required
               value={form.fullName}
               onChange={updateField("fullName")}
@@ -96,8 +103,9 @@ function Register() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
+            <label htmlFor="reg-email" className="mb-1 block text-sm font-medium text-slate-700">Email</label>
             <input
+              id="reg-email"
               required
               type="email"
               value={form.email}
@@ -108,8 +116,9 @@ function Register() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Phone (optional)</label>
+            <label htmlFor="reg-phone" className="mb-1 block text-sm font-medium text-slate-700">Phone (optional)</label>
             <input
+              id="reg-phone"
               type="tel"
               value={form.phone}
               onChange={updateField("phone")}
@@ -119,8 +128,9 @@ function Register() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">City to receive flood alerts for</label>
+            <label htmlFor="reg-city" className="mb-1 block text-sm font-medium text-slate-700">City to receive flood alerts for</label>
             <select
+              id="reg-city"
               required
               value={form.alertCity}
               onChange={updateField("alertCity")}
@@ -133,32 +143,68 @@ function Register() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Password</label>
-            <input
-              required
-              type="password"
-              minLength={8}
-              value={form.password}
-              onChange={updateField("password")}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="At least 8 characters"
-            />
+            <label htmlFor="reg-password" className="mb-1 block text-sm font-medium text-slate-700">Password</label>
+            <div className="relative">
+              <input
+                id="reg-password"
+                required
+                type={showPassword ? "text" : "password"}
+                minLength={8}
+                value={form.password}
+                onChange={updateField("password")}
+                aria-invalid={passwordTooShort ? "true" : undefined}
+                aria-describedby={passwordTooShort ? "reg-password-error" : undefined}
+                className={`w-full rounded-lg border px-3 py-2 pr-10 shadow-sm focus:outline-none focus:ring-2 ${
+                  passwordTooShort ? "border-red-300 focus:ring-red-400" : "border-slate-300 focus:ring-blue-500"
+                }`}
+                placeholder="At least 8 characters"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
+              </button>
+            </div>
+            {passwordTooShort ? (
+              <p id="reg-password-error" className="mt-1 text-xs text-red-600">Must be at least 8 characters.</p>
+            ) : null}
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Confirm password</label>
-            <input
-              required
-              type="password"
-              value={form.confirmPassword}
-              onChange={updateField("confirmPassword")}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label htmlFor="reg-confirm-password" className="mb-1 block text-sm font-medium text-slate-700">Confirm password</label>
+            <div className="relative">
+              <input
+                id="reg-confirm-password"
+                required
+                type={showConfirmPassword ? "text" : "password"}
+                value={form.confirmPassword}
+                onChange={updateField("confirmPassword")}
+                aria-invalid={confirmMismatch ? "true" : undefined}
+                aria-describedby={confirmMismatch ? "reg-confirm-password-error" : undefined}
+                className={`w-full rounded-lg border px-3 py-2 pr-10 shadow-sm focus:outline-none focus:ring-2 ${
+                  confirmMismatch ? "border-red-300 focus:ring-red-400" : "border-slate-300 focus:ring-blue-500"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((value) => !value)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+              >
+                {showConfirmPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
+              </button>
+            </div>
+            {confirmMismatch ? (
+              <p id="reg-confirm-password-error" className="mt-1 text-xs text-red-600">Passwords do not match.</p>
+            ) : null}
           </div>
 
           <button
             type="submit"
-            disabled={submitting || !form.alertCity}
+            disabled={submitting || !form.alertCity || passwordTooShort || confirmMismatch}
             className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? "Creating account..." : "Create account"}
