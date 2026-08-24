@@ -12,6 +12,7 @@ import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Badge from "../../components/common/Badge";
 import Toast from "../../components/common/Toast";
+import ViewToggle from "../../components/common/ViewToggle";
 import UserAlertBanner from "../../components/dashboard/UserAlertBanner";
 import ReliabilityScoreCard from "../../components/reliability/ReliabilityScoreCard";
 import { normalizeRisk } from "../../utils/riskLevels";
@@ -20,6 +21,7 @@ function Dashboard() {
   const { dashboard, loading, error, lastUpdated } = useLiveDashboard();
   const { summary: reliabilitySummary } = useReliability();
   const [toast, setToast] = useState(null);
+  const [view, setView] = useState("live");
   // Recomputes the toast from `dashboard` during render (not in an effect)
   // whenever it changes, skipping the very first render so mount doesn't
   // flash a toast for already-known conditions. React's documented pattern
@@ -89,27 +91,35 @@ function Dashboard() {
 
       <UserAlertBanner />
 
-      <div>
-        <h2 className="text-lg font-semibold text-slate-700">Live observed conditions</h2>
-        <p className="text-sm text-slate-500">
-          Directly from the latest automatic weather/river collection — not model output.
-        </p>
-      </div>
-      <SummarySection dashboard={dashboard} />
       <FloodMap />
-      <RainfallChart weather={dashboard.weather} />
-      <WeatherTable weather={dashboard.weather} />
-      <RiverTable rivers={dashboard.river} />
 
-      <div className="pt-2">
-        <h2 className="text-lg font-semibold text-slate-700">ML flood-risk forecast</h2>
-        <p className="text-sm text-slate-500">
-          The frozen production model's forecast for the following day, scored on the live data above — a
-          prediction, not an observed condition.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-700">
+            {view === "live" ? "Live observed conditions" : "ML flood-risk forecast"}
+          </h2>
+          <p className="text-sm text-slate-500">
+            {view === "live"
+              ? "Directly from the latest automatic weather/river collection — not model output."
+              : "The frozen production model's forecast for the following day, scored on the live data above — a prediction, not an observed condition."}
+          </p>
+        </div>
+        <ViewToggle value={view} onChange={setView} tomorrowLabel="Tomorrow (forecast)" />
       </div>
-      <RiskOverview prediction={dashboard.prediction} />
-      <PredictionTable predictions={dashboard.prediction} />
+
+      {view === "live" ? (
+        <>
+          <SummarySection dashboard={dashboard} />
+          <RainfallChart weather={dashboard.weather} />
+          <WeatherTable weather={dashboard.weather} />
+          <RiverTable rivers={dashboard.river} />
+        </>
+      ) : (
+        <>
+          <RiskOverview prediction={dashboard.prediction} />
+          <PredictionTable predictions={dashboard.prediction} />
+        </>
+      )}
 
       <div className="xl:w-1/2">
         <ReliabilityScoreCard summary={reliabilitySummary} />
