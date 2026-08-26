@@ -14,6 +14,7 @@ from backend.routes.auth import router as auth_router
 from backend.routes.alerts import router as alerts_router
 from backend.routes.notifications import router as notifications_router
 from backend.routes.reliability import router as reliability_router
+from backend.routes.admin import router as admin_router
 from backend.scheduler import start_scheduler
 from database.db_connection import (
     ensure_mlops_tables,
@@ -70,6 +71,7 @@ app.include_router(auth_router)
 app.include_router(alerts_router)
 app.include_router(notifications_router)
 app.include_router(reliability_router)
+app.include_router(admin_router)
 
 @app.get("/")
 def home():

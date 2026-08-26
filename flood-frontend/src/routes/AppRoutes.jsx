@@ -11,6 +11,7 @@ import Pipeline from "../pages/Pipeline/Pipeline";
 import MLDashboard from "../pages/MLDashboard/MLDashboard";
 import MLOps from "../pages/MLOps/MLOps";
 import Reliability from "../pages/Reliability/Reliability";
+import Users from "../pages/Users/Users";
 import About from "../pages/About/About";
 import NotFound from "../pages/NotFound/NotFound";
 
@@ -28,6 +29,7 @@ function AppRoutes() {
           <Route path="/ml-dashboard" element={<MLDashboard />} />
           <Route path="/mlops" element={<MLOps />} />
           <Route path="/reliability" element={<Reliability />} />
+          <Route path="/users" element={<Users />} />
           <Route path="/about" element={<About />} />
         </Route>
 

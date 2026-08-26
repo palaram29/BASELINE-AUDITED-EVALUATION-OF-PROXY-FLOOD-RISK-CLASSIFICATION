@@ -11,6 +11,7 @@ const links = [
   { to: "/ml-dashboard", label: "ML Dashboard" },
   { to: "/mlops", label: "MLOps" },
   { to: "/reliability", label: "Data Reliability" },
+  { to: "/users", label: "User Management" },
   { to: "/about", label: "About" },
 ];
 

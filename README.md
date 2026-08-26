@@ -39,8 +39,10 @@ The Flood Prediction System automates the complete flood prediction workflow by:
   retraining status and a manual model-promotion workflow
 - 🖥 **Two React (Vite) front-ends against one API:**
   - **`flood-frontend/`** - operator / research console (Dashboard, Weather, River,
-    Prediction, Reliability, MLOps, Pipeline, Statistics, About) - no login, it's
-    read-only tooling; personal alerts/notifications live in `citizen-frontend/`
+    Prediction, Reliability, MLOps, Pipeline, Statistics, User Management, About) -
+    no login, it's read-only tooling; personal alerts/notifications live in
+    `citizen-frontend/`. User Management lists everyone registered through
+    citizen-frontend, their notification history, and their area's current risk.
   - **`citizen-frontend/`** - public citizen app: your area's flood risk in plain
     language, an interactive risk map (on Home + full-screen at `/map`), weather,
     river levels, next-day forecast, registration with a location, and the in-app
@@ -105,7 +107,7 @@ Flood_Prediction_System/
 ├── backend/
 │   ├── routes/                    # weather, river, prediction, dashboard, stats,
 │   │                               # system, pipeline, health, reliability, mlops,
-│   │                               # auth, alerts, notifications
+│   │                               # auth, alerts, notifications, admin
 │   ├── services/                  # one service per route module above
 │   ├── utils/
 │   ├── app.py
@@ -131,7 +133,7 @@ Flood_Prediction_System/
 │   └── src/
 │       ├── pages/                  # Dashboard, Weather, River, Prediction,
 │       │                           # Statistics, Reliability, MLDashboard, MLOps,
-│       │                           # Pipeline, About, NotFound
+│       │                           # Pipeline, Users, About, NotFound
 │       ├── components/             # cards, charts, common, dashboard, layout,
 │       │                           # maps, ml, mlops, reliability, tables, weather
 │       ├── hooks/
@@ -315,6 +317,7 @@ Prediction Results
 | GET    | `/notifications`       | User's In-App Flood-Alert History (JWT-protected) |
 | GET    | `/notifications/unread-count` | Unread Alert Count (JWT-protected) |
 | POST   | `/notifications/mark-read`    | Mark Alerts Read (JWT-protected)  |
+| GET    | `/admin/users`         | Every Registered User + Notification History + Current Risk (operator console, no auth - see below) |
 
 ---
 
@@ -332,6 +335,18 @@ Both are additive: the citizen app only consumes existing public data endpoints 
 `flood-frontend/` has no login of its own - it's read-only operator tooling; every
 account/alert-subscription flow lives in `citizen-frontend/`, the one place a
 person actually registers.
+
+### User management (operator console)
+
+`flood-frontend/`'s **User Management** page (`GET /admin/users`) lists every
+citizen-frontend registration - name, email, phone, alert city, notification
+history, and that city's *current* live risk (not just the tier they were last
+notified about) - read-only, no create/edit/delete. Like `/mlops/*` and
+`/reliability/*`, this endpoint has no auth check: `flood-frontend/` is trusted
+operator tooling with no login of its own, so it follows the same convention
+those routers already established rather than adding a separate admin-auth
+layer. It never touches the `users` table - registration, login, and alert-city
+changes stay exclusively `backend/routes/auth.py`'s job.
 
 ### In-app flood-alert notifications
 
