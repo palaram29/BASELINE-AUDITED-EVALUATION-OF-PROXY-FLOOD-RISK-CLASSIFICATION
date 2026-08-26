@@ -1,7 +1,5 @@
-import { Link } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import LivePulse from "../dashboard/LivePulse";
-import { useAuth } from "../../hooks/useAuth";
 import usePipelineStatus from "../../hooks/usePipelineStatus";
 
 // Derives the Navbar's live-status pill from the scheduler's real run
@@ -20,7 +18,6 @@ function deriveLiveStatus(status, statusError) {
 }
 
 function Navbar({ onMenuClick }) {
-  const { user, loading } = useAuth();
   const { status, error: statusError } = usePipelineStatus();
 
   return (
@@ -45,29 +42,6 @@ function Navbar({ onMenuClick }) {
         <div className="hidden rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 md:block">
           Monitoring portal
         </div>
-        {loading ? null : user ? (
-          <Link
-            to="/account"
-            className="rounded-full bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 sm:px-4"
-          >
-            {user.full_name.split(" ")[0]}
-          </Link>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Link
-              to="/login"
-              className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 sm:px-4"
-            >
-              Log in
-            </Link>
-            <Link
-              to="/register"
-              className="rounded-full bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700 sm:px-4"
-            >
-              Get alerts
-            </Link>
-          </div>
-        )}
       </div>
     </header>
   );

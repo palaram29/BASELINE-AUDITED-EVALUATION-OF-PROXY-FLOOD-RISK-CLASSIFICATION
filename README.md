@@ -39,7 +39,8 @@ The Flood Prediction System automates the complete flood prediction workflow by:
   retraining status and a manual model-promotion workflow
 - 🖥 **Two React (Vite) front-ends against one API:**
   - **`flood-frontend/`** - operator / research console (Dashboard, Weather, River,
-    Prediction, Reliability, MLOps, Pipeline, Statistics, Account/Auth, About)
+    Prediction, Reliability, MLOps, Pipeline, Statistics, About) - no login, it's
+    read-only tooling; personal alerts/notifications live in `citizen-frontend/`
   - **`citizen-frontend/`** - public citizen app: your area's flood risk in plain
     language, an interactive risk map (on Home + full-screen at `/map`), weather,
     river levels, next-day forecast, registration with a location, and the in-app
@@ -130,10 +131,9 @@ Flood_Prediction_System/
 │   └── src/
 │       ├── pages/                  # Dashboard, Weather, River, Prediction,
 │       │                           # Statistics, Reliability, MLDashboard, MLOps,
-│       │                           # Pipeline, Account, Auth, About, NotFound
+│       │                           # Pipeline, About, NotFound
 │       ├── components/             # cards, charts, common, dashboard, layout,
 │       │                           # maps, ml, mlops, reliability, tables, weather
-│       ├── context/                # AuthContext
 │       ├── hooks/
 │       ├── routes/
 │       └── services/
@@ -329,6 +329,9 @@ Two independent Vite apps talk to the same FastAPI backend:
 
 Both are additive: the citizen app only consumes existing public data endpoints plus
 `/auth/*` and `/notifications/*`. Backend CORS (`backend/app.py`) allows both origins.
+`flood-frontend/` has no login of its own - it's read-only operator tooling; every
+account/alert-subscription flow lives in `citizen-frontend/`, the one place a
+person actually registers.
 
 ### In-app flood-alert notifications
 

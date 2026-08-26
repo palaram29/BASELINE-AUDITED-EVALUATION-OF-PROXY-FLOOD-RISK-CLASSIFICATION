@@ -14,7 +14,6 @@ import Skeleton from "../../components/common/Skeleton";
 import Badge from "../../components/common/Badge";
 import Toast from "../../components/common/Toast";
 import ViewToggle from "../../components/common/ViewToggle";
-import UserAlertBanner from "../../components/dashboard/UserAlertBanner";
 import ReliabilityScoreCard from "../../components/reliability/ReliabilityScoreCard";
 import { normalizeRisk } from "../../utils/riskLevels";
 
@@ -97,8 +96,6 @@ function Dashboard() {
           </Card>
         </div>
       </div>
-
-      <UserAlertBanner />
 
       <FloodMap />
 
