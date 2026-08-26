@@ -1,7 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { AuthContext } from "./authContextObject";
 import { TOKEN_STORAGE_KEY } from "../services/api";
-import { login as loginRequest, register as registerRequest, getMe } from "../services/authService";
+import {
+  login as loginRequest,
+  register as registerRequest,
+  getMe,
+  deleteAccount as deleteAccountRequest,
+} from "../services/authService";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -53,8 +58,16 @@ export function AuthProvider({ children }) {
     setUser((prev) => (prev ? { ...prev, ...partialUser } : prev));
   }, []);
 
+  const deleteAccount = useCallback(async (password) => {
+    await deleteAccountRequest(password);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    setUser(null);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, logout, updateUser, deleteAccount }}
+    >
       {children}
     </AuthContext.Provider>
   );

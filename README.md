@@ -312,6 +312,8 @@ Prediction Results
 | POST   | `/auth/register`       | Register a New User               |
 | POST   | `/auth/login`          | Log In (returns JWT)              |
 | GET    | `/auth/me`             | Current User Profile (JWT-protected) |
+| PUT    | `/auth/me`             | Edit Full Name / Email / Phone (JWT-protected) |
+| DELETE | `/auth/me`             | Permanently Delete Account - requires current password (JWT-protected) |
 | PUT    | `/auth/me/alert-city`  | Update the User's Alert City       |
 | GET    | `/alerts/me`           | Current User's Flood-Alert Status (JWT-protected) |
 | GET    | `/notifications`       | User's In-App Flood-Alert History (JWT-protected) |

@@ -30,3 +30,20 @@ export const updateAlertCity = async (alertCity) => {
   const response = await api.put("/auth/me/alert-city", { alert_city: alertCity });
   return response.data;
 };
+
+// Any field left undefined is left unchanged server-side.
+export const updateProfile = async ({ fullName, phone, email } = {}) => {
+  const payload = {};
+  if (fullName !== undefined) payload.full_name = fullName;
+  if (phone !== undefined) payload.phone = phone;
+  if (email !== undefined) payload.email = email;
+
+  const response = await api.put("/auth/me", payload);
+  return response.data;
+};
+
+// Permanently deletes the account - the backend requires the current
+// password to confirm, so a stolen/leaked token alone can't do this.
+export const deleteAccount = async (password) => {
+  await api.delete("/auth/me", { data: { password } });
+};

@@ -35,7 +35,7 @@ npm run lint
 | Forecast | `GET /prediction/latest` | public |
 | Weather | `GET /weather/latest` | public |
 | Rivers | `GET /river/latest` | public |
-| Register / Login / Account | `/auth/register`, `/auth/login`, `/auth/me`, `/auth/me/alert-city`, `/auth/cities` | mixed |
+| Register / Login / Account | `/auth/register`, `/auth/login`, `/auth/me` (GET/PUT/DELETE), `/auth/me/alert-city`, `/auth/cities` | mixed |
 | Alerts (bell + `/alerts`) | `GET /notifications`, `POST /notifications/mark-read` | JWT |
 
 Alerts are created server-side by `backend/services/notification_service.py` after

@@ -28,6 +28,16 @@ class UpdateAlertCityRequest(BaseModel):
     alert_city: str
 
 
+class UpdateProfileRequest(BaseModel):
+    full_name: str | None = Field(None, min_length=1, max_length=120)
+    phone: str | None = Field(None, max_length=30)
+    email: EmailStr | None = None
+
+
+class DeleteAccountRequest(BaseModel):
+    password: str = Field(..., min_length=1, description="Current password, required to confirm deletion.")
+
+
 def _validate_city(city):
     if city not in CITIES:
         raise HTTPException(status_code=422, detail=f"'{city}' is not a monitored city.")
@@ -89,3 +99,32 @@ def update_alert_city(payload: UpdateAlertCityRequest, user_id: int = Depends(ge
         return auth_service.update_alert_city(user_id, payload.alert_city)
     except AuthError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.put("/me")
+def update_profile(payload: UpdateProfileRequest, user_id: int = Depends(get_current_user_id)):
+    """Edit full_name/phone/email. Any field omitted (left as null) is
+    left unchanged - alert_city has its own endpoint above."""
+
+    try:
+        return auth_service.update_profile(
+            user_id,
+            full_name=payload.full_name,
+            phone=payload.phone,
+            email=payload.email,
+        )
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/me")
+def delete_account(payload: DeleteAccountRequest, user_id: int = Depends(get_current_user_id)):
+    """Permanently deletes the account. Requires the current password -
+    see auth_service.delete_account for why."""
+
+    try:
+        auth_service.delete_account(user_id, payload.password)
+    except AuthError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {"deleted": True}
