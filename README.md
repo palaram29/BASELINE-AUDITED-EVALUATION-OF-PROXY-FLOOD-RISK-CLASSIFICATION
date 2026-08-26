@@ -41,8 +41,10 @@ The Flood Prediction System automates the complete flood prediction workflow by:
   - **`flood-frontend/`** - operator / research console (Dashboard, Weather, River,
     Prediction, Reliability, MLOps, Pipeline, Statistics, Account/Auth, About)
   - **`citizen-frontend/`** - public citizen app: your area's flood risk in plain
-    language, weather, river levels, next-day forecast, registration with a
-    location, and the in-app alert centre. No ML / reliability / pipeline screens.
+    language, an interactive risk map (on Home + full-screen at `/map`), weather,
+    river levels, next-day forecast, registration with a location, and the in-app
+    alert centre. No ML / reliability / pipeline screens. Leaflet is code-split
+    and lazily loaded so its ~160 KB never blocks first paint.
 - 🗺 Interactive Risk Maps (Leaflet) of monitored cities/rivers
 - 📈 Historical Trend Charts (rainfall, risk, reliability, status timeline)
 
@@ -138,13 +140,14 @@ Flood_Prediction_System/
 │
 ├── citizen-frontend/               # React (Vite) SPA - public citizen app (port 5174)
 │   └── src/
-│       ├── pages/                  # Home, Weather, Rivers, Forecast, Notifications,
-│       │                           # Login, Register, Account, NotFound
-│       ├── components/             # Layout + bottom nav, RiskHero, NotificationBell,
-│       │                           # LocationPicker, EmergencyContacts, common/
+│       ├── pages/                  # Home, MapPage, Weather, Rivers, Forecast,
+│       │                           # Notifications, Login, Register, Account, NotFound
+│       ├── components/             # Layout + nav, RiskHero, LazyRiskMap + RiskMap (Leaflet),
+│       │                           # NotificationBell, LocationPicker, EmergencyContacts, common/
 │       ├── context/                # AuthContext (own token key)
 │       ├── hooks/                  # useAuth, useLiveData, useNotifications
-│       ├── utils/                  # risk, riverLevels, guidance, cityCoords, format
+│       ├── utils/                  # risk, riverLevels, guidance, cityCoords, mapData, format
+│       ├── data/                   # sriLankaDistricts.json (map polygons)
 │       ├── routes/
 │       └── services/
 │
@@ -322,7 +325,7 @@ Two independent Vite apps talk to the same FastAPI backend:
 | App | Port (dev) | Audience | Run |
 | --- | --- | --- | --- |
 | `flood-frontend/` | 5173 | Operators / researchers - full console incl. ML, MLOps, pipeline, reliability | `cd flood-frontend && npm install && npm run dev` |
-| `citizen-frontend/` | 5174 | Public - area flood risk, weather, river levels, forecast, alert centre | `cd citizen-frontend && npm install && npm run dev` |
+| `citizen-frontend/` | 5174 | Public - area flood risk, risk map, weather, river levels, forecast, alert centre | `cd citizen-frontend && npm install && npm run dev` |
 
 Both are additive: the citizen app only consumes existing public data endpoints plus
 `/auth/*` and `/notifications/*`. Backend CORS (`backend/app.py`) allows both origins.

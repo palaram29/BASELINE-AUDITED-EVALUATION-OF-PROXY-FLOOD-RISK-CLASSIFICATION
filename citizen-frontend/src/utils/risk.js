@@ -54,6 +54,16 @@ export const RISK_THEME = {
   },
 };
 
+// Raw hex per tier - for canvas/SVG contexts (the Leaflet map) that can't
+// use the Tailwind class strings above. Same colours as RISK_THEME.
+export const RISK_HEX = {
+  Low: "#16a34a",
+  Medium: "#d97706",
+  High: "#ea580c",
+  "Very High": "#dc2626",
+};
+
 export const riskTheme = (risk) => RISK_THEME[normalizeRisk(risk)] || RISK_THEME.Low;
 export const riskLabel = (risk) => RISK_LABEL[normalizeRisk(risk)] || "Low";
 export const riskRank = (risk) => RISK_ORDER.indexOf(normalizeRisk(risk));
+export const riskHex = (risk) => RISK_HEX[normalizeRisk(risk)] || RISK_HEX.Low;

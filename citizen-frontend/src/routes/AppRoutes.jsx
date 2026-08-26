@@ -7,6 +7,7 @@ import Home from "../pages/Home";
 import Weather from "../pages/Weather";
 import Rivers from "../pages/Rivers";
 import Forecast from "../pages/Forecast";
+import MapPage from "../pages/MapPage";
 import Notifications from "../pages/Notifications";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -19,6 +20,7 @@ function AppRoutes() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/map" element={<MapPage />} />
           <Route path="/weather" element={<Weather />} />
           <Route path="/rivers" element={<Rivers />} />
           <Route path="/forecast" element={<Forecast />} />

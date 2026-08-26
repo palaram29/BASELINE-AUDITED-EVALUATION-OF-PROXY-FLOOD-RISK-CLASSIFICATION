@@ -3,6 +3,8 @@ import { FiHome, FiCloudRain, FiActivity, FiCalendar, FiUser, FiLogIn } from "re
 import { useAuth } from "../hooks/useAuth";
 import NotificationBell from "./NotificationBell";
 
+// The flood map lives on Home (and full-screen at /map) rather than in
+// its own tab.
 const TABS = [
   { to: "/", label: "Home", icon: FiHome, end: true },
   { to: "/weather", label: "Weather", icon: FiCloudRain },
@@ -24,8 +26,8 @@ function Layout() {
             </span>
           </Link>
 
-          {/* Desktop / tablet primary nav - the mobile equivalent is the
-              bottom tab bar below. */}
+          {/* Desktop / tablet primary nav - phones use the bottom tab
+              bar below. */}
           <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
             {TABS.map((tab) => {
               const Icon = tab.icon;

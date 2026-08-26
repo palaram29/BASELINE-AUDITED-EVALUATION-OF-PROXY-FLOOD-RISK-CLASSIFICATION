@@ -1,12 +1,13 @@
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
-import { FiBell, FiChevronRight } from "react-icons/fi";
+import { FiBell, FiChevronRight, FiMaximize2 } from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
 import useLiveData from "../hooks/useLiveData";
-import { getMyAlert, getLatestPrediction } from "../services/dataService";
+import { getMyAlert, getLatestPrediction, getLatestRiver } from "../services/dataService";
 import RiskHero from "../components/RiskHero";
 import NationalSnapshot from "../components/NationalSnapshot";
 import EmergencyContacts from "../components/EmergencyContacts";
+import LazyRiskMap from "../components/LazyRiskMap";
 import Card from "../components/common/Card";
 import Spinner from "../components/common/Spinner";
 import ErrorMessage from "../components/common/ErrorMessage";
@@ -31,6 +32,7 @@ function Home() {
     lastUpdated,
     refresh,
   } = useLiveData(getLatestPrediction, { intervalMs: 60000, initial: [] });
+  const { data: rivers } = useLiveData(getLatestRiver, { intervalMs: 60000, initial: [] });
 
   if (authLoading) return <Spinner label="Loading…" />;
 
@@ -56,51 +58,56 @@ function Home() {
     </Card>
   );
 
-  const secondary = (
-    <>
-      {predLoading && !predictions?.length ? (
-        <Spinner label="Loading the national picture…" />
-      ) : (
-        <NationalSnapshot predictions={predictions || []} />
-      )}
+  return (
+    <div className="mx-auto max-w-4xl space-y-4">
+      {primary}
+
+      {predError ? <ErrorMessage message={predError} onRetry={refresh} /> : null}
+
+      <section>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Flood risk map</h2>
+          <Link
+            to="/map"
+            className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline"
+          >
+            <FiMaximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+            Full map
+          </Link>
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+          <div className="h-[300px] w-full sm:h-[360px]">
+            <LazyRiskMap
+              predictions={predictions || []}
+              rivers={rivers || []}
+              homeCity={user?.alert_city || null}
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {predLoading && !predictions?.length ? (
+          <Spinner label="Loading the national picture…" />
+        ) : (
+          <NationalSnapshot predictions={predictions || []} />
+        )}
+        <EmergencyContacts />
+      </div>
+
       <div className="flex justify-end">
         <DataFreshness timestamp={lastUpdated} />
       </div>
-      <EmergencyContacts />
-    </>
-  );
 
-  const accountLink = user ? (
-    <Link
-      to="/account"
-      className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-    >
-      Change your area or review past alerts
-      <FiChevronRight className="h-4 w-4" aria-hidden="true" />
-    </Link>
-  ) : null;
-
-  // Logged-in: two-column on large screens (the risk hero is tall enough
-  // to balance the snapshot + contacts column). Anonymous: a single
-  // centred column, since the CTA card alone can't fill half the width.
-  if (!user) {
-    return (
-      <div className="mx-auto max-w-2xl space-y-4">
-        {primary}
-        {predError ? <ErrorMessage message={predError} onRetry={refresh} /> : null}
-        {secondary}
-      </div>
-    );
-  }
-
-  return (
-    <div className="lg:grid lg:grid-cols-3 lg:gap-6">
-      <div className="space-y-4 lg:col-span-2">
-        {primary}
-        {predError ? <ErrorMessage message={predError} onRetry={refresh} /> : null}
-        {accountLink}
-      </div>
-      <div className="mt-4 space-y-4 lg:mt-0">{secondary}</div>
+      {user ? (
+        <Link
+          to="/account"
+          className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+        >
+          Change your area or review past alerts
+          <FiChevronRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      ) : null}
     </div>
   );
 }

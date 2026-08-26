@@ -1,0 +1,117 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Colombo", "risk": "High" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [79.77, 6.78],
+          [80.01, 6.78],
+          [80.01, 6.96],
+          [79.77, 6.96],
+          [79.77, 6.78]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Gampaha", "risk": "High" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [79.76, 7.01],
+          [80.18, 7.01],
+          [80.18, 7.35],
+          [79.76, 7.35],
+          [79.76, 7.01]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Kalutara", "risk": "Moderate" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [79.81, 6.51],
+          [80.21, 6.51],
+          [80.21, 6.80],
+          [79.81, 6.80],
+          [79.81, 6.51]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Kandy", "risk": "Moderate" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [80.45, 7.10],
+          [80.95, 7.10],
+          [80.95, 7.45],
+          [80.45, 7.45],
+          [80.45, 7.10]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Galle", "risk": "Moderate" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [80.00, 5.90],
+          [80.45, 5.90],
+          [80.45, 6.30],
+          [80.00, 6.30],
+          [80.00, 5.90]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Matara", "risk": "Moderate" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [80.43, 5.80],
+          [80.80, 5.80],
+          [80.80, 6.10],
+          [80.43, 6.10],
+          [80.43, 5.80]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Jaffna", "risk": "Low" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [79.75, 9.30],
+          [80.35, 9.30],
+          [80.35, 9.75],
+          [79.75, 9.75],
+          [79.75, 9.30]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Trincomalee", "risk": "Low" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [81.08, 8.40],
+          [81.40, 8.40],
+          [81.40, 8.80],
+          [81.08, 8.80],
+          [81.08, 8.40]
+        ]]
+      }
+    }
+  ]
+}
