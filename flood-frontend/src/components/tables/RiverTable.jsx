@@ -1,4 +1,5 @@
 import Card from "../common/Card";
+import { FLOOD_LEVELS, formatLevel } from "../../utils/riverLevels";
 
 function RiverTable({ rivers }) {
   return (
@@ -14,6 +15,9 @@ function RiverTable({ rivers }) {
               <th className="px-4 py-3 text-left">River</th>
               <th className="px-4 py-3 text-left">Station</th>
               <th className="px-4 py-3 text-left">Water Level</th>
+              {FLOOD_LEVELS.map((level) => (
+                <th key={level.key} className="px-4 py-3 text-left">{level.label}</th>
+              ))}
               <th className="px-4 py-3 text-left">Status</th>
               <th className="px-4 py-3 text-left">Risk</th>
             </tr>
@@ -30,6 +34,11 @@ function RiverTable({ rivers }) {
                 <td className="px-4 py-3">
                   {river.WaterLevel} m
                 </td>
+                {FLOOD_LEVELS.map((level) => (
+                  <td key={level.key} className={`px-4 py-3 ${level.tone}`}>
+                    {formatLevel(river[level.key])}
+                  </td>
+                ))}
                 <td className="px-4 py-3">
                   {river.Status}
                 </td>

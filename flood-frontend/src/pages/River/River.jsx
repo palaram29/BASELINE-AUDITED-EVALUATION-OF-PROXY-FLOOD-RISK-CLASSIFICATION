@@ -7,6 +7,7 @@ import Badge from "../../components/common/Badge";
 import StatusTimeline from "../../components/charts/StatusTimeline";
 import PredictionTable from "../../components/tables/PredictionTable";
 import ViewToggle from "../../components/common/ViewToggle";
+import { FLOOD_LEVELS, formatLevel } from "../../utils/riverLevels";
 
 function River() {
   const { river, loading, error } = useRiver();
@@ -67,6 +68,9 @@ function River() {
                     <th className="px-4 py-3">River</th>
                     <th className="px-4 py-3">Station</th>
                     <th className="px-4 py-3">Water level</th>
+                    {FLOOD_LEVELS.map((level) => (
+                      <th key={level.key} className="px-4 py-3">{level.label}</th>
+                    ))}
                     <th className="px-4 py-3">Status</th>
                   </tr>
                 </thead>
@@ -76,6 +80,11 @@ function River() {
                       <td className="px-4 py-3 font-medium text-slate-700">{item.River}</td>
                       <td className="px-4 py-3">{item.Station}</td>
                       <td className="px-4 py-3">{item.WaterLevel} m</td>
+                      {FLOOD_LEVELS.map((level) => (
+                        <td key={level.key} className={`px-4 py-3 ${level.tone}`}>
+                          {formatLevel(item[level.key])}
+                        </td>
+                      ))}
                       <td className="px-4 py-3">
                         <Badge tone={item.Status === "Alert" ? "red" : item.Status === "Watch" ? "yellow" : "green"}>{item.Status}</Badge>
                       </td>

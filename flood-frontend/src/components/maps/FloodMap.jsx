@@ -9,6 +9,7 @@ import { getLatestWeather } from "../../services/weatherService";
 import RiskRings, { RISK_RING_HIT_PANE } from "./RiskRings";
 import { RISK_LEVELS, RISK_COLORS, RISK_LABELS, normalizeRisk } from "../../utils/riskLevels";
 import { computeStationSeverity } from "../../utils/floodSeverity";
+import { FLOOD_LEVELS, formatLevel } from "../../utils/riverLevels";
 
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -401,6 +402,11 @@ function FloodMap() {
                         <div>
                           Water level: <strong>{station.WaterLevel ?? "N/A"} m</strong>
                         </div>
+                        {FLOOD_LEVELS.map((level) => (
+                          <div key={level.key} className={level.tone}>
+                            {level.label}: <strong>{formatLevel(station[level.key])}</strong>
+                          </div>
+                        ))}
                         <div>
                           Rainfall: <strong>{station.Rainfall ?? "N/A"} mm</strong>
                         </div>

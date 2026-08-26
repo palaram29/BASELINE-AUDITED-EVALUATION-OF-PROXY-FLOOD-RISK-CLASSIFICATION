@@ -7,10 +7,10 @@ export const demoWeather = [
 ];
 
 export const demoRiver = [
-  { River: "Kelani", Station: "Hanwella", WaterLevel: 9.4, Status: "Alert", RiverRisk: "High" },
-  { River: "Mahaweli", Station: "Kotmale", WaterLevel: 7.2, Status: "Watch", RiverRisk: "Moderate" },
-  { River: "Nilwala", Station: "Matara", WaterLevel: 6.8, Status: "Normal", RiverRisk: "Low" },
-  { River: "Kalu", Station: "Ratnapura", WaterLevel: 10.1, Status: "Alert", RiverRisk: "High" },
+  { River: "Kelani", Station: "Hanwella", WaterLevel: 9.4, PreviousWaterLevel: 9.1, AlertLevel: 8.0, MinorFloodLevel: 10.0, MajorFloodLevel: 12.0, Status: "Alert", RiverRisk: "High" },
+  { River: "Mahaweli", Station: "Kotmale", WaterLevel: 7.2, PreviousWaterLevel: 7.3, AlertLevel: 7.0, MinorFloodLevel: 9.0, MajorFloodLevel: 11.0, Status: "Watch", RiverRisk: "Moderate" },
+  { River: "Nilwala", Station: "Matara", WaterLevel: 6.8, PreviousWaterLevel: 6.6, AlertLevel: 8.0, MinorFloodLevel: 9.5, MajorFloodLevel: 11.0, Status: "Normal", RiverRisk: "Low" },
+  { River: "Kalu", Station: "Ratnapura", WaterLevel: 10.1, PreviousWaterLevel: 9.7, AlertLevel: 9.0, MinorFloodLevel: 11.0, MajorFloodLevel: 13.0, Status: "Alert", RiverRisk: "High" },
 ];
 
 export const demoPredictions = [
