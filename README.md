@@ -30,11 +30,19 @@ The Flood Prediction System automates the complete flood prediction workflow by:
 - 📝 Centralized Logging
 - 🔐 User Authentication (JWT) & Per-City Alert Subscriptions
 - 🔔 Personalized Flood-Risk Alerts (`/alerts/me`)
+- 📨 In-App Flood-Alert Notification Centre - a notification is raised for a
+  registered user whenever their area's risk *rises* into a higher tier
+  (`/notifications`, delivered after every pipeline run - see
+  `backend/services/notification_service.py`)
 - 🛡 Per-Source Data Reliability Scoring (Completeness/Timeliness/Validity/History)
 - 🧪 MLOps Monitoring - model versioning, drift detection, data-quality checks,
   retraining status and a manual model-promotion workflow
-- 🖥 React (Vite) Frontend - Dashboard, Weather, River, Prediction, Reliability,
-  MLOps, Pipeline, Statistics, Account/Auth and About pages
+- 🖥 **Two React (Vite) front-ends against one API:**
+  - **`flood-frontend/`** - operator / research console (Dashboard, Weather, River,
+    Prediction, Reliability, MLOps, Pipeline, Statistics, Account/Auth, About)
+  - **`citizen-frontend/`** - public citizen app: your area's flood risk in plain
+    language, weather, river levels, next-day forecast, registration with a
+    location, and the in-app alert centre. No ML / reliability / pipeline screens.
 - 🗺 Interactive Risk Maps (Leaflet) of monitored cities/rivers
 - 📈 Historical Trend Charts (rainfall, risk, reliability, status timeline)
 
@@ -94,7 +102,7 @@ Flood_Prediction_System/
 ├── backend/
 │   ├── routes/                    # weather, river, prediction, dashboard, stats,
 │   │                               # system, pipeline, health, reliability, mlops,
-│   │                               # auth, alerts
+│   │                               # auth, alerts, notifications
 │   ├── services/                  # one service per route module above
 │   ├── utils/
 │   ├── app.py
@@ -116,7 +124,7 @@ Flood_Prediction_System/
 │   ├── degradation.py
 │   └── tests/
 │
-├── flood-frontend/                 # React (Vite) SPA
+├── flood-frontend/                 # React (Vite) SPA - operator / research console
 │   └── src/
 │       ├── pages/                  # Dashboard, Weather, River, Prediction,
 │       │                           # Statistics, Reliability, MLDashboard, MLOps,
@@ -125,6 +133,18 @@ Flood_Prediction_System/
 │       │                           # maps, ml, mlops, reliability, tables, weather
 │       ├── context/                # AuthContext
 │       ├── hooks/
+│       ├── routes/
+│       └── services/
+│
+├── citizen-frontend/               # React (Vite) SPA - public citizen app (port 5174)
+│   └── src/
+│       ├── pages/                  # Home, Weather, Rivers, Forecast, Notifications,
+│       │                           # Login, Register, Account, NotFound
+│       ├── components/             # Layout + bottom nav, RiskHero, NotificationBell,
+│       │                           # LocationPicker, EmergencyContacts, common/
+│       ├── context/                # AuthContext (own token key)
+│       ├── hooks/                  # useAuth, useLiveData, useNotifications
+│       ├── utils/                  # risk, riverLevels, guidance, cityCoords, format
 │       ├── routes/
 │       └── services/
 │
@@ -289,6 +309,34 @@ Prediction Results
 | GET    | `/auth/me`             | Current User Profile (JWT-protected) |
 | PUT    | `/auth/me/alert-city`  | Update the User's Alert City       |
 | GET    | `/alerts/me`           | Current User's Flood-Alert Status (JWT-protected) |
+| GET    | `/notifications`       | User's In-App Flood-Alert History (JWT-protected) |
+| GET    | `/notifications/unread-count` | Unread Alert Count (JWT-protected) |
+| POST   | `/notifications/mark-read`    | Mark Alerts Read (JWT-protected)  |
+
+---
+
+## 🖥️ Front-ends
+
+Two independent Vite apps talk to the same FastAPI backend:
+
+| App | Port (dev) | Audience | Run |
+| --- | --- | --- | --- |
+| `flood-frontend/` | 5173 | Operators / researchers - full console incl. ML, MLOps, pipeline, reliability | `cd flood-frontend && npm install && npm run dev` |
+| `citizen-frontend/` | 5174 | Public - area flood risk, weather, river levels, forecast, alert centre | `cd citizen-frontend && npm install && npm run dev` |
+
+Both are additive: the citizen app only consumes existing public data endpoints plus
+`/auth/*` and `/notifications/*`. Backend CORS (`backend/app.py`) allows both origins.
+
+### In-app flood-alert notifications
+
+`backend/services/notification_service.py` runs after every successful pipeline cycle
+(`backend/scheduler.py`). For each registered user it compares their `alert_city`'s
+current risk tier to `users.last_alerted_risk` and inserts an `alert_notifications`
+row only when the risk has *risen* into a higher tier (Moderate/High/Critical) - so a
+user is not re-alerted every hour while conditions merely stay bad. When conditions
+ease back below Moderate the watermark is cleared, so a later rise alerts again.
+Delivery is in-app only (the citizen app's bell + `/alerts` screen); nothing is
+emailed or texted.
 
 ---
 
@@ -456,13 +504,16 @@ The project uses PostgreSQL to store:
 - River Data
 - ML Features
 - Flood Prediction Results
+- Users (registration / login / `alert_city` / `last_alerted_risk`)
+- Alert Notifications (in-app flood-alert history)
 
 ---
 
 ## 📈 Future Improvements
 
-- Push/SMS/Email delivery for flood alerts (currently pull-based via
-  `GET /alerts/me`, not yet pushed to the user)
+- SMS / email / push delivery for flood alerts — the citizen app now has an
+  in-app notification centre (`/notifications`, raised on a risk-tier rise),
+  but alerts are not yet delivered outside the app
 - Push-alerting (email/Slack/GitHub issue) when drift or data-quality
   breaches a threshold — today those events land in
   `GET /mlops/retraining-status` for a human to check on request, there's
