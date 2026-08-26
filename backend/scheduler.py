@@ -28,6 +28,7 @@ import schedule
 from backend.services.pipeline_service import run_full_pipeline
 from backend.services import mlops_service
 from backend.services import reliability_service
+from backend.services import notification_service
 from backend.utils.logger import logger
 
 # Matches river_scraper.py's own polling interval - weather_data dedups
@@ -66,6 +67,7 @@ def _run_pipeline_job():
             _status["last_success_at"] = _status["last_run_at"]
             _status["last_error"] = None
             _run_monitoring_job()
+            _run_notification_job()
         else:
             logger.error(f"Scheduled live pipeline run failed at step '{result.get('step')}'")
             _status["last_result"] = "failed"
@@ -100,6 +102,19 @@ def _run_monitoring_job():
         reliability_service.compute_all_reliability()
     except Exception as exc:
         logger.error(f"Scheduled data-reliability computation raised an exception: {exc}")
+
+
+def _run_notification_job():
+    """Raise in-app flood-alert notifications for citizen-app users whose
+    registered city's risk has risen into a higher tier - see
+    backend/services/notification_service.py. Runs only after a
+    successful pipeline (fresh predictions), and any failure here must not
+    affect pipeline status, so it's isolated in its own try/except."""
+
+    try:
+        notification_service.run_notification_cycle()
+    except Exception as exc:
+        logger.error(f"Scheduled notification cycle raised an exception: {exc}")
 
 
 def _run_scheduler_loop():

@@ -73,6 +73,52 @@ def ensure_users_table():
         ))
 
 
+def ensure_notifications_schema():
+    """Idempotently create the in-app flood-alert notification store and
+    the per-user "last alerted risk" watermark. Safe to call on every
+    startup.
+
+    alert_notifications: one row per alert delivered to a citizen-app
+    user, kept as a readable history (a bell/notification centre in
+    citizen-frontend/ reads it via GET /notifications). Rows are never
+    auto-deleted here; they're a record of what the user was told and
+    when.
+
+    users.last_alerted_risk: the normalised risk tier (Low/Medium/High/
+    Very High) the user was last notified about for their alert_city.
+    backend/services/notification_service.py uses it to only raise a new
+    notification when risk *rises* into a higher tier, instead of
+    re-sending the same alert after every hourly pipeline run. Reset when
+    conditions ease so a later rise alerts again."""
+
+    with engine.begin() as conn:
+        conn.execute(text(
+            'ALTER TABLE users '
+            'ADD COLUMN IF NOT EXISTS last_alerted_risk TEXT'
+        ))
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS alert_notifications (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                city TEXT NOT NULL,
+                risk_level TEXT NOT NULL,
+                risk_label TEXT NOT NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                rainfall_3day DOUBLE PRECISION,
+                predicted_for_date DATE,
+                is_read BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_alert_notifications_user "
+            "ON alert_notifications(user_id, created_at DESC)"
+        ))
+
+
 def ensure_river_data_timestamp_column():
     """Idempotently add a real TIMESTAMP column derived from river_data's
     "DateTime" text field (e.g. "13-Aug-2026 12:30 PM", from the DMC PDF).

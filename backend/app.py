@@ -12,12 +12,14 @@ from backend.routes.ml import router as ml_router
 from backend.routes.mlops import router as mlops_router
 from backend.routes.auth import router as auth_router
 from backend.routes.alerts import router as alerts_router
+from backend.routes.notifications import router as notifications_router
 from backend.routes.reliability import router as reliability_router
 from backend.scheduler import start_scheduler
 from database.db_connection import (
     ensure_mlops_tables,
     ensure_data_reliability_tables,
     ensure_ml_features_reliability_columns,
+    ensure_notifications_schema,
 )
 
 from fastapi import FastAPI
@@ -36,12 +38,18 @@ def _start_live_pipeline_scheduler():
     ensure_mlops_tables()
     ensure_data_reliability_tables()
     ensure_ml_features_reliability_columns()
+    ensure_notifications_schema()
     start_scheduler()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        # Operator/research console (flood-frontend)
         "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        # Citizen app (citizen-frontend)
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -60,6 +68,7 @@ app.include_router(ml_router)
 app.include_router(mlops_router)
 app.include_router(auth_router)
 app.include_router(alerts_router)
+app.include_router(notifications_router)
 app.include_router(reliability_router)
 
 @app.get("/")
