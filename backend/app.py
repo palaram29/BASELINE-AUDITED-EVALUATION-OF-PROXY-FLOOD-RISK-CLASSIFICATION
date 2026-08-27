@@ -21,6 +21,7 @@ from database.db_connection import (
     ensure_data_reliability_tables,
     ensure_ml_features_reliability_columns,
     ensure_notifications_schema,
+    ensure_live_risk_results_table,
 )
 
 from fastapi import FastAPI
@@ -40,6 +41,7 @@ def _start_live_pipeline_scheduler():
     ensure_data_reliability_tables()
     ensure_ml_features_reliability_columns()
     ensure_notifications_schema()
+    ensure_live_risk_results_table()
     start_scheduler()
 
 app.add_middleware(

@@ -53,6 +53,40 @@ def ensure_prediction_result_columns():
         ))
 
 
+def ensure_live_risk_results_table():
+    """Idempotently create live_risk_results, the snapshot store for the
+    same-day ("Today") flood-risk index (see
+    backend/services/live_risk_service.py). Safe to call on every startup
+    and on every pipeline run.
+
+    One row per (Date, City), upserted each pipeline cycle - the direct
+    parallel of prediction_results, which holds the t+1 ("Tomorrow") ML
+    forecast. Risk_Level here comes from the deterministic
+    Hazard x Vulnerability rule, NOT from the frozen model, so there is no
+    Probability/confidence column."""
+
+    with engine.begin() as conn:
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS live_risk_results (
+                id SERIAL PRIMARY KEY,
+                "Date" DATE NOT NULL,
+                "City" TEXT NOT NULL,
+                "Rainfall_3Day" DOUBLE PRECISION,
+                "Avg_Temperature" DOUBLE PRECISION,
+                "Avg_WindSpeed" DOUBLE PRECISION,
+                "Hazard" DOUBLE PRECISION,
+                "Vulnerability" DOUBLE PRECISION,
+                "Risk_Score" DOUBLE PRECISION,
+                "Risk_Level" TEXT,
+                "Method" TEXT NOT NULL DEFAULT 'rule_based_hazard_vulnerability',
+                computed_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                UNIQUE ("Date", "City")
+            )
+            """
+        ))
+
+
 def ensure_users_table():
     """Idempotently create the users table backing registration/login and
     per-user flood alerts. Safe to call on every startup."""
