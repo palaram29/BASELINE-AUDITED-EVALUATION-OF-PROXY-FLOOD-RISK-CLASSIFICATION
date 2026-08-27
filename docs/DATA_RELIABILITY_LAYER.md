@@ -1,13 +1,13 @@
 # Data Source Reliability Layer
 
-This document covers the reliability-scoring system added between raw data
-collection and the ML pipeline, and the research experiment that tests
-whether feeding reliability scores into the model as features improves
-robustness under degraded data. It's new since `docs/ML_METHODOLOGY_AND_LIMITATIONS.md`
-and `docs/MLOPS_INTEGRATION_PLAN.md` were written and isn't covered by
-either - see those documents for the base forecasting methodology and the
-MLOps monitoring layer respectively, which this builds alongside rather
-than replaces.
+This document covers the reliability-scoring layer that sits between raw
+data collection and the ML pipeline, and the research experiment that
+tests whether feeding reliability scores into the model as features
+improves robustness under degraded data. It builds alongside — not
+instead of — the base forecasting methodology
+([ML_METHODOLOGY_AND_LIMITATIONS.md](ML_METHODOLOGY_AND_LIMITATIONS.md))
+and the MLOps monitoring layer
+([MLOPS.md](MLOPS.md)).
 
 ---
 

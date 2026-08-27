@@ -2,9 +2,11 @@
 
 This document is the single source of truth for how `Flood_Risk` is
 defined, how the dataset is built, and how the three models are trained
-and compared. It replaces an earlier version of this document that
-described a same-day, rainfall-threshold-derived label; that version's
-findings are summarized in §1 as the reason this methodology exists.
+and compared. §1 records the original same-day, rainfall-threshold label
+and why it was abandoned; §2 onward is the current methodology.
+
+For the `ML/` code that implements all of this, see
+[ML_PIPELINE.md](ML_PIPELINE.md).
 
 ---
 
@@ -150,9 +152,9 @@ An early-warning system that reports today's already-known rainfall
 isn't a warning - it has no lead time. `X(t) -> Y(t+1)` requires the
 model to forecast risk before the triggering rainfall is fully observed,
 which is the actual operational task. Mechanically: for each city, rows
-are sorted by `End_Date`; `X(t)` is one row's features, `Y(t+1)` is the
-*next* row's `Flood_Risk`Rather than either row leaking into the other's
-own column set.
+are sorted by `End_Date`; `X(t)` is one row's features and `Y(t+1)` is
+the *next* row's `Flood_Risk`, rather than either row leaking into the
+other's own column set.
 
 **This means the model is implicitly trying to forecast next-day
 rainfall accumulation**, since `Vulnerability` is static and already
@@ -265,34 +267,20 @@ the dataset described in §4 - none are estimated.
 | XGBoost | 0.8954 | 0.5308 | 0.4780 | 0.6693 | 0.9218 | 0.4944 | 0.6023 | 0.9620 |
 | LightGBM | 0.9047 | 0.5276 | 0.4732 | 0.6591 | 0.9271 | 0.5190 | 0.5455 | 0.9596 |
 
-Random Forest's numbers above reflect a depth/leaf-size regularization
-fix applied after an earlier version of this table was written (the
-previous, unconstrained-tree config scored 0.5359 macro-F1 here, in line
-with the ~46-point train/test macro-F1 overfitting gap described in
-`ML/model_selector.py`). XGBoost and LightGBM's numbers reflect a second,
-later regularization pass applied specifically to those two algorithms
-(they had never received one - LightGBM in particular ran with fully
-unconstrained tree growth) - `ML/model_selector.py` documents the
-train/test gap each config closed and, for both, a higher-raw-score
-alternative that was tested and rejected because it turned out *more*
-overfit, not less. XGBoost's Extreme recall (0.6023) and LightGBM's High
-recall (0.5190) are each the best of the three algorithms as a result.
-This table was regenerated against the current `ML/reports/metrics.json`
-to keep the two in sync.
+All three algorithms are regularized (`max_depth` / min-leaf constraints —
+see `ML/model_selector.py`, which records the train/test overfitting gap
+each hyperparameter config closed and, for XGBoost and LightGBM, a
+higher-raw-score alternative that was tested and rejected for being *more*
+overfit). XGBoost's Extreme recall (0.6023) and LightGBM's High recall
+(0.5190) are each the best of the three as a result.
 
-Neither improved algorithm closes enough of the gap to change the
-selection outcome: Random Forest's macro-F1 (0.5626) still leads
-XGBoost's (0.5308) and LightGBM's (0.5276) by more than the 0.02 tie
-margin, so Random Forest remains selected on macro-F1 alone, unchanged
-from before this tuning pass (see `ML/reports/production_model.json` -
-the frozen model/weights are byte-identical to the prior version; only
-the comparison it was selected against changed, which is why the
-manifest's version was bumped to 1.1 rather than left at 1.0).
+Random Forest's macro-F1 (0.5626) leads XGBoost's (0.5308) and LightGBM's
+(0.5276) by more than the 0.02 tie margin, so Random Forest is selected
+on macro-F1 alone (`ML/reports/production_model.json`, version 1.1).
 
-**Persistence still beats all three trained models on macro-F1**, even
-after both tuning passes (0.5626 best-of-three vs. persistence's
-0.6307). This is the single most important, and least comfortable,
-finding in this document - see §12.
+**Persistence still beats all three trained models on macro-F1** (0.5626
+best-of-three vs. persistence's 0.6307). This is the single most
+important, and least comfortable, finding in this document — see §12.
 
 ## 12. What the results actually show - reported honestly, not adjusted
 
@@ -336,18 +324,9 @@ per-fold breakdown):
 | XGBoost | 0.8890 | 0.5409 | 0.5115 | 0.5918 |
 | LightGBM | 0.8973 | 0.5391 | 0.5090 | 0.6030 |
 
-Regenerated after the §11 hyperparameter changes (Random Forest's config
-is unchanged; XGBoost/LightGBM were regularized) - every trained model's
-mean macro-F1 improved over the previous version of this table, most of
-all Random Forest's (0.5319 -> 0.5744), which turns out to have been
-stale here for the same reason §11's primary-split table was: this file
-hadn't been regenerated since Random Forest's own depth/leaf fix, so it
-was still reporting an older config's numbers.
-
 Persistence has the highest macro-F1 in every individual fold as well as
-in the mean, both before and after this update - confirming §11-12 is
-not specific to the 2020-2023 window, and that this round of tuning
-narrowed the gap without closing it.
+in the mean — confirming §11–12 is not specific to the 2020–2023 test
+window.
 
 ## 14. Model selection
 
@@ -360,23 +339,10 @@ recall as a second tie-break). Implemented in
 Applied to §11's results: Random Forest has the highest raw macro-F1
 (0.5626), and neither XGBoost (0.5308) nor LightGBM (0.5276) is within
 the 0.02 tie margin of it (both trail by ~0.03), so the tie-break rule
-never activates - **Random Forest is selected outright on macro-F1**,
-with no recall-based override needed. This holds both before and after
-the XGBoost/LightGBM regularization pass documented in §11 - both
-algorithms improved, but not by enough to close a ~0.03 gap that was
-already too wide to trigger the tie-break before that pass either. This
-is a simpler outcome than an even earlier version of this table (from
-before Random Forest's own regularization fix), which had Random
-Forest's macro-F1 close enough to LightGBM's to trigger the tie-break
-and select LightGBM instead - see the regularization-fix note under
-§11's table for the full history.
-
-Because Random Forest's own config didn't change in this round, its
-frozen artifact (`ML/models/best_model.pkl`) is byte-identical before
-and after the XGBoost/LightGBM tuning pass - only the comparison table
-around it changed. `ML/reports/production_model.json`'s version was
-still bumped to 1.1 to reflect that a new, deliberate, reviewed training
-run happened (see §18).
+never activates — **Random Forest is selected outright on macro-F1**,
+with no recall-based override needed. The frozen artifact is
+`ML/models/best_model.pkl`; its manifest is
+`ML/reports/production_model.json` (version 1.1).
 
 ## 15. Evaluation metrics reported
 
@@ -393,11 +359,13 @@ Management Centre daily river-gauge PDF report, carrying official
 `AlertLevel`/`MinorFloodLevel`/`MajorFloodLevel` per station and a
 DMC-assigned `Status` (Normal/Alert/Minor Flood/Major Flood) - genuine,
 authoritative flood-status data, not synthetic. As of this writing only
-a handful of snapshots exist (`extracted_data/`), and no station-to-city
-mapping exists in the backend (only partial, approximate coordinates in
-the frontend map). Phase 2, once enough history accumulates:
+a handful of snapshots exist (`extracted_data/`). Only a partial,
+best-effort station-to-city mapping exists so far
+(`backend/services/reliability_service.py::CITY_TO_RIVER_STATION_MAP`,
+used by the reliability layer), plus approximate coordinates in the
+frontend map. Phase 2, once enough history accumulates:
 
-1. Build a real station-to-city mapping.
+1. Build a complete, verified station-to-city mapping.
 2. Keep the DMC scraper running continuously so history accrues.
 3. Add `River_Water_Level`/an alert-level ratio as both an ML feature
    and, potentially, a real (not derived) validation signal for the
@@ -438,20 +406,14 @@ The live system (weather/river ingestion -> feature processing -> ML
 prediction -> dashboard/map) uses a **frozen** production model, not a
 continuously-retrained one.
 
-**Update: the evidence layer described below now exists and is live.**
-`docs/MLOPS_INTEGRATION_PLAN.md` originally designed this as future work;
-Phase 1 of that plan (and the model-registry/rollback half of Phase 2)
-has since been implemented as `backend/services/mlops_service.py` /
-`backend/routes/mlops.py` (`GET /mlops/drift`, `/mlops/data-quality`,
-`/mlops/retraining-status`, `/mlops/models`, `POST
-/mlops/models/{id}/promote`), backed by the `ml_*` Postgres tables and
-surfaced on the frontend's MLDashboard/MLOps pages - see that document's
-"Implementation status" section for exactly what's live vs. still
-planned (Prometheus/Grafana push-alerting and the Docker/CI-CD stack
-remain not implemented). This turns "a human decides to retrain" into "a
-human decides to retrain, informed by a drift alert" without replacing
-the decision with automation - this section's human-gated retraining
-rule is unchanged.
+The monitoring evidence layer that supports this policy — feature drift,
+data-quality, and prediction-distribution monitoring, the model-version
+registry, and human-triggered promotion/rollback — is implemented in
+`backend/services/mlops_service.py` / `backend/routes/mlops.py`, backed
+by the `ml_*` Postgres tables and surfaced on the console's MLOps page.
+See [MLOPS.md](MLOPS.md). It turns "a
+human decides to retrain" into "a human decides to retrain, informed by a
+drift alert" — it does not replace the decision with automation.
 
 - Training happens **offline only**, by a human running
   `python ML/train_models.py` against the historical dataset described
