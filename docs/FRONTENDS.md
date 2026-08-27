@@ -23,10 +23,10 @@ No authentication. Every screen polls its endpoint every 30 s
 
 | Route | Page | Reads |
 |---|---|---|
-| `/` | **Dashboard** | `/dashboard/`, `/reliability/summary`, `/system/status` — weather/river/prediction snapshot, risk overview, rainfall chart, reliability widget, live-status pill |
+| `/` | **Dashboard** | `/dashboard/`, `/reliability/summary`, `/system/status` — **Today / Tomorrow** toggle: Today = same-day rule-based risk index (`live_risk`) + observed weather/river; Tomorrow = t+1 ML forecast. Plus risk overview, rainfall chart, reliability widget, live-status pill |
 | `/weather` | **Weather** | `/weather/latest`, `/weather/history` — table + chart, per-city search |
 | `/river` | **River** | `/river/latest`, `/river/history` — station table, status timeline |
-| `/prediction` | **Prediction** | `/prediction/latest`, `/prediction/history` — per-city forecast table with the `degraded_data_warning` banner where reliability is low |
+| `/prediction` | **Prediction** | `/prediction/latest`, `/prediction/history`, `/prediction/live` — **Today / Tomorrow** toggle: Today = rule-based same-day risk index + live weather/river; Tomorrow = per-city t+1 forecast table with the `degraded_data_warning` banner where reliability is low |
 | `/statistics` | **Statistics** | `/stats/` — station counts, high-risk counts |
 | `/pipeline` | **Pipeline** | `/system/status`; buttons `POST /system/*` and `/system/run-pipeline` |
 | `/ml-dashboard` | **ML Dashboard** | `/models`, `/best-model`, `/history`, `POST /predict` — model comparison table, best-model panel, feature importance, confusion matrix, single-city live prediction |
@@ -50,11 +50,11 @@ every 60 s. Auth token is stored under its own localStorage key
 
 | Route | Page | Auth | Description |
 |---|---|---|---|
-| `/` | **Home** | — | Your-area risk hero (if logged in) or a register prompt; embedded flood-risk map; national snapshot; emergency contacts |
+| `/` | **Home** | — | Your-area risk hero (if logged in) or a register prompt; embedded flood-risk map; national snapshot (highest risk **now** + **tomorrow**); emergency contacts |
 | `/map` | **Map** | — | Full-screen interactive risk map (Leaflet, code-split & lazy-loaded so its ~160 KB never blocks first paint) |
 | `/weather` | **Weather** | — | Latest weather per city, in plain language |
 | `/rivers` | **Rivers** | — | Latest river-gauge levels and DMC status per station |
-| `/forecast` | **Forecast** | — | "Tomorrow's flood risk" — the next-day forecast per city, sorted by risk, with a search box; flagged "not an official warning" |
+| `/forecast` | **Forecast** | `/prediction/latest`, `/prediction/live` | **Today / Tomorrow** toggle — "Flood risk right now" (rule-based same-day index) or "Tomorrow's flood risk" (next-day ML forecast) per city, sorted by risk, with a search box; both flagged "not an official warning" |
 | `/alerts` | **Notifications** | JWT | Your in-app flood-alert history; opening the screen marks them read |
 | `/account` | **Account** | JWT | Edit profile (name/email/phone), change alert area, link to alert history, and a "danger zone" to permanently delete the account (password required) |
 | `/login`, `/register` | | — | Email/password; registration also picks an alert city |

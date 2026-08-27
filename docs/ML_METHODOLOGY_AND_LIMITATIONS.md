@@ -442,3 +442,44 @@ drift alert" — it does not replace the decision with automation.
   exists to train against (§16's Phase 2 remains the path to changing
   that, and would itself require a new offline training run, not a live
   retrain).
+
+## 19. Same-day ("Today") risk index - rule-based, not ML
+
+The console and citizen app show a **Today / Tomorrow** toggle. "Tomorrow"
+is the frozen t+1 ML model described above, unchanged. "Today" is a
+**deterministic rule**, not a model:
+
+```
+Hazard(t)     = clip((Rainfall_3Day(t) - rmin) / (rmax - rmin), 0, 1)
+RiskScore(t)  = Hazard(t) x Vulnerability(city)          # §3 formula, un-shifted
+Risk_Level(t) = global-percentile classification of RiskScore(t)   # §4 thresholds
+```
+
+It reuses the **exact §3 Hazard x Vulnerability construction and the §4
+global percentile thresholds** - the only difference from the training
+label is that it is *not* shifted to t+1 (§6 step 12). Per §5, the
+same-day RiskScore needs no forecast: `Vulnerability` is static and
+`Rainfall_3Day(t)` is already observed.
+
+- **Frozen parameters.** `rmin`/`rmax`, the three RiskScore thresholds,
+  and the per-city `Vulnerability` are written once, offline, by
+  `python ML/export_label_params.py` to
+  `ML/reports/label_construction.json` (fit on the 2010-2019 training
+  period, from `ML/data/processed_dataset.csv`). Re-run that script only
+  when `ML/prepare_dataset.py` itself changes. Per-city `Vulnerability`
+  is taken from the processed dataset (which used the raw historical
+  `Elevation` column), *not* recomputed from `ML/utils.py::ELEVATION_MAP`,
+  so the index matches the frozen model's own labels.
+- **No model touched.** `backend/services/live_risk_service.py` never
+  loads `best_model.pkl` or any encoder. There is **no
+  probability/confidence** output - a rule has none. Data Source
+  Reliability is attached the same additive way as on t+1 predictions.
+- **Storage.** Each pipeline run upserts one row per city into
+  `live_risk_results` (keyed by `("Date","City")`), the direct parallel
+  of `prediction_results`. Served by `GET /prediction/live` (current) and
+  `GET /prediction/live/history` (snapshots), and included as the
+  `live_risk` key on `GET /dashboard`.
+- **Why keep it rule-based.** Fitting a second ML model to this un-shifted
+  label would just relearn a near-deterministic function of rainfall
+  (~99% accuracy) - the exact circularity §1 documents. The rule is
+  honest about what it is: a current-conditions exposure index.

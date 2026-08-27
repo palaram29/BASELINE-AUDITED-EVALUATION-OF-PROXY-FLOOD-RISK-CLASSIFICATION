@@ -20,6 +20,7 @@ registry (see [MLOPS.md](MLOPS.md)).
 |---|---|
 | `utils.py` | Single source of truth: feature/target column names, `ELEVATION_MAP` & `COASTAL_MAP`, all artifact/report paths (incl. legacy fallbacks), the `logs/ml_pipeline.log` logger, `prepare_data()`, `resolve_model_paths()`, `compute_feature_distribution()` |
 | `prepare_dataset.py` | Raw historical CSVs → `train_dataset.csv` / `test_dataset.csv` (t+1 pairs, derived Hazard×Vulnerability label, global percentile thresholds) |
+| `export_label_params.py` | `processed_dataset.csv` → `ML/reports/label_construction.json` — freezes the rainfall min/max, RiskScore thresholds and per-city `Vulnerability` so the backend's same-day ("Today") risk index (`live_risk_service.py`) matches the training labels. No model involved. Re-run only when `prepare_dataset.py` changes. |
 | `model_selector.py` | `MODEL_REGISTRY` (RF/XGBoost/LightGBM factories + hyperparameters), `select_best_model()` |
 | `evaluate_models.py` | `evaluate_model()` (fit/predict timing + full metric set), `save_confusion_matrix()` (PNG + CSV), `build_comparison_table()` |
 | `train_models.py` | CLI orchestrator: load → train all → evaluate → compare → select → save winner + reports + frozen manifest; logs to MLflow best-effort |
@@ -59,6 +60,13 @@ Processing order (leakage-safe):
 Output: `train_dataset.csv` (~109k rows), `test_dataset.csv` (~38k rows),
 `processed_dataset.csv` (pre-pairing), plus a printed class-distribution
 summary.
+
+`ML/export_label_params.py` then reads `processed_dataset.csv` and freezes
+the same-day label parameters (rainfall min/max, RiskScore percentile
+thresholds, per-city `Vulnerability`) to `ML/reports/label_construction.json`
+— consumed by the backend's rule-based "Today" risk index, not by any
+model. See [ML_METHODOLOGY_AND_LIMITATIONS.md](ML_METHODOLOGY_AND_LIMITATIONS.md)
+§19 and [DATA_PIPELINE.md](DATA_PIPELINE.md) step 7.
 
 ---
 
@@ -148,6 +156,7 @@ check behind the results in
 
 ```bash
 python ML/prepare_dataset.py            # rebuild datasets (only if raw data changed)
+python ML/export_label_params.py        # refreeze label_construction.json (only if prepare_dataset changed)
 python ML/train_models.py               # train, compare, freeze the winner
 python ML/walkforward_validate.py       # robustness check
 python ML/register_run.py               # register candidates into the MLOps registry

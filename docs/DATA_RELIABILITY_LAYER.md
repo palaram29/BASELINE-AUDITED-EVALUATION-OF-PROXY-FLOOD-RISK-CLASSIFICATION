@@ -78,10 +78,16 @@ also configurable.
   `River_Reliability` / `Overall_Data_Reliability` to every `ml_features`
   row, computed only from data available up to that row's own date (no
   look-ahead leakage into the t -> t+1 forecasting task).
+  The same `Overall_Data_Reliability` is carried through onto both the
+  t+1 prediction rows (`prediction_service`) and the same-day
+  `live_risk` rows (`live_risk_service`) as
+  `data_reliability_score` / `_level` / `degraded_data_warning` -
+  additive fields, never gating the result.
 - **Frontend**: a compact reliability widget on the Dashboard and inline
-  on every prediction row (visually and semantically separate from the
-  model's own predicted-risk probability - a data-quality signal, never
-  model confidence), plus a full `/reliability` page
+  on every prediction row and same-day risk-index row (visually and
+  semantically separate from the model's own predicted-risk probability -
+  a data-quality signal, never model confidence; the rule-based "Today"
+  index has no probability at all), plus a full `/reliability` page
   (`flood-frontend/src/pages/Reliability`, `src/components/reliability/`)
   with per-source detail, a history chart, and the validation-flags audit
   table.

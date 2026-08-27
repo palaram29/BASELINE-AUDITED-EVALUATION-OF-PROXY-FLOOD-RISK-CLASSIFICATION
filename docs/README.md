@@ -10,12 +10,12 @@ data flow, database schema, and how to run everything are below.
 | Document | What it covers |
 |---|---|
 | [API_REFERENCE.md](API_REFERENCE.md) | Every REST endpoint, grouped by router, with auth notes |
-| [DATA_PIPELINE.md](DATA_PIPELINE.md) | Weather collection, DMC river-PDF scraping/extraction, river-risk engine, ML feature generation, prediction, and the in-process scheduler |
-| [ML_PIPELINE.md](ML_PIPELINE.md) | The `ML/` module — dataset preparation, model comparison/selection, evaluation, walk-forward validation, artifacts, training→registration→promotion workflow |
-| [ML_METHODOLOGY_AND_LIMITATIONS.md](ML_METHODOLOGY_AND_LIMITATIONS.md) | How `Flood_Risk` is defined, the t+1 forecasting task, results vs. baselines, and the limitations to state in the dissertation |
+| [DATA_PIPELINE.md](DATA_PIPELINE.md) | Weather collection, DMC river-PDF scraping/extraction, river-risk engine, ML feature generation, the t+1 prediction, the same-day risk snapshot, and the in-process scheduler |
+| [ML_PIPELINE.md](ML_PIPELINE.md) | The `ML/` module — dataset preparation, same-day label-param export, model comparison/selection, evaluation, walk-forward validation, artifacts, training→registration→promotion workflow |
+| [ML_METHODOLOGY_AND_LIMITATIONS.md](ML_METHODOLOGY_AND_LIMITATIONS.md) | How `Flood_Risk` is defined, the t+1 forecasting task, the same-day rule-based index (§19), results vs. baselines, and the limitations to state in the dissertation |
 | [MLOPS.md](MLOPS.md) | Model-version registry, drift/data-quality/prediction monitoring, retraining alerts, promotion/rollback, and what is still planned |
 | [DATA_RELIABILITY_LAYER.md](DATA_RELIABILITY_LAYER.md) | Per-source reliability scoring (completeness/timeliness/validity/history) and the degraded-data research experiment |
-| [FRONTENDS.md](FRONTENDS.md) | The operator/research console (`flood-frontend/`) and the public citizen app (`citizen-frontend/`) |
+| [FRONTENDS.md](FRONTENDS.md) | The operator/research console (`flood-frontend/`) and the public citizen app (`citizen-frontend/`), including the Today / Tomorrow risk toggle |
 
 The root [`README.md`](../README.md) is the project's public overview and
 install guide; this folder is the design/reference detail behind it.
@@ -26,15 +26,20 @@ install guide; this folder is the design/reference detail behind it.
 
 The Flood Prediction System collects real-time weather and river-gauge
 data for 30 named locations in Sri Lanka, scores each data source for
-reliability, generates machine-learning features, and produces a
-**next-day (t+1) flood-risk forecast** per city through a FastAPI REST
-API. Two React apps consume that API: a read-only operator/research
-console and a public citizen app with personal alerts.
+reliability, generates machine-learning features, and produces two
+per-city flood-risk outputs through a FastAPI REST API: a **next-day
+(t+1) ML forecast** ("Tomorrow") and a **same-day rule-based risk index**
+("Today"). Two React apps consume that API — a read-only operator/research
+console and a public citizen app with personal alerts — both with a
+Today / Tomorrow toggle.
 
 The prediction target, `Flood_Risk`, is a **derived Hazard × Vulnerability
 risk index**, not an observed flood-event label — no historical
-flood-incident record exists in this project. See
-[ML_METHODOLOGY_AND_LIMITATIONS.md](ML_METHODOLOGY_AND_LIMITATIONS.md).
+flood-incident record exists in this project. The "Today" index applies
+that same formula, un-shifted, to current data — a deterministic rule,
+not a model. See
+[ML_METHODOLOGY_AND_LIMITATIONS.md](ML_METHODOLOGY_AND_LIMITATIONS.md)
+(§19 for the same-day index).
 
 ---
 
@@ -51,12 +56,14 @@ Flood_Prediction_System/
 │   ├── extract_river_data.py    PDF → river_data
 │   ├── river_risk_engine.py     Highest current river risk summary
 │   ├── generate_ml_features.py  weather_data → ml_features (+ reliability columns)
-│   ├── predict_flood.py         ml_features → prediction_results (frozen model)
+│   ├── predict_flood.py         ml_features → prediction_results (frozen t+1 model)
 │   ├── routes/                  One module per API area (see API_REFERENCE.md)
 │   └── services/                One service per route module
+│       └── live_risk_service.py ml_features → live_risk_results (same-day rule, no model)
 ├── reliability/                 Pure, DB-free reliability scoring engine + tests
 ├── ML/                          Offline model-comparison / selection pipeline
 │   ├── prepare_dataset.py       Raw historical CSVs → t+1 train/test datasets
+│   ├── export_label_params.py   processed_dataset.csv → label_construction.json (same-day index params)
 │   ├── train_models.py          Train + compare RF/XGBoost/LightGBM, freeze the winner
 │   ├── model_selector.py        Algorithm registry + best-model selection rule
 │   ├── evaluate_models.py       Metrics, confusion matrices, comparison table
@@ -66,7 +73,7 @@ Flood_Prediction_System/
 │   ├── run_reliability_experiments.py  Degraded-data robustness experiment
 │   ├── predict.py               Reusable inference (used by backend/predict_flood.py)
 │   ├── models/                  Trained + frozen .pkl artifacts, versioned copies
-│   └── reports/                 metrics.json, production_model.json, CSVs, matrices
+│   └── reports/                 metrics.json, production_model.json, label_construction.json, CSVs, matrices
 ├── ML_Training/                 Legacy single-model trainer (fallback only)
 ├── database/db_connection.py    Engine + idempotent schema-migration helpers
 ├── flood-frontend/              React (Vite) operator / research console — port 5173
@@ -97,12 +104,15 @@ Flood_Prediction_System/
                                  ▼
                             ml_features
                                  │
-                        predict_flood.py  ──►  ML/models/best_model.pkl  (frozen)
-                                 │
-                                 ▼
-                         prediction_results
-                                 │
-              ┌──────────────────┼─────────────────────┐
+                 ┌───────────────┴───────────────┐
+                 ▼                               ▼
+        predict_flood.py                 live_risk_service.py
+   ──► ML/models/best_model.pkl (frozen)  (Hazard×Vulnerability rule,
+                 │                         label_construction.json — no model)
+                 ▼                               │
+         prediction_results  ("Tomorrow")        ▼
+                 │                        live_risk_results  ("Today")
+              ┌──┴───────────────┬─────────────────────┐
               ▼                  ▼                     ▼
       MLOps monitoring    notification_service   REST API (FastAPI)
       (drift / quality)   (risk-rise alerts)     /weather /river /prediction
@@ -116,11 +126,12 @@ Flood_Prediction_System/
                                   (operator console)           (public citizen app)
 ```
 
-`backend/scheduler.py` runs the weather → river → feature → prediction
-pipeline every 60 minutes in a background thread started at app startup,
-then runs the MLOps monitoring cycle, the reliability scoring pass, and
-the notification cycle. Nothing in the live app ever trains or retrains a
-model — see [ML_PIPELINE.md](ML_PIPELINE.md) and
+`backend/scheduler.py` runs the weather → river → feature → t+1 prediction
+→ same-day risk snapshot pipeline every 60 minutes in a background thread
+started at app startup, then runs the MLOps monitoring cycle, the
+reliability scoring pass, and the notification cycle. Nothing in the live
+app ever trains or retrains a model (the "Today" index is a deterministic
+rule, not a model) — see [ML_PIPELINE.md](ML_PIPELINE.md) and
 [MLOPS.md](MLOPS.md).
 
 ---
@@ -139,14 +150,16 @@ every app startup and add new columns without dropping data.
 | `weather_data` | `Date`, `City`, `Rainfall`, `Temperature`, `WindSpeed` | `weather_collector.py` (dedups per `Date`+`City`) |
 | `river_data` | `DateTime` (text), `ReportTimestamp` (real TIMESTAMP), `River`, `Station`, `WaterLevel`, `PreviousWaterLevel`, `AlertLevel`, `MinorFloodLevel`, `MajorFloodLevel`, `Rainfall`, `Status`, `RiverRisk` | `extract_river_data.py` |
 | `ml_features` | `Date`, `City`, `Rainfall_3Day`, `Avg_Temperature`, `Avg_WindSpeed`, `Weather_Reliability`, `River_Reliability`, `Overall_Data_Reliability` | `generate_ml_features.py` |
-| `prediction_results` | `Date`, `Predicted_For_Date`, `City`, `Rainfall_3Day`, `Avg_Temperature`, `Avg_WindSpeed`, `Predicted_Risk`, `Probability`, `Model_Used` — unique index on (`Date`,`City`) | `predict_flood.py` / `POST /ml/predict` |
+| `prediction_results` | `Date`, `Predicted_For_Date`, `City`, `Rainfall_3Day`, `Avg_Temperature`, `Avg_WindSpeed`, `Predicted_Risk`, `Probability`, `Model_Used` — unique index on (`Date`,`City`). The **t+1 ("Tomorrow") ML forecast** | `predict_flood.py` / `POST /ml/predict` |
+| `live_risk_results` | `Date`, `City`, `Rainfall_3Day`, `Avg_Temperature`, `Avg_WindSpeed`, `Hazard`, `Vulnerability`, `Risk_Score`, `Risk_Level`, `Method`, `computed_at` — unique on (`Date`,`City`). The **same-day ("Today") rule-based index** — no `Probability` | `live_risk_service.store_live_risk_snapshot()` (each pipeline run) |
 
 `ReportTimestamp` exists because the DMC `DateTime` text (`6-Aug-2026`,
 not `06-Aug-2026`) sorts wrong lexicographically; every "latest river
 report" query orders by the real timestamp instead.
 
-`Predicted_For_Date` = `Date` + 1 day — the model forecasts the day
-*after* the features it is given.
+`Predicted_For_Date` = `Date` + 1 day — the ML model forecasts the day
+*after* the features it is given. `live_risk_results` has no such column:
+it scores the day the features are for.
 
 ### Accounts & alerts
 
@@ -238,6 +251,7 @@ See [ML_PIPELINE.md](ML_PIPELINE.md). Never run automatically.
 
 ```bash
 python ML/prepare_dataset.py
+python ML/export_label_params.py        # refreeze the same-day index params
 python ML/train_models.py
 python ML/walkforward_validate.py
 python ML/register_run.py               # then promote via the MLOps page

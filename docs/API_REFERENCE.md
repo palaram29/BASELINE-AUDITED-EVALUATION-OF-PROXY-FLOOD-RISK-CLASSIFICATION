@@ -26,7 +26,7 @@ CORS allows `localhost`/`127.0.0.1` on ports `5173` and `5174`.
 |---|---|---|
 | GET | `/` | API liveness message |
 | GET | `/health/` | `{api, database, ml_model}` — DB connectivity + whether the resolved model file exists |
-| GET | `/dashboard/` | `{weather, river, prediction}` — the three "latest" payloads in one call |
+| GET | `/dashboard/` | `{weather, river, prediction, live_risk}` — the "latest" payloads in one call (`prediction` = t+1 ML forecast, `live_risk` = same-day rule-based index) |
 | GET | `/stats/` | Counts: weather stations, river stations, latest-day prediction count, high-risk rivers, high-risk predictions (`High`+`Extreme`) |
 | GET | `/weather/latest` | All cities' rows for the most recent `Date` |
 | GET | `/weather/history` | Every `weather_data` row, newest date first |
@@ -34,8 +34,11 @@ CORS allows `localhost`/`127.0.0.1` on ports `5173` and `5174`.
 | GET | `/river/history` | Every `river_data` row, newest first |
 | GET | `/prediction/latest` | One row per city for the most recent prediction `Date`; each row carries `data_reliability_score` / `data_reliability_level` / `degraded_data_warning` (additive, distinct from `Probability`) |
 | GET | `/prediction/history` | Every `prediction_results` row, newest first, same reliability fields attached |
+| GET | `/prediction/live` | Same-day ("Today") flood-risk index, one row per city — `Risk_Level` from the deterministic Hazard×Vulnerability rule (`Method: "rule_based_hazard_vulnerability"`), **not** the ML model; carries `Hazard` / `Vulnerability` / `Risk_Score` and the same reliability fields. No `Probability`. Recomputed live from the latest features. See [ML_METHODOLOGY_AND_LIMITATIONS.md](ML_METHODOLOGY_AND_LIMITATIONS.md) §19 |
+| GET | `/prediction/live/history` | Every `live_risk_results` snapshot row (one per city per pipeline run), newest date first |
 
-`Predicted_Risk` values are `Low` / `Medium` / `High` / `Extreme`.
+`Predicted_Risk` (t+1 forecast) and `Risk_Level` (same-day index) values
+are both `Low` / `Medium` / `High` / `Extreme`.
 `river_data.RiverRisk` uses a separate vocabulary
 (`Low`/`Medium`/`High`/`Very High`) mapped from the DMC `Status`
 (`Normal`/`Alert`/`Minor Flood`/`Major Flood`) — the two are kept
