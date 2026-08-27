@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FiBell, FiChevronRight, FiMaximize2 } from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
 import useLiveData from "../hooks/useLiveData";
-import { getMyAlert, getLatestPrediction, getLatestRiver } from "../services/dataService";
+import { getMyAlert, getLatestPrediction, getLatestRiver, getLiveRisk } from "../services/dataService";
 import RiskHero from "../components/RiskHero";
 import NationalSnapshot from "../components/NationalSnapshot";
 import EmergencyContacts from "../components/EmergencyContacts";
@@ -33,6 +33,7 @@ function Home() {
     refresh,
   } = useLiveData(getLatestPrediction, { intervalMs: 60000, initial: [] });
   const { data: rivers } = useLiveData(getLatestRiver, { intervalMs: 60000, initial: [] });
+  const { data: liveRisk } = useLiveData(getLiveRisk, { intervalMs: 60000, initial: [] });
 
   if (authLoading) return <Spinner label="Loading…" />;
 
@@ -90,7 +91,7 @@ function Home() {
         {predLoading && !predictions?.length ? (
           <Spinner label="Loading the national picture…" />
         ) : (
-          <NationalSnapshot predictions={predictions || []} />
+          <NationalSnapshot predictions={predictions || []} liveRisk={liveRisk || []} />
         )}
         <EmergencyContacts />
       </div>
