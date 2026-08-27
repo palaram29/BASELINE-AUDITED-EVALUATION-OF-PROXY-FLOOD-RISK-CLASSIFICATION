@@ -157,7 +157,7 @@ def _resolve_production_model():
     backend/services/mlops_service.py::promote_model_version), falling
     straight through to the existing file-based load_best_model() if no
     row is promoted yet, the DB is unreachable, or the artifact is
-    missing - see docs/MLOPS_INTEGRATION_PLAN.md decision 5. This is the
+    missing - see docs/MLOPS.md decision 5. This is the
     only place a DB dependency enters model loading; ML/ itself stays
     database-free.
 

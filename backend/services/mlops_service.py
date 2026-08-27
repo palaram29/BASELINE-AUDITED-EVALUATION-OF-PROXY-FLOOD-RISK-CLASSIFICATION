@@ -1,6 +1,6 @@
 """
 Service layer for the MLOps monitoring/lifecycle layer - see
-docs/MLOPS_INTEGRATION_PLAN.md.
+docs/MLOPS.md.
 
 Reads/writes the 6 ml_* tables created by
 database.db_connection.ensure_mlops_tables(). This is the read model the

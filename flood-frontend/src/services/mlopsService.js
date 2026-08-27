@@ -5,7 +5,7 @@ import api from "./api";
 // Distinct from mlService.js (Model Comparison - unchanged). There is
 // deliberately no "train"/"retrain" call here - the only mutating
 // endpoint is promoteModelVersion, which only ever changes which
-// already-trained version is live. See docs/MLOPS_INTEGRATION_PLAN.md.
+// already-trained version is live. See docs/MLOPS.md.
 
 export const getProductionModel = async () => {
   const response = await api.get("/mlops/model");

@@ -43,7 +43,7 @@ TEST_DATA_FILE = os.getenv("TEST_DATA_FILE", "ML/data/test_dataset.csv")
 # =====================================================
 # MLOPS MONITORING
 # =====================================================
-# See docs/MLOPS_INTEGRATION_PLAN.md. PSI (Population Stability Index)
+# See docs/MLOPS.md. PSI (Population Stability Index)
 # thresholds below are the standard literature convention: <0.1 = no
 # meaningful shift, 0.1-0.25 = moderate shift worth a look, >0.25 =
 # significant shift. All configurable so they can be recalibrated once

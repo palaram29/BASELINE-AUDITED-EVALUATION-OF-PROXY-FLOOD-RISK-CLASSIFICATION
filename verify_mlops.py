@@ -1,5 +1,5 @@
 """
-Smoke-test for the MLOps layer - see docs/MLOPS_INTEGRATION_PLAN.md.
+Smoke-test for the MLOps layer - see docs/MLOPS.md.
 
 Checks, in order:
   1. The 6 ml_* tables exist and are queryable.
@@ -13,7 +13,7 @@ Checks, in order:
 
 This does not replace actually looking at the numbers (e.g. cross-
 checking a drift score by hand) - see the manual checklist in this
-project's chat history / docs/MLOPS_INTEGRATION_PLAN.md for that.
+project's chat history / docs/MLOPS.md for that.
 
 Usage:
     python verify_mlops.py

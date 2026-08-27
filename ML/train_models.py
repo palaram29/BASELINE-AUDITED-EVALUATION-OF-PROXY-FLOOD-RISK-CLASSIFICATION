@@ -121,7 +121,7 @@ def _resolve_output_paths(config_name):
 def _mlflow_setup():
     """Point MLflow at a local SQLite-backed tracking store by default
     (MLFLOW_TRACKING_URI overrides this) - no separate server process to
-    run, full Model Registry support. See docs/MLOPS_INTEGRATION_PLAN.md.
+    run, full Model Registry support. See docs/MLOPS.md.
     Never raises: MLflow is an additive tracking layer, not a training
     dependency - if setup fails, training below still runs exactly as it
     did before this was added, just without MLflow logging."""

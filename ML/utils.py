@@ -50,7 +50,7 @@ MODEL_COMPARISON_CSV = os.path.join(REPORTS_DIR, "model_comparison.csv")
 METRICS_JSON = os.path.join(REPORTS_DIR, "metrics.json")
 
 # Versioned copies of every algorithm's model, one per (human-run)
-# ML/register_run.py call - see docs/MLOPS_INTEGRATION_PLAN.md. Kept
+# ML/register_run.py call - see docs/MLOPS.md. Kept
 # separate from BEST_MODEL_PATH (which stays "whichever version is
 # currently Production") so past versions are never deleted/overwritten,
 # which is what makes rollback possible.

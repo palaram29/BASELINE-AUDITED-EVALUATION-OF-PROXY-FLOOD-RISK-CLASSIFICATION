@@ -6,7 +6,7 @@ file into a versioned, never-overwritten copy under
 ML/models/versions/.
 
 This is a deliberately separate, human-run step from training itself -
-see docs/MLOPS_INTEGRATION_PLAN.md "Registering a run into Postgres is a
+see docs/MLOPS.md "Registering a run into Postgres is a
 separate, explicit step from training". ML/train_models.py stays
 database-free (matches ML/'s existing documented principle); this is the
 one file in ML/ allowed to touch Postgres, and only because a human runs

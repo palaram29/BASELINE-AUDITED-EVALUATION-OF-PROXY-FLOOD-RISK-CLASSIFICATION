@@ -1,5 +1,5 @@
 """
-MLOps monitoring/lifecycle API - see docs/MLOPS_INTEGRATION_PLAN.md.
+MLOps monitoring/lifecycle API - see docs/MLOPS.md.
 
 Distinct from backend/routes/ml.py (Model Comparison - Random Forest/
 XGBoost/LightGBM metrics, unchanged, still the source of truth for that)
