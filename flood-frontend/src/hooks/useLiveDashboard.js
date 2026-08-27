@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { getDashboard } from "../services/dashboardService";
-import { demoWeather, demoRiver, demoPredictions } from "../utils/demoData";
-import { simulateWeather, simulateRiver, simulatePrediction } from "../utils/liveData";
+import { demoWeather, demoRiver, demoPredictions, demoLiveRisk } from "../utils/demoData";
+import { simulateWeather, simulateRiver, simulatePrediction, simulateLiveRisk } from "../utils/liveData";
 
 function useLiveDashboard() {
   const [dashboard, setDashboard] = useState({
     weather: demoWeather,
     river: demoRiver,
     prediction: demoPredictions,
+    liveRisk: demoLiveRisk,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -31,8 +32,9 @@ function useLiveDashboard() {
           const weather = Array.isArray(data.weather) ? data.weather : [];
           const river = Array.isArray(data.river) ? data.river : [];
           const prediction = Array.isArray(data.prediction) ? data.prediction : [];
+          const liveRisk = Array.isArray(data.live_risk) ? data.live_risk : [];
 
-          setDashboard({ weather, river, prediction });
+          setDashboard({ weather, river, prediction, liveRisk });
           setLastUpdated(new Date());
           setError("");
         }
@@ -44,6 +46,7 @@ function useLiveDashboard() {
             weather: simulateWeather(demoWeather),
             river: simulateRiver(demoRiver),
             prediction: simulatePrediction(demoPredictions),
+            liveRisk: simulateLiveRisk(demoLiveRisk),
           });
           setLastUpdated(new Date());
         }

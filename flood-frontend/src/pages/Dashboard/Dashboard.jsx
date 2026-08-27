@@ -7,6 +7,8 @@ import RiverTable from "../../components/tables/RiverTable";
 import RainfallChart from "../../components/charts/RainfallChart";
 import PredictionTable from "../../components/tables/PredictionTable";
 import RiskOverview from "../../components/dashboard/RiskOverview";
+import LiveRiskOverview from "../../components/prediction/LiveRiskOverview";
+import LiveRiskTable from "../../components/prediction/LiveRiskTable";
 import FloodMap from "../../components/maps/FloodMap";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Skeleton from "../../components/common/Skeleton";
@@ -110,19 +112,21 @@ function Dashboard() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-heading">
-            {view === "live" ? "Live observed conditions" : "ML flood-risk forecast"}
+            {view === "live" ? "Today — current flood-risk" : "Tomorrow — ML flood-risk forecast"}
           </h2>
           <p className="text-sm text-muted">
             {view === "live"
-              ? "Directly from the latest automatic weather/river collection — not model output."
-              : "The frozen production model's forecast for the following day, scored on the live data above — a prediction, not an observed condition."}
+              ? "A rule-based risk index from current rainfall and each city's fixed flood exposure, plus the latest observed weather/river data. Not a model forecast."
+              : "The frozen production model's forecast for the following day, scored on today's data — a prediction, not an observed condition."}
           </p>
         </div>
-        <ViewToggle value={view} onChange={setView} tomorrowLabel="Tomorrow (forecast)" />
+        <ViewToggle value={view} onChange={setView} liveLabel="Today" tomorrowLabel="Tomorrow (forecast)" />
       </div>
 
       {view === "live" ? (
         <>
+          <LiveRiskOverview liveRisk={dashboard.liveRisk} />
+          <LiveRiskTable liveRisk={dashboard.liveRisk} />
           <SummarySection dashboard={dashboard} />
           <RainfallChart weather={dashboard.weather} />
           <WeatherTable weather={dashboard.weather} />

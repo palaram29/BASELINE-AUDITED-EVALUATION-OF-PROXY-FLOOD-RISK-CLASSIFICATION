@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import usePrediction from "../../hooks/usePrediction";
+import useLiveRisk from "../../hooks/useLiveRisk";
 import useWeather from "../../hooks/useWeather";
 import useRiver from "../../hooks/useRiver";
 import PageHeader from "../../components/common/PageHeader";
@@ -10,6 +11,8 @@ import Loader from "../../components/common/Loader";
 import SearchInput from "../../components/common/SearchInput";
 import EmptyState from "../../components/common/EmptyState";
 import RiskChart from "../../components/charts/RiskChart";
+import LiveRiskTable from "../../components/prediction/LiveRiskTable";
+import LiveRiskOverview from "../../components/prediction/LiveRiskOverview";
 import WeatherTable from "../../components/tables/WeatherTable";
 import RiverTable from "../../components/tables/RiverTable";
 import ViewToggle from "../../components/common/ViewToggle";
@@ -17,6 +20,7 @@ import { riskTone } from "../../utils/riskTone";
 
 function Prediction() {
   const { prediction, loading, error } = usePrediction();
+  const { liveRisk, error: liveRiskError } = useLiveRisk();
   const { weather, error: weatherError } = useWeather();
   const { river, error: riverError } = useRiver();
   const [search, setSearch] = useState("");
@@ -35,9 +39,9 @@ function Prediction() {
         description={
           view === "tomorrow"
             ? "The frozen production model's next-day flood-risk index for each monitored city, scored on data available today."
-            : "The live weather and river conditions currently feeding the forecast model."
+            : "A rule-based flood-risk index for right now — current rainfall × each city's fixed flood exposure — plus the live weather and river conditions feeding the model. Not a model forecast."
         }
-        actions={<ViewToggle value={view} onChange={setView} />}
+        actions={<ViewToggle value={view} onChange={setView} liveLabel="Today" tomorrowLabel="Tomorrow" />}
       >
         {view === "tomorrow" ? (
           <SearchInput value={search} placeholder="Search city" onSearch={setSearch} />
@@ -91,8 +95,11 @@ function Prediction() {
         </div>
       ) : (
         <>
+          {liveRiskError ? <ErrorMessage message={liveRiskError} /> : null}
           {weatherError ? <ErrorMessage message={weatherError} /> : null}
           {riverError ? <ErrorMessage message={riverError} /> : null}
+          <LiveRiskOverview liveRisk={liveRisk} />
+          <LiveRiskTable liveRisk={liveRisk} />
           <WeatherTable weather={weather} />
           <RiverTable rivers={river} />
         </>

@@ -20,6 +20,15 @@ export const demoPredictions = [
   { City: "Jaffna", Rainfall_3Day: 23, Avg_Temperature: 34.2, Avg_WindSpeed: 10.1, Predicted_Risk: "Low", Date: "2026-06-11" },
 ];
 
+// Same-day ("Today") rule-based risk index - the counterpart to
+// demoPredictions (the t+1 "Tomorrow" ML forecast).
+export const demoLiveRisk = [
+  { City: "Colombo", Rainfall_3Day: 76, Avg_Temperature: 32.1, Avg_WindSpeed: 19.2, Risk_Level: "High", Risk_Score: 0.14, Method: "rule_based_hazard_vulnerability", Date: "2026-06-11" },
+  { City: "Kandy", Rainfall_3Day: 44, Avg_Temperature: 24.8, Avg_WindSpeed: 13.5, Risk_Level: "Low", Risk_Score: 0.02, Method: "rule_based_hazard_vulnerability", Date: "2026-06-11" },
+  { City: "Galle", Rainfall_3Day: 81, Avg_Temperature: 29.7, Avg_WindSpeed: 21.8, Risk_Level: "Medium", Risk_Score: 0.1, Method: "rule_based_hazard_vulnerability", Date: "2026-06-11" },
+  { City: "Jaffna", Rainfall_3Day: 23, Avg_Temperature: 34.2, Avg_WindSpeed: 10.1, Risk_Level: "Low", Risk_Score: 0.01, Method: "rule_based_hazard_vulnerability", Date: "2026-06-11" },
+];
+
 export const demoStatistics = {
   weatherStations: 8,
   riverStations: 12,

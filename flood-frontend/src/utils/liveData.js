@@ -18,3 +18,9 @@ export const simulatePrediction = (items = []) =>
     Rainfall_3Day: Number((Number(item.Rainfall_3Day) + (index % 2 === 0 ? 2 : -1)).toFixed(0)),
     Avg_Temperature: Number((Number(item.Avg_Temperature) + (index % 3 === 0 ? 0.1 : -0.1)).toFixed(1)),
   }));
+
+export const simulateLiveRisk = (items = []) =>
+  items.map((item, index) => ({
+    ...item,
+    Rainfall_3Day: Number((Number(item.Rainfall_3Day) + (index % 2 === 0 ? 3 : -2)).toFixed(0)),
+  }));
