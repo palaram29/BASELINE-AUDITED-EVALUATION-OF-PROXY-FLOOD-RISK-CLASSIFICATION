@@ -53,13 +53,13 @@ function WeatherStats({ weather }) {
       {cards.map((card) => (
         <div
           key={card.title}
-          className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all"
+          className="bg-surface rounded-xl shadow-md p-6 hover:shadow-xl transition-all"
         >
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-slate-500">{card.title}</p>
+              <p className="text-muted">{card.title}</p>
 
-              <h2 className="text-3xl font-bold mt-2">
+              <h2 className="text-3xl font-bold mt-2 text-heading">
                 {card.value}
               </h2>
             </div>

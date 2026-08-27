@@ -17,7 +17,7 @@ function PerformancePanel({ performance }) {
   return (
     <Card>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-800">Model Performance</h3>
+        <h3 className="text-lg font-semibold text-heading">Model Performance</h3>
         <Badge tone={performance.ground_truth_available ? "green" : "slate"}>
           {performance.ground_truth_available ? "Live ground truth" : "Offline evaluation only"}
         </Badge>
@@ -25,24 +25,24 @@ function PerformancePanel({ performance }) {
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">Accuracy</p>
-          <p className="mt-1 text-lg font-semibold text-slate-800">{pct(metrics.accuracy)}</p>
+          <p className="text-xs uppercase tracking-wide text-muted">Accuracy</p>
+          <p className="mt-1 text-lg font-semibold text-heading">{pct(metrics.accuracy)}</p>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">Macro-F1</p>
-          <p className="mt-1 text-lg font-semibold text-slate-800">{pct(metrics.macro_f1)}</p>
+          <p className="text-xs uppercase tracking-wide text-muted">Macro-F1</p>
+          <p className="mt-1 text-lg font-semibold text-heading">{pct(metrics.macro_f1)}</p>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">High Recall</p>
-          <p className="mt-1 text-lg font-semibold text-slate-800">{pct(metrics.high_risk_recall)}</p>
+          <p className="text-xs uppercase tracking-wide text-muted">High Recall</p>
+          <p className="mt-1 text-lg font-semibold text-heading">{pct(metrics.high_risk_recall)}</p>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">Extreme Recall</p>
-          <p className="mt-1 text-lg font-semibold text-slate-800">{pct(metrics.extreme_risk_recall)}</p>
+          <p className="text-xs uppercase tracking-wide text-muted">Extreme Recall</p>
+          <p className="mt-1 text-lg font-semibold text-heading">{pct(metrics.extreme_risk_recall)}</p>
         </div>
       </div>
 
-      {performance.note ? <p className="mt-4 text-xs text-slate-500">{performance.note}</p> : null}
+      {performance.note ? <p className="mt-4 text-xs text-muted">{performance.note}</p> : null}
     </Card>
   );
 }

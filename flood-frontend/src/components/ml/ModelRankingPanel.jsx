@@ -14,22 +14,22 @@ function ModelRankingPanel({ models = [] }) {
 
   return (
     <Card>
-      <h3 className="mb-4 text-lg font-semibold text-slate-800">Model Ranking (by Macro-F1)</h3>
+      <h3 className="mb-4 text-lg font-semibold text-heading">Model Ranking (by Macro-F1)</h3>
       <div className="space-y-3">
         {ranked.map((model, index) => (
           <div
             key={model.name}
-            className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
+            className="flex items-center justify-between rounded-xl bg-surface-2 px-4 py-3 transition hover:bg-surface-2"
           >
             <div className="flex items-center gap-3">
               <span className="text-xl">{MEDALS[index] || `#${index + 1}`}</span>
-              <span className="font-medium text-slate-800">{model.name}</span>
+              <span className="font-medium text-heading">{model.name}</span>
             </div>
             <span className="font-semibold text-blue-600">{(model.macro_f1 * 100).toFixed(1)}%</span>
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs text-slate-400">
+      <p className="mt-3 text-xs text-faint">
         Ranked by raw Macro-F1 only. The model actually selected for prediction can differ from #1 here when
         High/Extreme-risk recall favors another model within a close Macro-F1 margin - see the Best Performing
         Model panel for the exact tie-break reasoning.

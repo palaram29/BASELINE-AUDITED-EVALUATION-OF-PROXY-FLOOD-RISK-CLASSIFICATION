@@ -29,16 +29,16 @@ function ModelRegistryPanel({ modelVersions = [], onPromoted }) {
 
   return (
     <Card>
-      <h3 className="mb-4 text-lg font-semibold text-slate-800">Model Registry</h3>
+      <h3 className="mb-4 text-lg font-semibold text-heading">Model Registry</h3>
       {actionError ? <p className="mb-3 text-sm text-red-600">{actionError}</p> : null}
 
       {modelVersions.length ? (
         <div className="space-y-3">
           {modelVersions.map((v) => (
-            <div key={v.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+            <div key={v.id} className="flex items-center justify-between rounded-lg bg-surface-2 px-4 py-3">
               <div>
-                <p className="font-medium text-slate-700">{v.algorithm} v{v.version}</p>
-                <p className="text-xs text-slate-500">
+                <p className="font-medium text-body">{v.algorithm} v{v.version}</p>
+                <p className="text-xs text-muted">
                   Macro-F1 {v.macro_f1 != null ? `${(v.macro_f1 * 100).toFixed(1)}%` : "—"}
                 </p>
               </div>
@@ -48,7 +48,7 @@ function ModelRegistryPanel({ modelVersions = [], onPromoted }) {
                   <button
                     onClick={() => handlePromote(v.id)}
                     disabled={promotingId === v.id}
-                    className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+                    className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-brand-strong disabled:opacity-50"
                   >
                     {promotingId === v.id ? "Promoting..." : v.status === "Archived" ? "Rollback to this" : "Promote"}
                   </button>

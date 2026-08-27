@@ -15,14 +15,14 @@ function TrainingHistoryTable({ trainingHistory = [] }) {
 
   return (
     <Card>
-      <h3 className="mb-4 text-lg font-semibold text-slate-800">Training History</h3>
+      <h3 className="mb-4 text-lg font-semibold text-heading">Training History</h3>
 
       {trainingHistory.length ? (
         <>
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
               <thead>
-                <tr className="bg-slate-100 text-left text-slate-600">
+                <tr className="bg-surface-2 text-left text-muted">
                   <th className="px-4 py-3">Version</th>
                   <th className="px-4 py-3">Algorithm</th>
                   <th className="px-4 py-3">Trained</th>
@@ -33,16 +33,16 @@ function TrainingHistoryTable({ trainingHistory = [] }) {
               </thead>
               <tbody>
                 {visible.map((row) => (
-                  <tr key={row.id} className="border-b border-slate-200">
-                    <td className="px-4 py-3 text-slate-600">v{row.version}</td>
-                    <td className="px-4 py-3 font-medium text-slate-700">{row.algorithm}</td>
-                    <td className="px-4 py-3 text-slate-600">
+                  <tr key={row.id} className="border-b border-line">
+                    <td className="px-4 py-3 text-muted">v{row.version}</td>
+                    <td className="px-4 py-3 font-medium text-body">{row.algorithm}</td>
+                    <td className="px-4 py-3 text-muted">
                       {row.trained_at ? new Date(row.trained_at).toLocaleString() : "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted">
                       {row.macro_f1 != null ? `${(row.macro_f1 * 100).toFixed(1)}%` : "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted">
                       {row.accuracy != null ? `${(row.accuracy * 100).toFixed(1)}%` : "—"}
                     </td>
                     <td className="px-4 py-3"><Badge tone={STATUS_TONE[row.status] || "slate"}>{row.status}</Badge></td>

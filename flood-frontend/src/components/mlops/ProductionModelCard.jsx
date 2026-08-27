@@ -4,8 +4,8 @@ import MLOpsHealthBadge from "./MLOpsHealthBadge";
 function Stat({ label, value }) {
   return (
     <div className="rounded-xl bg-white/70 px-4 py-3 shadow-sm">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-800">{value}</p>
+      <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-heading">{value}</p>
     </div>
   );
 }
@@ -32,13 +32,13 @@ function ProductionModelCard({ productionModel, health }) {
             <p className="text-sm font-medium uppercase tracking-wide text-blue-700">Production Model</p>
             {health ? <MLOpsHealthBadge status={health.status} /> : null}
           </div>
-          <h2 className="mt-1 text-2xl font-bold text-slate-800">
+          <h2 className="mt-1 text-2xl font-bold text-heading">
             {productionModel.algorithm} {productionModel.version ? `v${productionModel.version}` : ""}
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-muted">
             {trainedAt ? `Trained ${trainedAt.toLocaleString()}` : "Training date unknown"}
           </p>
-          <p className="mt-2 max-w-xl text-xs text-slate-500">{productionModel.source}</p>
+          <p className="mt-2 max-w-xl text-xs text-muted">{productionModel.source}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

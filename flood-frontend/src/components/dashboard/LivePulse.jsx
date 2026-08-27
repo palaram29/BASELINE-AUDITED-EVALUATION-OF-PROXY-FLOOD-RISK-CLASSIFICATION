@@ -1,10 +1,21 @@
+const CONFIG = {
+  live: { dot: "bg-emerald-500", label: "Live feed active" },
+  warning: { dot: "bg-amber-500", label: "Monitoring delayed" },
+  offline: { dot: "bg-red-500", label: "Offline" },
+};
+
 function LivePulse({ status = "live" }) {
-  const tone = status === "live" ? "bg-green-500" : status === "warning" ? "bg-yellow-500" : "bg-red-500";
+  const cfg = CONFIG[status] || CONFIG.offline;
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
-      <span className={`h-2.5 w-2.5 rounded-full ${tone}`} />
-      <span className="text-sm font-medium text-slate-700">{status === "live" ? "Live feed active" : status === "warning" ? "Monitoring delayed" : "Offline"}</span>
+    <div className="flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 shadow-sm">
+      <span className="relative flex h-2.5 w-2.5">
+        {status === "live" ? (
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+        ) : null}
+        <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${cfg.dot}`} />
+      </span>
+      <span className="text-sm font-medium text-body">{cfg.label}</span>
     </div>
   );
 }

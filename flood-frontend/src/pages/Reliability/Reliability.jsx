@@ -1,5 +1,6 @@
 import { useState } from "react";
 import useReliability from "../../hooks/useReliability";
+import PageHeader from "../../components/common/PageHeader";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Skeleton from "../../components/common/Skeleton";
 import ReliabilityScoreCard from "../../components/reliability/ReliabilityScoreCard";
@@ -11,7 +12,7 @@ import EmptyState from "../../components/common/EmptyState";
 
 function LoadingCard() {
   return (
-    <div className="space-y-4 rounded-xl bg-white p-6 shadow-md">
+    <div className="card space-y-4 p-6">
       <Skeleton className="h-6 w-1/3" />
       <Skeleton className="h-3 w-full" />
       <Skeleton className="h-3 w-full" />
@@ -33,36 +34,32 @@ const ISSUE_TONE = {
 
 function ValidationFlagsTable({ flags }) {
   return (
-    <Card>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-800">Recent Validation Flags</h3>
-        <span className="text-xs text-slate-400">
-          Suspicious/invalid records are flagged for audit, never deleted from weather_data/river_data
-        </span>
-      </div>
-
+    <Card
+      title="Recent validation flags"
+      subtitle="Flagged for audit, never deleted from weather_data / river_data"
+    >
       {flags?.length ? (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+        <div className="-mx-2 max-h-[32rem] overflow-auto rounded-xl border border-line sm:mx-0">
+          <table className="data-table min-w-full">
             <thead>
-              <tr className="text-left text-slate-500">
-                <th className="px-2 py-1">Source</th>
-                <th className="px-2 py-1">Field</th>
-                <th className="px-2 py-1">Observed Value</th>
-                <th className="px-2 py-1">Issue</th>
-                <th className="px-2 py-1">Record Time</th>
+              <tr>
+                <th>Source</th>
+                <th>Field</th>
+                <th>Observed value</th>
+                <th>Issue</th>
+                <th>Record time</th>
               </tr>
             </thead>
             <tbody>
               {flags.map((f) => (
-                <tr key={f.id} className="border-t border-slate-100">
-                  <td className="px-2 py-2 font-medium text-slate-700">{f.source}</td>
-                  <td className="px-2 py-2 text-slate-600">{f.field_name}</td>
-                  <td className="px-2 py-2 text-slate-600">{f.observed_value ?? "—"}</td>
-                  <td className="px-2 py-2">
+                <tr key={f.id}>
+                  <td>{f.source}</td>
+                  <td className="text-muted">{f.field_name}</td>
+                  <td className="text-muted">{f.observed_value ?? "—"}</td>
+                  <td>
                     <Badge tone={ISSUE_TONE[f.issue_type] || "slate"}>{f.issue_type}</Badge>
                   </td>
-                  <td className="px-2 py-2 text-slate-500">
+                  <td className="text-muted">
                     {f.record_timestamp ? new Date(f.record_timestamp).toLocaleString() : "—"}
                   </td>
                 </tr>
@@ -87,19 +84,12 @@ function Reliability() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Data Reliability</h1>
-          <p className="mt-2 max-w-2xl text-slate-500">
-            Reliability = 0.25×Completeness + 0.25×Timeliness + 0.25×Validity + 0.25×Historical Reliability,
-            computed per source (one per City for weather, one per River:Station for river). A data-quality signal,
-            distinct from model prediction confidence - see the ML Dashboard for that.
-          </p>
-          {lastUpdated ? (
-            <p className="mt-1 text-xs text-slate-400">Last updated {lastUpdated.toLocaleTimeString()}</p>
-          ) : null}
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Machine Learning"
+        title="Data reliability"
+        description="Reliability = 0.25×Completeness + 0.25×Timeliness + 0.25×Validity + 0.25×Historical Reliability, computed per source (one per city for weather, one per river:station for river). A data-quality signal, distinct from model prediction confidence."
+        meta={lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : undefined}
+      />
 
       {error ? <ErrorMessage message={error} /> : null}
 

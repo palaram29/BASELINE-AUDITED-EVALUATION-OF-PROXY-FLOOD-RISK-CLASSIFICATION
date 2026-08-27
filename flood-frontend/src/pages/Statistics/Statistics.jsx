@@ -1,42 +1,50 @@
+import {
+  FiCloudRain,
+  FiActivity,
+  FiTrendingUp,
+  FiAlertTriangle,
+  FiAlertOctagon,
+} from "react-icons/fi";
 import useStatistics from "../../hooks/useStatistics";
-import Card from "../../components/common/Card";
+import PageHeader from "../../components/common/PageHeader";
+import SummaryCard from "../../components/cards/SummaryCard";
 import ErrorMessage from "../../components/common/ErrorMessage";
-import Badge from "../../components/common/Badge";
+import Skeleton from "../../components/common/Skeleton";
 
 function Statistics() {
   const { statistics, loading, error } = useStatistics();
 
-  if (loading) {
-    return <div className="rounded-2xl bg-white p-8 text-center shadow-sm">Loading system statistics...</div>;
-  }
+  const cards = [
+    { title: "Weather stations", value: statistics.weatherStations, tone: "blue", icon: FiCloudRain },
+    { title: "River stations", value: statistics.riverStations, tone: "green", icon: FiActivity },
+    { title: "Predictions", value: statistics.predictionCount, tone: "yellow", icon: FiTrendingUp },
+    { title: "High risk rivers", value: statistics.highRiskRivers, tone: "orange", icon: FiAlertTriangle },
+    { title: "High risk predictions", value: statistics.highRiskPredictions, tone: "red", icon: FiAlertOctagon },
+  ];
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-800">System statistics</h1>
-        <p className="mt-2 text-slate-500">An overview of the data coverage and flood risk footprint.</p>
-      </div>
+      <PageHeader
+        eyebrow="Overview"
+        title="System statistics"
+        description="A snapshot of data coverage and the current flood-risk footprint across all monitored sources."
+      />
 
       {error ? <ErrorMessage message={error} /> : null}
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {[
-          { title: "Weather stations", value: statistics.weatherStations, tone: "blue" },
-          { title: "River stations", value: statistics.riverStations, tone: "green" },
-          { title: "Predictions", value: statistics.predictionCount, tone: "yellow" },
-          { title: "High risk rivers", value: statistics.highRiskRivers, tone: "red" },
-          { title: "High risk predictions", value: statistics.highRiskPredictions, tone: "red" },
-        ].map((item) => (
-          <Card key={item.title}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">{item.title}</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-800">{item.value}</p>
-              </div>
-              <Badge tone={item.tone}>{item.value > 0 ? "Active" : "None"}</Badge>
-            </div>
-          </Card>
-        ))}
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        {loading
+          ? cards.map((c) => <Skeleton key={c.title} className="h-28 rounded-2xl" />)
+          : cards.map((item) => (
+              <SummaryCard
+                key={item.title}
+                title={item.title}
+                value={item.value}
+                tone={item.tone}
+                icon={item.icon}
+                hint={item.value > 0 ? "Active" : "No data yet"}
+              />
+            ))}
       </div>
     </div>
   );

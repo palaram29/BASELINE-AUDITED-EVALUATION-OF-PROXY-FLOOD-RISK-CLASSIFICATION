@@ -41,8 +41,8 @@ function LivePredictionPanel({ bestModelName, onPredicted }) {
           <FaBolt size={16} />
         </span>
         <div>
-          <h3 className="text-lg font-semibold text-slate-800">ML Flood-Risk Prediction</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className="text-lg font-semibold text-heading">ML Flood-Risk Prediction</h3>
+          <p className="text-sm text-muted">
             A forecast from the frozen production model{bestModelName ? ` (${bestModelName})` : ""}, scored on the
             latest available weather data — not an observed condition. See the map's River and Weather layers for
             current observed conditions.
@@ -54,7 +54,7 @@ function LivePredictionPanel({ bestModelName, onPredicted }) {
         <select
           value={city}
           onChange={(event) => setCity(event.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-64"
+          className="w-full rounded-lg border border-line-strong px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand sm:w-64"
         >
           {CITIES.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -63,7 +63,7 @@ function LivePredictionPanel({ bestModelName, onPredicted }) {
         <button
           onClick={handlePredict}
           disabled={loading}
-          className="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg bg-brand px-6 py-2 font-medium text-white shadow-sm transition hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Predicting..." : "Predict"}
         </button>
@@ -73,33 +73,33 @@ function LivePredictionPanel({ bestModelName, onPredicted }) {
 
       {result ? (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-5 sm:grid-cols-6">
+          <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-surface-2 p-5 sm:grid-cols-6">
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">Predicted Risk</p>
+              <p className="text-xs uppercase tracking-wide text-muted">Predicted Risk</p>
               <div className="mt-1"><Badge tone={riskTone(result.risk)}>{result.risk?.toUpperCase()}</Badge></div>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">Predicted For</p>
-              <p className="mt-1 font-semibold text-slate-800">{result.predicted_for_date || "—"}</p>
+              <p className="text-xs uppercase tracking-wide text-muted">Predicted For</p>
+              <p className="mt-1 font-semibold text-heading">{result.predicted_for_date || "—"}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">Confidence (model)</p>
-              <p className="mt-1 font-semibold text-slate-800">
+              <p className="text-xs uppercase tracking-wide text-muted">Confidence (model)</p>
+              <p className="mt-1 font-semibold text-heading">
                 {result.confidence != null ? `${(result.confidence * 100).toFixed(0)}%` : "n/a"}
               </p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">Model Used</p>
-              <p className="mt-1 font-semibold text-slate-800">{result.model_used}</p>
+              <p className="text-xs uppercase tracking-wide text-muted">Model Used</p>
+              <p className="mt-1 font-semibold text-heading">{result.model_used}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">Prediction Time</p>
-              <p className="mt-1 font-semibold text-slate-800">{result.prediction_time_ms.toFixed(0)} ms</p>
+              <p className="text-xs uppercase tracking-wide text-muted">Prediction Time</p>
+              <p className="mt-1 font-semibold text-heading">{result.prediction_time_ms.toFixed(0)} ms</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-500">Data Reliability</p>
+              <p className="text-xs uppercase tracking-wide text-muted">Data Reliability</p>
               <div className="mt-1 flex items-center gap-2">
-                <span className="font-semibold text-slate-800">
+                <span className="font-semibold text-heading">
                   {result.data_reliability_score != null ? `${Math.round(result.data_reliability_score * 100)}%` : "n/a"}
                 </span>
                 {result.data_reliability_level ? (

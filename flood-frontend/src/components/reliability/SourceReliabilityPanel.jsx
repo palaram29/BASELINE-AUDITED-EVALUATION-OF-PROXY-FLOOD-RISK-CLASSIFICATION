@@ -45,9 +45,9 @@ function SourceReliabilityPanel({ sources, selectedSource, onSelectSource }) {
   return (
     <Card>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold text-slate-800">Source Reliability</h3>
+        <h3 className="text-lg font-semibold text-heading">Source Reliability</h3>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-faint">
             {sourceType === "weather" ? weatherCount : riverCount} of {(sources?.length || 0)} sources
           </span>
           <ViewToggle
@@ -63,7 +63,7 @@ function SourceReliabilityPanel({ sources, selectedSource, onSelectSource }) {
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="text-left text-slate-500">
+              <tr className="text-left text-muted">
                 <th className="px-2 py-1">Source</th>
                 <th className="px-2 py-1">Completeness</th>
                 <th className="px-2 py-1">Timeliness</th>
@@ -78,16 +78,16 @@ function SourceReliabilityPanel({ sources, selectedSource, onSelectSource }) {
                 <tr
                   key={`${s.source_type}:${s.source}`}
                   onClick={() => onSelectSource?.(s.source)}
-                  className={`cursor-pointer border-t border-slate-100 hover:bg-slate-50 ${
+                  className={`cursor-pointer border-t border-line hover:bg-surface-2 ${
                     selectedSource === s.source ? "bg-blue-50" : ""
                   }`}
                 >
-                  <td className="px-2 py-2 font-medium text-slate-700">{s.source}</td>
-                  <td className="px-2 py-2 text-slate-600">{pct(s.completeness_score)}</td>
-                  <td className="px-2 py-2 text-slate-600">{pct(s.timeliness_score)}</td>
-                  <td className="px-2 py-2 text-slate-600">{pct(s.validity_score)}</td>
-                  <td className="px-2 py-2 text-slate-600">{pct(s.historical_reliability_score)}</td>
-                  <td className="px-2 py-2 font-semibold text-slate-800">{pct(s.reliability_score)}</td>
+                  <td className="px-2 py-2 font-medium text-body">{s.source}</td>
+                  <td className="px-2 py-2 text-muted">{pct(s.completeness_score)}</td>
+                  <td className="px-2 py-2 text-muted">{pct(s.timeliness_score)}</td>
+                  <td className="px-2 py-2 text-muted">{pct(s.validity_score)}</td>
+                  <td className="px-2 py-2 text-muted">{pct(s.historical_reliability_score)}</td>
+                  <td className="px-2 py-2 font-semibold text-heading">{pct(s.reliability_score)}</td>
                   <td className="px-2 py-2">
                     <Badge tone={RELIABILITY_TONE[s.reliability_level] || "slate"}>{s.reliability_level}</Badge>
                   </td>

@@ -27,7 +27,7 @@ function DataQualityPanel({ dataQuality }) {
   return (
     <Card>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-800">Data Quality</h3>
+        <h3 className="text-lg font-semibold text-heading">Data Quality</h3>
         {dataQuality?.overall_status ? (
           <Badge tone={STATUS_TONE[dataQuality.overall_status] || "slate"}>{dataQuality.overall_status}</Badge>
         ) : null}
@@ -38,8 +38,8 @@ function DataQualityPanel({ dataQuality }) {
           {reliability ? (
             <div>
               <div className="mb-1 flex items-center justify-between text-sm">
-                <span className="text-slate-600">Data Reliability Score</span>
-                <span className="font-semibold text-slate-800">
+                <span className="text-muted">Data Reliability Score</span>
+                <span className="font-semibold text-heading">
                   {reliability.metric_value != null ? `${reliability.metric_value.toFixed(1)}%` : "—"}
                 </span>
               </div>
@@ -50,12 +50,13 @@ function DataQualityPanel({ dataQuality }) {
             </div>
           ) : null}
 
+          <div className="max-h-80 overflow-y-auto rounded-lg border border-line">
           <table className="min-w-full text-sm">
             <tbody>
               {others.map((m) => (
-                <tr key={m.metric_name} className="border-t border-slate-100">
-                  <td className="px-2 py-2 text-slate-600">{metricLabel(m.metric_name)}</td>
-                  <td className="px-2 py-2 text-right font-medium text-slate-800">
+                <tr key={m.metric_name} className="border-t border-line">
+                  <td className="px-2 py-2 text-muted">{metricLabel(m.metric_name)}</td>
+                  <td className="px-2 py-2 text-right font-medium text-heading">
                     {m.metric_value != null ? `${m.metric_value.toFixed(2)}%` : "—"}
                   </td>
                   <td className="px-2 py-2 text-right">
@@ -65,6 +66,7 @@ function DataQualityPanel({ dataQuality }) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
         <EmptyState

@@ -1,6 +1,6 @@
 function RiverSection() {
   return (
-    <div className="bg-white rounded-xl shadow p-6">
+    <div className="bg-surface rounded-xl shadow p-6">
       River Section
     </div>
   );

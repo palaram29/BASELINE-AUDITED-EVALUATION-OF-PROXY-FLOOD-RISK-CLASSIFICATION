@@ -8,7 +8,6 @@ import RainfallChart from "../../components/charts/RainfallChart";
 import PredictionTable from "../../components/tables/PredictionTable";
 import RiskOverview from "../../components/dashboard/RiskOverview";
 import FloodMap from "../../components/maps/FloodMap";
-import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Skeleton from "../../components/common/Skeleton";
 import Badge from "../../components/common/Badge";
@@ -78,22 +77,31 @@ function Dashboard() {
           this banner instead of being replaced by it. */}
       {error ? <ErrorMessage message={error} onRetry={retry} /> : null}
 
-      <div className="rounded-3xl border border-blue-100 bg-gradient-to-r from-slate-900 via-blue-900 to-cyan-800 p-6 text-white shadow-2xl">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950 p-6 text-white shadow-xl sm:p-8">
+        <div
+          className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-sky-500/20 blur-3xl"
+          aria-hidden="true"
+        />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">Flood monitoring dashboard</h1>
-              <Badge tone="green">Operational</Badge>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Flood monitoring dashboard
+              </h1>
+              <Badge tone="green" dot>Operational</Badge>
             </div>
-            <p className="mt-3 max-w-2xl text-sm text-blue-100 sm:text-base">
-              Live river and weather conditions across Sri Lanka, automatically refreshed, plus the ML model's
-              next-day flood-risk forecast built from that data.
+            <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
+              Live river and weather conditions across Sri Lanka, automatically refreshed, plus the
+              ML model's next-day flood-risk forecast built from that data.
             </p>
           </div>
-          <Card className="border-0 bg-white/10 px-4 py-3 text-white backdrop-blur">
-            <p className="text-sm text-blue-100">Last update</p>
-            <p className="text-lg font-semibold">{lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} • Sri Lanka</p>
-          </Card>
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur">
+            <p className="text-xs uppercase tracking-wider text-slate-400">Last update</p>
+            <p className="mt-0.5 text-lg font-semibold">
+              {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              <span className="ml-1 text-sm font-normal text-slate-400">· Sri Lanka</span>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -101,10 +109,10 @@ function Dashboard() {
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-700">
+          <h2 className="text-lg font-semibold text-heading">
             {view === "live" ? "Live observed conditions" : "ML flood-risk forecast"}
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted">
             {view === "live"
               ? "Directly from the latest automatic weather/river collection — not model output."
               : "The frozen production model's forecast for the following day, scored on the live data above — a prediction, not an observed condition."}

@@ -20,17 +20,17 @@ function RetrainingAlertsPanel({ retrainingStatus }) {
   return (
     <Card>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-800">Retraining Alerts</h3>
+        <h3 className="text-lg font-semibold text-heading">Retraining Alerts</h3>
         {retrainingStatus?.retraining_recommended ? <Badge tone="orange">Retraining recommended</Badge> : null}
       </div>
 
       {events.length ? (
-        <ul className="space-y-3">
+        <ul className="max-h-96 space-y-3 overflow-y-auto">
           {events.map((e) => (
-            <li key={e.id} className="flex items-start justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
+            <li key={e.id} className="flex items-start justify-between rounded-lg bg-surface-2 px-4 py-3 text-sm">
               <div>
-                <p className="font-medium text-slate-700">{EVENT_LABEL[e.event_type] || e.event_type}</p>
-                <p className="text-xs text-slate-500">
+                <p className="font-medium text-body">{EVENT_LABEL[e.event_type] || e.event_type}</p>
+                <p className="text-xs text-muted">
                   {e.created_at ? new Date(e.created_at).toLocaleString() : ""} · triggered by {e.triggered_by}
                 </p>
               </div>
@@ -42,7 +42,7 @@ function RetrainingAlertsPanel({ retrainingStatus }) {
         <EmptyState title="No retraining events yet" description="Drift/quality breaches and promotions will be logged here." />
       )}
 
-      {retrainingStatus?.note ? <p className="mt-4 text-xs text-slate-400">{retrainingStatus.note}</p> : null}
+      {retrainingStatus?.note ? <p className="mt-4 text-xs text-faint">{retrainingStatus.note}</p> : null}
     </Card>
   );
 }

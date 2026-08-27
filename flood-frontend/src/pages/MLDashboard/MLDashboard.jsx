@@ -1,4 +1,5 @@
 import useMLDashboard from "../../hooks/useMLDashboard";
+import PageHeader from "../../components/common/PageHeader";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Skeleton from "../../components/common/Skeleton";
 import ModelOverviewCard from "../../components/ml/ModelOverviewCard";
@@ -15,7 +16,7 @@ function CardSkeletonRow() {
   return (
     <div className="grid gap-6 md:grid-cols-3">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="space-y-4 rounded-xl bg-white p-6 shadow-md">
+        <div key={i} className="card space-y-4 p-6">
           <Skeleton className="h-6 w-2/3" />
           <Skeleton className="h-3 w-full" />
           <Skeleton className="h-3 w-full" />
@@ -32,23 +33,20 @@ function MLDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">ML Model Dashboard</h1>
-          <p className="mt-2 text-slate-500">
-            Random Forest, XGBoost and LightGBM were compared on the historical dataset; the best performer is
-            frozen as the production model and used for all live ML flood-risk predictions below.
-          </p>
-          {lastUpdated ? (
-            <p className="mt-1 text-xs text-slate-400">Last updated {lastUpdated.toLocaleTimeString()}</p>
-          ) : null}
-        </div>
-        {bestModel?.production_status === "frozen" ? (
-          <span className="inline-flex items-center gap-2 self-start rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200">
-            🔒 Frozen production model{bestModel.production_version ? ` · v${bestModel.production_version}` : ""}
-          </span>
-        ) : null}
-      </div>
+      <PageHeader
+        eyebrow="Machine Learning"
+        title="ML model dashboard"
+        description="Random Forest, XGBoost and LightGBM were compared on the historical dataset; the best performer is frozen as the production model and used for all live ML flood-risk predictions below."
+        meta={lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : undefined}
+        actions={
+          bestModel?.production_status === "frozen" ? (
+            <span className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm font-medium text-body">
+              🔒 Frozen production model
+              {bestModel.production_version ? ` · v${bestModel.production_version}` : ""}
+            </span>
+          ) : null
+        }
+      />
 
       {error ? <ErrorMessage message={error} /> : null}
 

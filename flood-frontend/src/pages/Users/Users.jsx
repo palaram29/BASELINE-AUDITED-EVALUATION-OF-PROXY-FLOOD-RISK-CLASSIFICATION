@@ -1,10 +1,14 @@
 import { useMemo, useState } from "react";
+import { FiUsers, FiMapPin, FiAlertTriangle } from "react-icons/fi";
 import useUsers from "../../hooks/useUsers";
+import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import EmptyState from "../../components/common/EmptyState";
 import Skeleton from "../../components/common/Skeleton";
+import SummaryCard from "../../components/cards/SummaryCard";
+import SearchInput from "../../components/common/SearchInput";
 import { riskTone } from "../../utils/riskTone";
 
 function formatDate(value) {
@@ -38,56 +42,40 @@ function Users() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">User management</h1>
-          <p className="mt-2 text-slate-500">
-            Everyone who has registered for personalized flood alerts through the citizen app,
-            and the current live risk for the area each one is subscribed to.
-          </p>
-        </div>
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search name, email, or city"
-          className="w-full rounded-lg border border-slate-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 lg:w-80"
-        />
-      </div>
+      <PageHeader
+        eyebrow="Administration"
+        title="User management"
+        description="Everyone registered for personalized flood alerts through the citizen app, and the current live risk for the area each one is subscribed to."
+      >
+        <SearchInput value={search} placeholder="Search name, email, or city" onSearch={setSearch} />
+      </PageHeader>
 
       {error ? <ErrorMessage message={error} /> : null}
 
       {loading ? (
-        <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
+        <div className="space-y-5">
+          <div className="grid gap-5 md:grid-cols-3">
+            <Skeleton className="h-28 rounded-2xl" />
+            <Skeleton className="h-28 rounded-2xl" />
+            <Skeleton className="h-28 rounded-2xl" />
           </div>
-          <Skeleton className="h-96 w-full rounded-xl" />
+          <Skeleton className="h-96 w-full rounded-2xl" />
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <p className="text-sm text-slate-500">Registered users</p>
-              <p className="mt-2 text-3xl font-semibold text-slate-800">{users.length}</p>
-            </Card>
-            <Card>
-              <p className="text-sm text-slate-500">Cities subscribed</p>
-              <p className="mt-2 text-3xl font-semibold text-slate-800">{citiesCovered}</p>
-            </Card>
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Users currently under alert</p>
-                  <p className="mt-2 text-3xl font-semibold text-slate-800">{usersUnderAlert}</p>
-                </div>
-                {usersUnderAlert > 0 ? <Badge tone="red">Action may be needed</Badge> : null}
-              </div>
-            </Card>
+          <div className="grid gap-5 md:grid-cols-3">
+            <SummaryCard title="Registered users" value={users.length} icon={FiUsers} tone="blue" />
+            <SummaryCard title="Cities subscribed" value={citiesCovered} icon={FiMapPin} tone="green" />
+            <SummaryCard
+              title="Users currently under alert"
+              value={usersUnderAlert}
+              icon={FiAlertTriangle}
+              tone={usersUnderAlert > 0 ? "red" : "slate"}
+              hint={usersUnderAlert > 0 ? "Action may be needed" : "All areas clear"}
+            />
           </div>
 
-          <Card>
+          <Card title="Registrations" subtitle={`${filteredUsers.length} of ${users.length} shown`}>
             {users.length === 0 ? (
               <EmptyState
                 title="No registrations yet"
@@ -96,42 +84,44 @@ function Users() {
             ) : filteredUsers.length === 0 ? (
               <EmptyState title="No matches" description="No registered user matches that search." />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse">
+              <div className="-mx-2 overflow-x-auto rounded-xl border border-line sm:mx-0">
+                <table className="data-table min-w-full">
                   <thead>
-                    <tr className="bg-slate-100 text-left text-sm text-slate-600">
-                      <th className="px-4 py-3">Name</th>
-                      <th className="px-4 py-3">Email</th>
-                      <th className="px-4 py-3">Phone</th>
-                      <th className="px-4 py-3">Alert city</th>
-                      <th className="px-4 py-3">Current risk</th>
-                      <th className="px-4 py-3">Notifications</th>
-                      <th className="px-4 py-3">Registered</th>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Alert city</th>
+                      <th>Current risk</th>
+                      <th>Notifications</th>
+                      <th>Registered</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.map((user) => (
-                      <tr key={user.id} className="border-b border-slate-200 text-sm">
-                        <td className="px-4 py-3 font-medium text-slate-700">{user.full_name}</td>
-                        <td className="px-4 py-3 text-slate-600">{user.email}</td>
-                        <td className="px-4 py-3 text-slate-600">{user.phone || "—"}</td>
-                        <td className="px-4 py-3 text-slate-600">{user.alert_city}</td>
-                        <td className="px-4 py-3">
+                      <tr key={user.id}>
+                        <td className="wrap">{user.full_name}</td>
+                        <td className="wrap text-muted">{user.email}</td>
+                        <td className="text-muted">{user.phone || "—"}</td>
+                        <td className="text-muted">{user.alert_city}</td>
+                        <td>
                           {user.current_risk_label ? (
-                            <Badge tone={riskTone(user.current_risk_level)}>{user.current_risk_label}</Badge>
+                            <Badge tone={riskTone(user.current_risk_level)}>
+                              {user.current_risk_label}
+                            </Badge>
                           ) : (
-                            <span className="text-slate-400">No data</span>
+                            <span className="text-faint">No data</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-slate-600">
+                        <td className="text-muted">
                           {user.notification_count}
                           {user.last_notified_at ? (
-                            <span className="ml-1 text-xs text-slate-400">
+                            <span className="ml-1 text-xs text-faint">
                               (last {formatDate(user.last_notified_at)})
                             </span>
                           ) : null}
                         </td>
-                        <td className="px-4 py-3 text-slate-500">{formatDate(user.created_at)}</td>
+                        <td className="text-muted">{formatDate(user.created_at)}</td>
                       </tr>
                     ))}
                   </tbody>

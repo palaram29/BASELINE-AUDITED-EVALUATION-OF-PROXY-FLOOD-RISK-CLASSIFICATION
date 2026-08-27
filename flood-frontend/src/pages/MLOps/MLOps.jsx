@@ -1,4 +1,5 @@
 import useMLOpsMonitoring from "../../hooks/useMLOpsMonitoring";
+import PageHeader from "../../components/common/PageHeader";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Skeleton from "../../components/common/Skeleton";
 import ProductionModelCard from "../../components/mlops/ProductionModelCard";
@@ -12,7 +13,7 @@ import TrainingHistoryTable from "../../components/mlops/TrainingHistoryTable";
 
 function LoadingCard() {
   return (
-    <div className="space-y-4 rounded-xl bg-white p-6 shadow-md">
+    <div className="card space-y-4 p-6">
       <Skeleton className="h-6 w-1/3" />
       <Skeleton className="h-3 w-full" />
       <Skeleton className="h-3 w-full" />
@@ -46,20 +47,22 @@ function MLOps() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">MLOps Monitoring</h1>
-          <p className="mt-2 max-w-2xl text-slate-500">
-            Production model lifecycle, live feature/prediction drift and data quality. Retraining stays a
-            deliberate, human-reviewed step - this page only ever surfaces evidence for that decision, never
-            triggers it automatically. For algorithm comparison, see{" "}
-            <a href="/ml-dashboard" className="text-blue-600 hover:text-blue-700">ML Dashboard</a>.
-          </p>
-          {lastUpdated ? (
-            <p className="mt-1 text-xs text-slate-400">Last updated {lastUpdated.toLocaleTimeString()}</p>
-          ) : null}
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Machine Learning"
+        title="MLOps monitoring"
+        description={
+          <>
+            Production model lifecycle, live feature/prediction drift and data quality. Retraining
+            stays a deliberate, human-reviewed step — this page only surfaces evidence for that
+            decision, never triggers it. For algorithm comparison, see{" "}
+            <a href="/ml-dashboard" className="font-medium text-brand hover:text-brand-strong">
+              ML Dashboard
+            </a>
+            .
+          </>
+        }
+        meta={lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : undefined}
+      />
 
       {error ? <ErrorMessage message={error} /> : null}
 

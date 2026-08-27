@@ -16,7 +16,7 @@ function ViewToggle({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className={`inline-flex shrink-0 rounded-full bg-slate-100 p-1 ${className}`}
+      className={`inline-flex shrink-0 rounded-full border border-line bg-surface-2 p-1 ${className}`}
     >
       {options.map((option) => {
         const active = value === option.key;
@@ -28,7 +28,9 @@ function ViewToggle({
             aria-selected={active}
             onClick={() => onChange(option.key)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              active ? "bg-blue-600 text-white shadow" : "text-slate-600 hover:text-slate-800"
+              active
+                ? "bg-brand text-brand-contrast shadow-sm"
+                : "text-muted hover:text-heading"
             }`}
           >
             {option.label}

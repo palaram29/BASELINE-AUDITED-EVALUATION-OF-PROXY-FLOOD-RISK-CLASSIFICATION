@@ -29,20 +29,20 @@ function RiskMap({ river = [], prediction = [] }) {
   }, [river, prediction]);
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-md ring-1 ring-slate-200">
+    <div className="rounded-2xl bg-surface p-6 shadow-md ring-1 ring-line">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-slate-800">Sri Lanka flood risk map</h3>
-          <p className="text-sm text-slate-500">Live regional view of monitored flood zones</p>
+          <h3 className="text-lg font-semibold text-heading">Sri Lanka flood risk map</h3>
+          <p className="text-sm text-muted">Live regional view of monitored flood zones</p>
         </div>
-        <div className="flex items-center gap-3 text-xs text-slate-500">
+        <div className="flex items-center gap-3 text-xs text-muted">
           <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-red-500" />High</span>
           <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-amber-500" />Moderate</span>
           <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-green-500" />Low</span>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4">
+      <div className="rounded-2xl border border-line bg-gradient-to-br from-slate-50 via-white to-blue-50 p-4">
         <svg viewBox={sriLankaOutline.viewBox} className="h-72 w-full rounded-2xl">
           <rect x="0" y="0" width="520" height="520" rx="16" fill="#f8fbff" />
           <path d={sriLankaOutline.path} fill="#dbeafe" stroke="#2563eb" strokeWidth="3" />
@@ -62,12 +62,12 @@ function RiskMap({ river = [], prediction = [] }) {
 
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         {regions.map((region) => (
-          <div key={region.name} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div key={region.name} className="rounded-xl border border-line bg-surface-2 p-3">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full" style={{ backgroundColor: region.color }} />
-              <p className="font-medium text-slate-700">{region.name}</p>
+              <p className="font-medium text-body">{region.name}</p>
             </div>
-            <p className="mt-2 text-sm text-slate-500">{region.detail}</p>
+            <p className="mt-2 text-sm text-muted">{region.detail}</p>
           </div>
         ))}
       </div>

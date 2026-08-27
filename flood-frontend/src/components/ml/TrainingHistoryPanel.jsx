@@ -25,12 +25,12 @@ function TrainingHistoryPanel({ bestModel }) {
 
   return (
     <Card>
-      <h3 className="mb-4 text-lg font-semibold text-slate-800">Training History</h3>
+      <h3 className="mb-4 text-lg font-semibold text-heading">Training History</h3>
       <dl className="space-y-3 text-sm">
         {rows.map((row) => (
-          <div key={row.label} className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-0">
-            <dt className="text-slate-500">{row.label}</dt>
-            <dd className="font-medium text-slate-800">{row.value}</dd>
+          <div key={row.label} className="flex items-center justify-between border-b border-line pb-2 last:border-0">
+            <dt className="text-muted">{row.label}</dt>
+            <dd className="font-medium text-heading">{row.value}</dd>
           </div>
         ))}
       </dl>

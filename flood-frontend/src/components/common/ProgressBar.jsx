@@ -2,16 +2,16 @@
 // the Model Overview Cards.
 function ProgressBar({ value = 0, tone = "blue" }) {
   const tones = {
-    blue: "bg-blue-600",
-    green: "bg-green-600",
-    yellow: "bg-yellow-500",
-    slate: "bg-slate-500",
+    blue: "bg-brand",
+    green: "bg-emerald-500",
+    yellow: "bg-amber-500",
+    slate: "bg-faint",
   };
 
   const percent = Math.max(0, Math.min(100, value * 100));
 
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-3">
       <div
         className={`h-full rounded-full transition-all duration-500 ${tones[tone] || tones.blue}`}
         style={{ width: `${percent}%` }}

@@ -34,8 +34,8 @@ function ModelComparisonTable({ models = [], bestModelName }) {
 
   return (
     <Card>
-      <h3 className="mb-4 text-lg font-semibold text-slate-800">Model Comparison</h3>
-      <p className="mb-4 text-sm text-slate-500">
+      <h3 className="mb-4 text-lg font-semibold text-heading">Model Comparison</h3>
+      <p className="mb-4 text-sm text-muted">
         Green badges mark the highest value in each column. That is not always the model actually{" "}
         <strong>selected</strong> (right-most column) - selection weighs Macro-F1, High Recall and Extreme Recall
         together (see the Best Performing Model panel for the exact reasoning), not any single column in isolation.
@@ -43,7 +43,7 @@ function ModelComparisonTable({ models = [], bestModelName }) {
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
           <thead>
-            <tr className="bg-slate-100 text-left text-sm text-slate-600">
+            <tr className="bg-surface-2 text-left text-sm text-muted">
               <th className="px-4 py-3">Model</th>
               {COLUMNS.map((column) => (
                 <th key={column.key} className="px-4 py-3">{column.label}</th>
@@ -55,9 +55,9 @@ function ModelComparisonTable({ models = [], bestModelName }) {
             {models.map((model) => (
               <tr
                 key={model.name}
-                className={`border-b border-slate-200 ${model.name === bestModelName ? "bg-green-50/60" : ""}`}
+                className={`border-b border-line ${model.name === bestModelName ? "bg-green-50/60" : ""}`}
               >
-                <td className="px-4 py-3 font-medium text-slate-700">{model.name}</td>
+                <td className="px-4 py-3 font-medium text-body">{model.name}</td>
                 {COLUMNS.map((column, index) => {
                   const value = model[column.key];
                   const isBest = value != null && value === bestValues[index];
@@ -66,7 +66,7 @@ function ModelComparisonTable({ models = [], bestModelName }) {
                       {isBest ? (
                         <Badge tone="green">{column.format(value)}</Badge>
                       ) : (
-                        <span className="text-slate-700">{value != null ? column.format(value) : "n/a"}</span>
+                        <span className="text-body">{value != null ? column.format(value) : "n/a"}</span>
                       )}
                     </td>
                   );

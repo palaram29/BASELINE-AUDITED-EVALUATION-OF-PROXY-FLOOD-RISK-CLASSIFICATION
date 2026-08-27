@@ -18,10 +18,10 @@ function BestModelPanel({ bestModel }) {
             </span>
             <div>
               <p className="text-sm font-medium uppercase tracking-wide text-green-700">Best Performing Model</p>
-              <h2 className="text-2xl font-bold text-slate-800">{bestModel.name}</h2>
+              <h2 className="text-2xl font-bold text-heading">{bestModel.name}</h2>
             </div>
           </div>
-          <p className="mt-3 max-w-xl text-sm text-slate-600">{bestModel.reason_selected}</p>
+          <p className="mt-3 max-w-xl text-sm text-muted">{bestModel.reason_selected}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge tone="green">Used for ML Flood-Risk Prediction</Badge>
             {bestModel.production_status === "frozen" ? (
@@ -51,8 +51,8 @@ function BestModelPanel({ bestModel }) {
 function Stat({ label, value }) {
   return (
     <div className="rounded-xl bg-white/70 px-4 py-3 shadow-sm">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-800">{value}</p>
+      <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-heading">{value}</p>
     </div>
   );
 }

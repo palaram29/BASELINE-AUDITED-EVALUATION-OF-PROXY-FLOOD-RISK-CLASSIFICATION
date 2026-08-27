@@ -10,11 +10,11 @@ function pct(value) {
 
 function ScoreRow({ label, score, level, compact = false }) {
   return (
-    <div className={compact ? "" : "border-t border-slate-100 pt-4 first:border-t-0 first:pt-0"}>
+    <div className={compact ? "" : "border-t border-line pt-4 first:border-t-0 first:pt-0"}>
       <div className="mb-1 flex items-center justify-between">
-        <span className={compact ? "text-sm text-slate-600" : "font-medium text-slate-700"}>{label}</span>
+        <span className={compact ? "text-sm text-muted" : "font-medium text-body"}>{label}</span>
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-800">{pct(score)}</span>
+          <span className="font-semibold text-heading">{pct(score)}</span>
           {level ? <Badge tone={RELIABILITY_TONE[level] || "slate"}>{level}</Badge> : null}
         </div>
       </div>
@@ -31,7 +31,7 @@ function ReliabilityScoreCard({ summary }) {
   return (
     <Card>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-800">Data Reliability</h3>
+        <h3 className="text-lg font-semibold text-heading">Data Reliability</h3>
       </div>
 
       {summary ? (

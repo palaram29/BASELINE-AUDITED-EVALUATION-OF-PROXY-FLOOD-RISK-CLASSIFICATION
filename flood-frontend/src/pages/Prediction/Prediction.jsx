@@ -2,9 +2,13 @@ import { useMemo, useState } from "react";
 import usePrediction from "../../hooks/usePrediction";
 import useWeather from "../../hooks/useWeather";
 import useRiver from "../../hooks/useRiver";
+import PageHeader from "../../components/common/PageHeader";
 import Card from "../../components/common/Card";
 import ErrorMessage from "../../components/common/ErrorMessage";
 import Badge from "../../components/common/Badge";
+import Loader from "../../components/common/Loader";
+import SearchInput from "../../components/common/SearchInput";
+import EmptyState from "../../components/common/EmptyState";
 import RiskChart from "../../components/charts/RiskChart";
 import WeatherTable from "../../components/tables/WeatherTable";
 import RiverTable from "../../components/tables/RiverTable";
@@ -23,67 +27,64 @@ function Prediction() {
     return prediction.filter((item) => item.City.toLowerCase().includes(query));
   }, [prediction, search]);
 
-  if (loading) {
-    return <div className="rounded-2xl bg-white p-8 text-center shadow-sm">Loading prediction model output...</div>;
-  }
-
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Flood risk forecast</h1>
-          <p className="mt-2 text-slate-500">
-            {view === "tomorrow"
-              ? "Derived flood-risk index predicted for the next day, based on data available today for each monitored city."
-              : "Live weather and river conditions currently feeding the forecast model."}
-          </p>
-        </div>
-        <div className="flex flex-col items-start gap-3 lg:items-end">
-          <ViewToggle value={view} onChange={setView} />
-          {view === "tomorrow" ? (
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search city"
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 lg:w-80"
-            />
-          ) : null}
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Monitoring"
+        title="Flood-risk forecast"
+        description={
+          view === "tomorrow"
+            ? "The frozen production model's next-day flood-risk index for each monitored city, scored on data available today."
+            : "The live weather and river conditions currently feeding the forecast model."
+        }
+        actions={<ViewToggle value={view} onChange={setView} />}
+      >
+        {view === "tomorrow" ? (
+          <SearchInput value={search} placeholder="Search city" onSearch={setSearch} />
+        ) : null}
+      </PageHeader>
 
       {error ? <ErrorMessage message={error} /> : null}
 
-      {view === "tomorrow" ? (
-        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <Card>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse">
-                <thead>
-                  <tr className="bg-slate-100 text-left text-sm text-slate-600">
-                    <th className="px-4 py-3">City</th>
-                    <th className="px-4 py-3">Rainfall (3d)</th>
-                    <th className="px-4 py-3">Temp</th>
-                    <th className="px-4 py-3">Wind</th>
-                    <th className="px-4 py-3">Predicted For</th>
-                    <th className="px-4 py-3">Predicted Risk</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPrediction.map((item, index) => (
-                    <tr key={`${item.City}-${index}`} className="border-b border-slate-200">
-                      <td className="px-4 py-3 font-medium text-slate-700">{item.City}</td>
-                      <td className="px-4 py-3">{item.Rainfall_3Day} mm</td>
-                      <td className="px-4 py-3">{item.Avg_Temperature} °C</td>
-                      <td className="px-4 py-3">{item.Avg_WindSpeed} km/h</td>
-                      <td className="px-4 py-3 text-slate-500">{item.Predicted_For_Date || "—"}</td>
-                      <td className="px-4 py-3">
-                        <Badge tone={riskTone(item.Predicted_Risk)}>{item.Predicted_Risk}</Badge>
-                      </td>
+      {loading ? (
+        <Card>
+          <Loader label="Loading prediction model output…" />
+        </Card>
+      ) : view === "tomorrow" ? (
+        <div className="space-y-6">
+          <Card title="Predicted risk by city" subtitle="Next-day flood-risk tier">
+            {filteredPrediction.length ? (
+              <div className="-mx-2 overflow-x-auto rounded-xl border border-line sm:mx-0">
+                <table className="data-table min-w-full">
+                  <thead>
+                    <tr>
+                      <th>City</th>
+                      <th>Rainfall (3d)</th>
+                      <th>Temp</th>
+                      <th>Wind</th>
+                      <th>Predicted for</th>
+                      <th>Predicted risk</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredPrediction.map((item, index) => (
+                      <tr key={`${item.City}-${index}`}>
+                        <td>{item.City}</td>
+                        <td>{item.Rainfall_3Day} mm</td>
+                        <td>{item.Avg_Temperature} °C</td>
+                        <td>{item.Avg_WindSpeed} km/h</td>
+                        <td className="text-muted">{item.Predicted_For_Date || "—"}</td>
+                        <td>
+                          <Badge tone={riskTone(item.Predicted_Risk)}>{item.Predicted_Risk}</Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <EmptyState title="No forecasts" description="No prediction matches that search yet." />
+            )}
           </Card>
 
           <RiskChart prediction={filteredPrediction} />

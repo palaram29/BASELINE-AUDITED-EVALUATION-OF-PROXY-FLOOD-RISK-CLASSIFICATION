@@ -278,11 +278,11 @@ function FloodMap() {
   }, [riverStations]);
 
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-lg ring-1 ring-slate-200">
+    <div className="rounded-2xl bg-surface p-4 shadow-lg ring-1 ring-line">
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h3 className="text-xl font-semibold text-slate-800">Sri Lanka flood monitoring map</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className="text-xl font-semibold text-heading">Sri Lanka flood monitoring map</h3>
+          <p className="text-sm text-muted">
             Observed river/weather conditions (DMC gauge data, live weather readings) alongside the ML model's
             next-day flood-risk prediction — the district shading and "ML flood-risk prediction" markers are
             forecasts, everything else on this map is an observed reading.
@@ -292,7 +292,7 @@ function FloodMap() {
           <input
             type="text"
             placeholder="Search district or city"
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-lg border border-line-strong px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand"
             list="district-options"
             onChange={(event) => {
               const value = event.target.value;
@@ -309,7 +309,7 @@ function FloodMap() {
       </div>
 
       {loading ? (
-        <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+        <div className="mb-4 rounded-xl border border-line bg-surface-2 p-4 text-sm text-muted">
           Loading live map data...
         </div>
       ) : null}
@@ -320,7 +320,7 @@ function FloodMap() {
         </div>
       ) : null}
 
-      <div className="h-[420px] w-full overflow-hidden rounded-2xl border border-slate-200 sm:h-[560px]">
+      <div className="h-[420px] w-full overflow-hidden rounded-2xl border border-line sm:h-[560px]">
         <MapContainer
           center={[7.5, 80.7]}
           zoom={7}
@@ -391,14 +391,14 @@ function FloodMap() {
                     position={station.position}
                     station={station}
                     tooltipContent={
-                      <span className="text-xs font-medium text-slate-700">
+                      <span className="text-xs font-medium text-body">
                         {station.stationName} — {severity.category} ({Math.round(severity.score * 100)}%)
                       </span>
                     }
                     popupContent={
                       <div className="min-w-[200px] space-y-1 text-sm">
-                        <div className="font-semibold text-slate-800">{station.stationName}</div>
-                        <div className="text-slate-500">{station.River} river — observed DMC gauge reading</div>
+                        <div className="font-semibold text-heading">{station.stationName}</div>
+                        <div className="text-muted">{station.River} river — observed DMC gauge reading</div>
                         <div>
                           Water level: <strong>{station.WaterLevel ?? "N/A"} m</strong>
                         </div>
@@ -410,7 +410,7 @@ function FloodMap() {
                         <div>
                           Rainfall: <strong>{station.Rainfall ?? "N/A"} mm</strong>
                         </div>
-                        <div className="text-slate-500">Observed status: {station.Status || "N/A"}</div>
+                        <div className="text-muted">Observed status: {station.Status || "N/A"}</div>
                         <div className="pt-1">
                           <span
                             className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-white"
@@ -429,24 +429,24 @@ function FloodMap() {
         </MapContainer>
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-        <p className="mb-2 text-xs text-slate-500">
+      <div className="mt-4 rounded-xl border border-line bg-surface-2 p-3">
+        <p className="mb-2 text-xs text-muted">
           Each river station's zone is a live severity score computed from its water level, rate of rise, rainfall and current
           RiverRisk classification — not a fixed color. The zone glows red at the station and fades smoothly through orange and
           yellow to green with distance, so impact spreads outward the way it would in a real flood: bigger, redder zones for
           stations that are rising fastest or already critical, small green ones for calm stations. Zones shrink back toward
           green automatically as conditions improve.
         </p>
-        <div className="grid grid-cols-2 gap-2 text-sm text-slate-700 sm:flex sm:flex-wrap sm:gap-3">
+        <div className="grid grid-cols-2 gap-2 text-sm text-body sm:flex sm:flex-wrap sm:gap-3">
           {RISK_LEVELS.map((level) => (
-            <div key={level} className="flex items-center gap-2 rounded-full bg-white px-3 py-1 ring-1 ring-slate-200">
+            <div key={level} className="flex items-center gap-2 rounded-full bg-surface px-3 py-1 ring-1 ring-line">
               <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: RISK_COLORS[level] }} />
               {RISK_LABELS[level]}
             </div>
           ))}
         </div>
         {omittedCount > 0 ? (
-          <p className="mt-2 text-xs text-slate-400">
+          <p className="mt-2 text-xs text-faint">
             {omittedCount} station{omittedCount === 1 ? "" : "s"} not shown — no mapped coordinates for that river/city yet.
           </p>
         ) : null}

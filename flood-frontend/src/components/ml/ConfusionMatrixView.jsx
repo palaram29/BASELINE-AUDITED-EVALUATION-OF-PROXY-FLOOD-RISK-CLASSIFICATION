@@ -9,8 +9,8 @@ function ConfusionMatrixView({ matrix = [], labels = [], modelName }) {
   return (
     <Card>
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-slate-800">Confusion Matrix</h3>
-        <p className="text-sm text-slate-500">{modelName ? `${modelName} on the held-out test set` : "Best model on the held-out test set"}</p>
+        <h3 className="text-lg font-semibold text-heading">Confusion Matrix</h3>
+        <p className="text-sm text-muted">{modelName ? `${modelName} on the held-out test set` : "Best model on the held-out test set"}</p>
       </div>
 
       {matrix.length ? (
@@ -18,13 +18,13 @@ function ConfusionMatrixView({ matrix = [], labels = [], modelName }) {
           <table className="border-collapse text-center text-sm">
             <thead>
               <tr>
-                <th className="p-2"></th>
-                <th className="p-2 text-xs font-medium uppercase text-slate-500" colSpan={labels.length}>Predicted</th>
+                <th className="p-2" colSpan={2}></th>
+                <th className="p-2 text-xs font-medium uppercase text-muted" colSpan={labels.length}>Predicted</th>
               </tr>
               <tr>
-                <th className="p-2"></th>
+                <th className="p-2" colSpan={2}></th>
                 {labels.map((label) => (
-                  <th key={label} className="p-2 text-xs font-medium text-slate-600">{label}</th>
+                  <th key={label} className="p-2 text-xs font-medium text-muted">{label}</th>
                 ))}
               </tr>
             </thead>
@@ -34,17 +34,20 @@ function ConfusionMatrixView({ matrix = [], labels = [], modelName }) {
                   {i === 0 ? (
                     <th
                       rowSpan={matrix.length}
-                      className="p-2 text-xs font-medium uppercase text-slate-500 [writing-mode:vertical-rl]"
+                      className="p-2 text-xs font-medium uppercase text-muted [writing-mode:vertical-rl]"
                     >
                       Actual
                     </th>
                   ) : null}
+                  <th className="whitespace-nowrap p-2 text-right text-xs font-medium text-muted">
+                    {labels[i]}
+                  </th>
                   {row.map((value, j) => {
                     const intensity = value / max;
                     return (
                       <td
                         key={`${i}-${j}`}
-                        className="h-14 w-14 border border-white font-semibold text-slate-800"
+                        className="h-14 w-14 border border-white font-semibold text-heading"
                         style={{ backgroundColor: `rgba(37, 99, 235, ${0.08 + intensity * 0.55})` }}
                       >
                         {value}
@@ -57,7 +60,7 @@ function ConfusionMatrixView({ matrix = [], labels = [], modelName }) {
           </table>
         </div>
       ) : (
-        <p className="py-10 text-center text-sm text-slate-400">No confusion matrix available.</p>
+        <p className="py-10 text-center text-sm text-faint">No confusion matrix available.</p>
       )}
     </Card>
   );

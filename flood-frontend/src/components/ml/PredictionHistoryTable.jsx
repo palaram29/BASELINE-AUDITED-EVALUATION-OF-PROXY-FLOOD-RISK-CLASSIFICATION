@@ -16,14 +16,14 @@ function PredictionHistoryTable({ history = [] }) {
 
   return (
     <Card>
-      <h3 className="mb-4 text-lg font-semibold text-slate-800">Prediction History</h3>
+      <h3 className="mb-4 text-lg font-semibold text-heading">Prediction History</h3>
 
       {history.length ? (
         <>
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse">
               <thead>
-                <tr className="bg-slate-100 text-left text-sm text-slate-600">
+                <tr className="bg-surface-2 text-left text-sm text-muted">
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Predicted For</th>
                   <th className="px-4 py-3">City</th>
@@ -34,15 +34,15 @@ function PredictionHistoryTable({ history = [] }) {
               </thead>
               <tbody>
                 {visible.map((row, index) => (
-                  <tr key={`${row.City}-${row.Date}-${index}`} className="border-b border-slate-200 text-sm">
-                    <td className="px-4 py-3 text-slate-600">{row.Date}</td>
-                    <td className="px-4 py-3 text-slate-600">{row.Predicted_For_Date || "—"}</td>
-                    <td className="px-4 py-3 font-medium text-slate-700">{row.City}</td>
+                  <tr key={`${row.City}-${row.Date}-${index}`} className="border-b border-line text-sm">
+                    <td className="px-4 py-3 text-muted">{row.Date}</td>
+                    <td className="px-4 py-3 text-muted">{row.Predicted_For_Date || "—"}</td>
+                    <td className="px-4 py-3 font-medium text-body">{row.City}</td>
                     <td className="px-4 py-3"><Badge tone={riskTone(row.Predicted_Risk)}>{row.Predicted_Risk}</Badge></td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-muted">
                       {row.Probability != null ? `${(row.Probability * 100).toFixed(0)}%` : "—"}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">{row.Model_Used || "—"}</td>
+                    <td className="px-4 py-3 text-muted">{row.Model_Used || "—"}</td>
                   </tr>
                 ))}
               </tbody>

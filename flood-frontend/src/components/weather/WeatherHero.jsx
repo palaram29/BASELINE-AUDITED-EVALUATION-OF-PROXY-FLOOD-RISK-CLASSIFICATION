@@ -18,7 +18,7 @@ function WeatherHero({ weather = [] }) {
   ];
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-6 text-white shadow-2xl">
+    <div className="rounded-3xl border border-line bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-6 text-white shadow-2xl">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm uppercase tracking-[0.35em] text-cyan-200">Weather operations</p>

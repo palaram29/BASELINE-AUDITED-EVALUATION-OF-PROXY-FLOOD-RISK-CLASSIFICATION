@@ -1,55 +1,57 @@
 import Card from "../common/Card";
+import Badge from "../common/Badge";
+import EmptyState from "../common/EmptyState";
 import { FLOOD_LEVELS, formatLevel } from "../../utils/riverLevels";
 
-function RiverTable({ rivers }) {
+function statusTone(status) {
+  if (status === "Alert") return "red";
+  if (status === "Watch") return "yellow";
+  return "green";
+}
+
+function RiverTable({ rivers = [] }) {
   return (
-    <Card>
-      <h2 className="text-xl font-semibold mb-4">
-        River Monitoring
-      </h2>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-slate-100">
-              <th className="px-4 py-3 text-left">River</th>
-              <th className="px-4 py-3 text-left">Station</th>
-              <th className="px-4 py-3 text-left">Water Level</th>
-              {FLOOD_LEVELS.map((level) => (
-                <th key={level.key} className="px-4 py-3 text-left">{level.label}</th>
-              ))}
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-left">Risk</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {rivers.map((river, index) => (
-              <tr
-                key={river.id ?? `${river.River}-${river.Station}-${index}`}
-                className="border-b hover:bg-slate-50"
-              >
-                <td className="px-4 py-3">{river.River}</td>
-                <td className="px-4 py-3">{river.Station}</td>
-                <td className="px-4 py-3">
-                  {river.WaterLevel} m
-                </td>
+    <Card title="River monitoring" subtitle="Water level and flood thresholds per station">
+      {rivers.length ? (
+        <div className="-mx-2 overflow-x-auto rounded-xl border border-line sm:mx-0">
+          <table className="data-table min-w-full">
+            <thead>
+              <tr>
+                <th>River</th>
+                <th>Station</th>
+                <th>Water level</th>
                 {FLOOD_LEVELS.map((level) => (
-                  <td key={level.key} className={`px-4 py-3 ${level.tone}`}>
-                    {formatLevel(river[level.key])}
-                  </td>
+                  <th key={level.key}>{level.label}</th>
                 ))}
-                <td className="px-4 py-3">
-                  {river.Status}
-                </td>
-                <td className="px-4 py-3">
-                  {river.RiverRisk}
-                </td>
+                <th>Status</th>
+                <th>Risk</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {rivers.map((river, index) => (
+                <tr key={river.id ?? `${river.River}-${river.Station}-${index}`}>
+                  <td>{river.River}</td>
+                  <td>{river.Station}</td>
+                  <td>{river.WaterLevel} m</td>
+                  {FLOOD_LEVELS.map((level) => (
+                    <td key={level.key} className={level.tone}>
+                      {formatLevel(river[level.key])}
+                    </td>
+                  ))}
+                  <td>
+                    <Badge tone={statusTone(river.Status)} dot>
+                      {river.Status}
+                    </Badge>
+                  </td>
+                  <td className="text-muted">{river.RiverRisk}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <EmptyState title="No river data" description="Station readings appear here after the next automatic collection." />
+      )}
     </Card>
   );
 }

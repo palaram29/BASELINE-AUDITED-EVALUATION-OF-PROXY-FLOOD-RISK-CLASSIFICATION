@@ -38,7 +38,7 @@ function ModelOverviewCard({ model, isBest = false }) {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
             <Icon size={18} />
           </span>
-          <h3 className="text-lg font-semibold text-slate-800">{model.name}</h3>
+          <h3 className="text-lg font-semibold text-heading">{model.name}</h3>
         </div>
         <Badge tone={model.status === "Trained" ? "green" : "slate"}>{model.status || "Unknown"}</Badge>
       </div>
@@ -47,8 +47,8 @@ function ModelOverviewCard({ model, isBest = false }) {
         {metricRows.map((row) => (
           <div key={row.key}>
             <div className="mb-1 flex items-center justify-between text-sm">
-              <span className="text-slate-500">{row.label}</span>
-              <span className="font-medium text-slate-800">
+              <span className="text-muted">{row.label}</span>
+              <span className="font-medium text-heading">
                 {model[row.key] != null ? `${(model[row.key] * 100).toFixed(1)}%` : "—"}
               </span>
             </div>
@@ -57,14 +57,14 @@ function ModelOverviewCard({ model, isBest = false }) {
         ))}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 text-sm">
+      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4 text-sm">
         <div>
-          <p className="text-slate-500">Training Time</p>
-          <p className="font-semibold text-slate-800">{(model.training_time_sec * 1000).toFixed(0)} ms</p>
+          <p className="text-muted">Training Time</p>
+          <p className="font-semibold text-heading">{(model.training_time_sec * 1000).toFixed(0)} ms</p>
         </div>
         <div>
-          <p className="text-slate-500">Prediction Time</p>
-          <p className="font-semibold text-slate-800">{(model.prediction_time_sec * 1000).toFixed(1)} ms</p>
+          <p className="text-muted">Prediction Time</p>
+          <p className="font-semibold text-heading">{(model.prediction_time_sec * 1000).toFixed(1)} ms</p>
         </div>
       </div>
     </Card>
