@@ -1,0 +1,50 @@
+{
+  "description": "Frozen Hazard x Vulnerability label-construction parameters, used to compute the live same-day ('Today') flood-risk index. Consistent with the frozen t+1 model's training labels. See docs/ML_METHODOLOGY_AND_LIMITATIONS.md and ML/prepare_dataset.py.",
+  "generated_at": "2026-08-27T19:54:52.596727+00:00",
+  "source": "processed_dataset.csv",
+  "fit_period": "training years <= 2019 (test >= 2020)",
+  "boundaries_used": {
+    "Extreme": 0.995,
+    "High": 0.98,
+    "Medium": 0.95
+  },
+  "rainfall_min": 0.0,
+  "rainfall_max": 527.9,
+  "thresholds": {
+    "Extreme": 0.19836512597083117,
+    "High": 0.1206052282629285,
+    "Medium": 0.082373555597651
+  },
+  "vulnerability_by_city": {
+    "Athurugiriya": 0.475,
+    "Badulla": 0.243893,
+    "Bentota": 0.975,
+    "Colombo": 0.975,
+    "Galle": 0.975,
+    "Gampaha": 0.475,
+    "Hambantota": 0.975,
+    "Hatton": 0.025,
+    "Jaffna": 0.975,
+    "Kalmunai": 0.975,
+    "Kalutara": 0.975,
+    "Kandy": 0.299842,
+    "Kesbewa": 0.475,
+    "Kolonnawa": 0.475,
+    "Kurunegala": 0.451931,
+    "Mabole": 0.475,
+    "Maharagama": 0.475,
+    "Mannar": 0.975,
+    "Matale": 0.35264,
+    "Matara": 0.975,
+    "Moratuwa": 0.975,
+    "Mount Lavinia": 0.975,
+    "Negombo": 0.975,
+    "Oruwala": 0.475,
+    "Pothuhera": 0.451537,
+    "Puttalam": 0.975,
+    "Ratnapura": 0.475,
+    "Sri Jayewardenepura Kotte": 0.475,
+    "Trincomalee": 0.975,
+    "Weligama": 0.975
+  }
+}

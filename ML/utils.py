@@ -71,6 +71,15 @@ FEATURE_BASELINE_JSON = os.path.join(REPORTS_DIR, "feature_baseline.json")
 PRODUCTION_MODEL_JSON = os.path.join(REPORTS_DIR, "production_model.json")
 WALKFORWARD_RESULTS_CSV = os.path.join(REPORTS_DIR, "walkforward_results.csv")
 
+# Frozen Hazard x Vulnerability label-construction parameters (rainfall
+# normalization bounds, RiskScore percentile thresholds, per-city
+# Vulnerability), written by ML/export_label_params.py from the processed
+# dataset. Read by backend/services/live_risk_service.py to compute the
+# live same-day ("Today") risk index consistently with how the frozen
+# t+1 model's own training labels were built. Not a model artifact - a
+# deterministic rule's parameters.
+LABEL_CONSTRUCTION_JSON = os.path.join(REPORTS_DIR, "label_construction.json")
+
 # Raw historical files as originally supplied (same-day rainfall-threshold
 # label, interleaved rolling-window split) - kept only as the input the
 # t+1 forecasting pipeline (ML/prepare_dataset.py) reads from. Not used
