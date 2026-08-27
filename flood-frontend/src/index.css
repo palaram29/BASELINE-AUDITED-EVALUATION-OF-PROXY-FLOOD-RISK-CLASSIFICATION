@@ -1,25 +1,279 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: toggled by `.dark` on <html> (see ThemeContext). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Semantic design tokens. Every surface/text/border colour in the app
+ * references one of these so the whole UI themes from a single place and
+ * dark mode is just a different set of values.
+ */
 :root {
-  color-scheme: light;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #0f172a;
-  background-color: #f8fafc;
+  --canvas: #f4f7fb;
+  --canvas-alt: #eef2f8;
+  --surface: #ffffff;
+  --surface-2: #f4f6fa;
+  --surface-3: #eceff5;
+  --line: #e3e8f0;
+  --line-strong: #d3dae5;
+
+  --heading: #0f172a;
+  --body: #3b475c;
+  --muted: #64748b;
+  --faint: #94a3b8;
+
+  --brand: #0d76c4;
+  --brand-strong: #0a5f9e;
+  --brand-soft: #e6f1fb;
+  --brand-contrast: #ffffff;
+
+  --ring: #2b93de;
+
+  --shadow-color: 215 35% 45%;
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+.dark {
+  --canvas: #0a1120;
+  --canvas-alt: #0d1526;
+  --surface: #121c30;
+  --surface-2: #17233b;
+  --surface-3: #1e2c47;
+  --line: #26344d;
+  --line-strong: #33445f;
+
+  --heading: #f1f5f9;
+  --body: #c6d0de;
+  --muted: #91a0b5;
+  --faint: #667691;
+
+  --brand: #3aa0e6;
+  --brand-strong: #5bb2ec;
+  --brand-soft: #14304b;
+  --brand-contrast: #041322;
+
+  --ring: #3aa0e6;
+
+  --shadow-color: 222 60% 3%;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-canvas-alt: var(--canvas-alt);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-heading: var(--heading);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-contrast: var(--brand-contrast);
+
+  --color-ring-accent: var(--ring);
+
+  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--body);
+  background-color: var(--canvas);
+}
+
+:root.dark {
+  color-scheme: dark;
 }
 
 * {
   box-sizing: border-box;
 }
 
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--body);
+  background:
+    radial-gradient(1200px 600px at 100% -10%, color-mix(in oklab, var(--brand) 12%, transparent), transparent 60%),
+    var(--canvas);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
+}
+
+/* Consistent, subtle focus ring across the app. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Themed scrollbars so dark mode doesn't get a bright track. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--line-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted);
+  background-clip: content-box;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--brand) 30%, transparent);
+}
+
+@layer components {
+  /* The standard raised container. */
+  .card {
+    /* min-width:0 lets a card shrink inside a flex/grid track so wide
+       children (tables, charts) scroll inside their own container instead
+       of pushing the whole page wider than the viewport. */
+    min-width: 0;
+    border-radius: 1rem;
+    border: 1px solid var(--line);
+    background-color: var(--surface);
+    box-shadow:
+      0 1px 2px hsl(var(--shadow-color) / 0.06),
+      0 8px 24px -12px hsl(var(--shadow-color) / 0.12);
+  }
+
+  .card-hover {
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+  .card-hover:hover {
+    border-color: var(--line-strong);
+    box-shadow:
+      0 2px 4px hsl(var(--shadow-color) / 0.08),
+      0 18px 40px -16px hsl(var(--shadow-color) / 0.22);
+    transform: translateY(-2px);
+  }
+
+  /* Section eyebrow label used above panel titles. */
+  .eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  /* Consistent table styling across every data grid in the app. */
+  .data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.875rem;
+  }
+  .data-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--surface-2);
+    color: var(--muted);
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .data-table thead th:first-child { border-top-left-radius: 0.6rem; }
+  .data-table thead th:last-child { border-top-right-radius: 0.6rem; }
+  .data-table tbody td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--body);
+    white-space: nowrap;
+  }
+  /* Opt a cell out of nowrap for long free-text columns (emails, notes). */
+  .data-table tbody td.wrap {
+    white-space: normal;
+  }
+  .data-table tbody tr:last-child td { border-bottom: 0; }
+  .data-table tbody tr {
+    transition: background-color 0.12s ease;
+  }
+  .data-table tbody tr:hover td {
+    background-color: color-mix(in oklab, var(--brand) 6%, transparent);
+  }
+  .data-table tbody td:first-child {
+    font-weight: 500;
+    color: var(--heading);
+  }
+}
+
+@layer utilities {
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--surface-2) 0%,
+      var(--surface-3) 50%,
+      var(--surface-2) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/*
+ * Leaflet chrome (popups, zoom controls, attribution) ships its own light
+ * styling. In dark mode the map tiles stay bright, but the surrounding
+ * chrome should follow the app theme so popup text stays readable.
+ */
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--body);
+  box-shadow: 0 12px 32px -12px rgba(2, 8, 23, 0.6);
+}
+.dark .leaflet-container a.leaflet-popup-close-button {
+  color: var(--muted);
+}
+.dark .leaflet-bar a,
+.dark .leaflet-bar a:hover {
+  background: var(--surface);
+  color: var(--body);
+  border-color: var(--line);
+}
+.dark .leaflet-control-attribution {
+  background: color-mix(in oklab, var(--surface) 82%, transparent);
+  color: var(--faint);
+}
+.dark .leaflet-control-attribution a {
+  color: var(--muted);
 }
