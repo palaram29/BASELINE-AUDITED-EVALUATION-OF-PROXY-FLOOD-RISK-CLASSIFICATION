@@ -35,6 +35,8 @@ from backend.config import (
     CITIES,
     DRIFT_PSI_WARNING_THRESHOLD,
     DRIFT_PSI_CRITICAL_THRESHOLD,
+    DRIFT_PSI_EPSILON,
+    DRIFT_PSI_BINS,
     MISSING_DATA_WARNING_PCT,
     MISSING_DATA_CRITICAL_PCT,
     MONITORING_WINDOW_DAYS,
@@ -300,27 +302,50 @@ def _load_feature_baseline():
 
 
 def _psi(quantile_edges, live_values):
-    """Population Stability Index between a baseline distribution (given
-    as its own quintile edges - each baseline bin therefore holds exactly
-    20% of the baseline by construction) and a live sample bucketed into
-    those same edges."""
+    """Population Stability Index between a baseline distribution and a
+    live sample bucketed into the baseline's own bin edges.
+
+    PSI = sum over bins of (a_i - e_i) * ln(a_i / e_i), where a_i is the
+    live proportion in bin i and e_i the baseline proportion.
+
+    Binning: the baseline is supplied as its own quantile edges, so each
+    bin holds exactly 1 / DRIFT_PSI_BINS of the baseline and e_i = 0.2 is
+    exact rather than estimated. Edges are half-open on the left,
+    (lo, hi], with the first bin extended to negative infinity and the
+    last to positive infinity so that live values outside the training
+    range are still counted rather than silently dropped.
+
+    Smoothing: e_i cannot be zero by the construction above, so only the
+    live proportion needs a floor. a_i is clamped below at
+    DRIFT_PSI_EPSILON, which keeps the logarithm finite when a bin
+    receives no live observations. An empty bin then contributes a large
+    but bounded term, so a genuine collapse of the live distribution
+    registers as critical drift instead of raising a math domain error.
+
+    Thresholds: the 0.10 and 0.25 bands applied to this value by the
+    caller are the conventional operational heuristics for PSI. They are
+    not validated performance thresholds for this system; no relationship
+    between a PSI band and predictive degradation has been established
+    here, which is why a breach raises a retraining recommendation for
+    human review rather than triggering anything automatically.
+    """
 
     live = [v for v in live_values if v is not None]
-    if not live or len(quantile_edges) != 6:
+    if not live or len(quantile_edges) != DRIFT_PSI_BINS + 1:
         return None
 
     n = len(live)
-    expected_frac = 0.2
+    expected_frac = 1.0 / DRIFT_PSI_BINS
     psi = 0.0
-    for i in range(5):
+    for i in range(DRIFT_PSI_BINS):
         lo, hi = quantile_edges[i], quantile_edges[i + 1]
         if i == 0:
             count = sum(1 for v in live if v <= hi)
-        elif i == 4:
+        elif i == DRIFT_PSI_BINS - 1:
             count = sum(1 for v in live if v > lo)
         else:
             count = sum(1 for v in live if lo < v <= hi)
-        actual_frac = max(count / n, 1e-6)
+        actual_frac = max(count / n, DRIFT_PSI_EPSILON)
         psi += (actual_frac - expected_frac) * math.log(actual_frac / expected_frac)
     return round(float(psi), 4)
 

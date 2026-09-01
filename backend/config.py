@@ -55,6 +55,22 @@ MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
 DRIFT_PSI_WARNING_THRESHOLD = float(os.getenv("DRIFT_PSI_WARNING_THRESHOLD", "0.1"))
 DRIFT_PSI_CRITICAL_THRESHOLD = float(os.getenv("DRIFT_PSI_CRITICAL_THRESHOLD", "0.25"))
 
+# Smoothing floor for the PSI actual-proportion term. PSI sums
+# (a_i - e_i) * ln(a_i / e_i) over bins, so a bin that receives no live
+# observations would make the logarithm undefined. The expected
+# proportion e_i cannot be zero here because the baseline bins are the
+# training distribution's own quintile edges, giving e_i = 0.2 by
+# construction; only the actual proportion a_i needs a floor. The value
+# is small enough not to perturb a populated bin and large enough to keep
+# an empty bin finite: with the seven-day monitoring window an empty bin
+# contributes roughly (0 - 0.2) * ln(1e-6 / 0.2), a large but bounded
+# term that correctly registers as critical drift rather than crashing.
+DRIFT_PSI_EPSILON = float(os.getenv("DRIFT_PSI_EPSILON", "1e-6"))
+
+# Number of baseline bins. Quintiles are used, so the expected proportion
+# per bin is exactly 1 / DRIFT_PSI_BINS by construction.
+DRIFT_PSI_BINS = int(os.getenv("DRIFT_PSI_BINS", "5"))
+
 MISSING_DATA_WARNING_PCT = float(os.getenv("MISSING_DATA_WARNING_PCT", "5"))
 MISSING_DATA_CRITICAL_PCT = float(os.getenv("MISSING_DATA_CRITICAL_PCT", "10"))
 
