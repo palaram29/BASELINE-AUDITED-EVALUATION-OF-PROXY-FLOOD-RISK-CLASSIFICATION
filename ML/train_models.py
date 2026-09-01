@@ -239,7 +239,12 @@ def _build_production_manifest(best_result, metrics_payload, train_file, test_fi
             "weighted_f1": model_metrics["f1_score"],
             "high_risk_recall": model_metrics["high_risk_recall"],
             "extreme_risk_recall": model_metrics["extreme_risk_recall"],
+            # Weighted OvR AUC is retained under its original key for the
+            # dashboard and MLOps service; the macro value is added
+            # alongside it because macro averaging is the figure
+            # comparable to macro-F1 on this heavily imbalanced split.
             "roc_auc": model_metrics["roc_auc"],
+            "roc_auc_macro": model_metrics.get("roc_auc_macro"),
         },
         "artifacts": {
             "model_file": os.path.relpath(paths["best_model_path"], paths["models_dir"]),
@@ -344,6 +349,7 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC, co
                                 "high_risk_recall": result["high_risk_recall"],
                                 "extreme_risk_recall": result["extreme_risk_recall"],
                                 "roc_auc": result["roc_auc"],
+                                "roc_auc_macro": result.get("roc_auc_macro"),
                                 "training_time_sec": result["training_time"],
                                 "prediction_time_sec": result["prediction_time"],
                             }.items() if v is not None
@@ -397,12 +403,19 @@ def train_and_compare(train_file, test_file, metric=DEFAULT_SELECTION_METRIC, co
                     "high_risk_recall": r["high_risk_recall"],
                     "extreme_risk_recall": r["extreme_risk_recall"],
                     "roc_auc": r["roc_auc"],
+                    "roc_auc_macro": r.get("roc_auc_macro"),
                     "training_time_sec": r["training_time"],
                     "prediction_time_sec": r["prediction_time"],
                     "confusion_matrix": r["confusion_matrix"].tolist(),
                     "labels": r["labels"],
                     "classification_report": r["classification_report"],
                     "feature_importance": r["feature_importance"],
+                    # Impurity-based importance above, permutation-based
+                    # here. Both are reported because impurity importance
+                    # is inflated for continuous, high-cardinality
+                    # predictors; agreement between the two is what makes
+                    # a claim about feature reliance defensible.
+                    "permutation_importance": r.get("permutation_importance", {}),
                     "status": r["status"],
                     "mlflow_run_id": model_mlflow_run_ids.get(r["name"]),
                 }
