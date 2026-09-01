@@ -31,6 +31,7 @@ from ML.utils import logger, ensure_dirs, WALKFORWARD_RESULTS_CSV, FEATURE_COLUM
 from ML.prepare_dataset import (
     load_raw,
     attach_geography,
+    attach_reliability_features,
     assign_period,
     compute_hazard,
     compute_vulnerability,
@@ -112,7 +113,13 @@ def run_fold(df_raw, train_year_end, test_year):
 
 def main():
     ensure_dirs()
-    df_raw = attach_geography(load_raw())
+    # Reliability columns must be attached before pairing:
+    # build_t_plus_1_pairs() carries Weather_Reliability, River_Reliability
+    # and Overall_Data_Reliability onto every pair, even though the
+    # walk-forward feature set (FEATURE_COLUMNS) does not use them. This
+    # mirrors the pipeline order in ML/prepare_dataset.main(); omitting the
+    # step raises KeyError: 'Weather_Reliability' on the first fold.
+    df_raw = attach_reliability_features(attach_geography(load_raw()))
 
     all_rows = []
     for train_year_end, test_year in FOLDS:
@@ -147,6 +154,18 @@ def main():
     print("\n===== MEAN ACROSS FOLDS (per model) =====\n")
     summary = results_df.groupby("Model")[["Accuracy", "Macro_F1", "High_Recall", "Extreme_Recall"]].mean()
     print(summary.round(4).to_string())
+
+    # Per-fold ranking check: the paper claims persistence ranks first in
+    # every fold, so the claim is verified here rather than eyeballed.
+    print("\n===== PER-FOLD MACRO-F1 RANKING =====\n")
+    for test_year, g in results_df.groupby("Test_Year"):
+        ranked = g.sort_values("Macro_F1", ascending=False)
+        top = ranked.iloc[0]
+        print(f"Test {test_year}: 1st = {top['Model']} ({top['Macro_F1']:.4f})  |  "
+              + ", ".join(f"{r.Model} {r.Macro_F1:.4f}" for r in ranked.itertuples()))
+
+    wins = results_df.loc[results_df.groupby("Test_Year")["Macro_F1"].idxmax(), "Model"]
+    print(f"\nPersistence ranked first in {(wins == 'Persistence').sum()} of {len(wins)} folds.")
 
 
 if __name__ == "__main__":

@@ -2,8 +2,8 @@
   "model": "RandomForest",
   "version": "1.1",
   "status": "frozen",
-  "frozen_at": "2026-08-18T11:51:25.703503+00:00",
-  "selection_reason": "highest macro-F1 (0.5626)",
+  "frozen_at": "2026-09-01T10:05:26.264533+00:00",
+  "selection_reason": "highest macro-F1 (0.5780)",
   "training_period": "2010-2023",
   "dataset": {
     "train_rows": 109470,
@@ -20,14 +20,14 @@
     "Coastal_Flag"
   ],
   "evaluation_metrics": {
-    "accuracy": 0.9222222222222223,
-    "macro_precision": 0.5181174810587261,
-    "macro_recall": 0.6603973474823388,
-    "macro_f1": 0.5626016051315863,
-    "weighted_f1": 0.938199769208679,
-    "high_risk_recall": 0.46756152125279643,
+    "accuracy": 0.9496173132752705,
+    "macro_precision": 0.5533175812637865,
+    "macro_recall": 0.6106279052858151,
+    "macro_f1": 0.5780084425500964,
+    "weighted_f1": 0.9530943110739544,
+    "high_risk_recall": 0.41834451901565994,
     "extreme_risk_recall": 0.5681818181818182,
-    "roc_auc": 0.9585533522541598
+    "roc_auc": 0.9519340476836294
   },
   "artifacts": {
     "model_file": "best_model.pkl",
