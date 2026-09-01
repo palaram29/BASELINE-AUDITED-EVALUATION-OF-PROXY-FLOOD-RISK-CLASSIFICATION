@@ -1,0 +1,101 @@
+{
+  "resamples": 1000,
+  "block_unit": "calendar month",
+  "seed": 42,
+  "model": {
+    "name": "RandomForestClassifier",
+    "macro_f1": 0.578,
+    "ci_95": [
+      0.534,
+      0.6161
+    ],
+    "per_class": {
+      "Extreme": {
+        "precision": 0.46296296296296297,
+        "recall": 0.5681818181818182,
+        "f1-score": 0.5102040816326531,
+        "support": 88.0
+      },
+      "High": {
+        "precision": 0.413716814159292,
+        "recall": 0.41834451901565994,
+        "f1-score": 0.41601779755283647,
+        "support": 447.0
+      },
+      "Low": {
+        "precision": 0.9848535752281763,
+        "recall": 0.9721968880413454,
+        "f1-score": 0.9784843048079999,
+        "support": 36183.0
+      },
+      "Medium": {
+        "precision": 0.35173697270471466,
+        "recall": 0.48378839590443684,
+        "f1-score": 0.4073275862068966,
+        "support": 1172.0
+      },
+      "accuracy": 0.9496173132752705,
+      "macro avg": {
+        "precision": 0.5533175812637865,
+        "recall": 0.6106279052858151,
+        "f1-score": 0.5780084425500964,
+        "support": 37890.0
+      },
+      "weighted avg": {
+        "precision": 0.9573202639525197,
+        "recall": 0.9496173132752705,
+        "f1-score": 0.9530943110739544,
+        "support": 37890.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        50,
+        14,
+        6,
+        18
+      ],
+      [
+        33,
+        187,
+        84,
+        143
+      ],
+      [
+        16,
+        106,
+        35177,
+        884
+      ],
+      [
+        9,
+        145,
+        451,
+        567
+      ]
+    ]
+  },
+  "persistence": {
+    "macro_f1": 0.6307,
+    "ci_95": [
+      0.589,
+      0.6631
+    ]
+  },
+  "paired_difference": {
+    "definition": "persistence macro-F1 minus model macro-F1",
+    "mean": 0.0533,
+    "ci_95": [
+      0.0235,
+      0.085
+    ],
+    "excludes_zero": true,
+    "persistence_wins_fraction": 1.0
+  },
+  "labels": [
+    "Extreme",
+    "High",
+    "Low",
+    "Medium"
+  ]
+}
