@@ -1,3 +1,15 @@
+# Runtime dependencies, unpinned so the project installs on a range of
+# Python versions. This file does NOT reproduce the environment the
+# reported results were produced in.
+#
+# For that, use requirements.lock.txt, regenerated with:
+#     pip freeze > requirements.lock.txt
+#
+# The subset of packages that can actually change a reported metric
+# (scikit-learn, xgboost, lightgbm, numpy, pandas, scipy) is recorded
+# with the runtime and the pipeline's fixed seeds and split boundaries in
+# ML/reports/environment.json, written by ML/environment_report.py.
+
 fastapi
 uvicorn
 pandas
