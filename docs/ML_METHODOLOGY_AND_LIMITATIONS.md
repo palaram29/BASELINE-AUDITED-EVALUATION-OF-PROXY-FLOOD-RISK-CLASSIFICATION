@@ -22,7 +22,7 @@ scored 99.05-99.94% accuracy. Investigation found two compounding causes:
   predicts "Low" already scores ~99.4% without learning anything.
 - **The label was a near-deterministic function of one input**: a plain
   rainfall-threshold rule (`<150mm -> Low`, `<200 -> Medium`, `<350 ->
-  High`, else `Extreme`), with no machine learning at all, reproduced the
+High`, else `Extreme`), with no machine learning at all, reproduced the
   original `Flood_Risk` column at 99.8% accuracy on both train and test.
   Random Forest's own feature importance assigned 85.6% of its decision
   weight to `Rainfall_3Day` alone.
@@ -48,7 +48,7 @@ anywhere in this project. Every piece of documentation, API response,
 and dashboard string describing this target must say "predicted
 flood-risk index" / "forecasted risk" / "derived risk", never "flood
 prediction accuracy" or "confirmed flood" unqualified. Real,
-authoritative flood status *is* collected by this system - see §16 (DMC
+authoritative flood status _is_ collected by this system - see §16 (DMC
 river data, Phase 2) - but not yet in enough historical depth to serve
 as a training label.
 
@@ -87,18 +87,19 @@ Flood_Risk(t+1)  = global percentile classification of RiskScore(t+1)
 As fit by `ML/prepare_dataset.py` on the primary 2010-2019 training
 period:
 
-| Component | Fitted value |
-|---|---|
-| Rainfall_3Day normalization | min = 0.0, max = 527.9 |
-| Elevation normalization | min = 2.0 (Negombo), max = 1271.0 (Hatton), clipped to [0.05, 0.95] before inverting |
+| Component                   | Fitted value                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------ |
+| Rainfall_3Day normalization | min = 0.0, max = 527.9                                                               |
+| Elevation normalization     | min = 2.0 (Negombo), max = 1271.0 (Hatton), clipped to [0.05, 0.95] before inverting |
 
 **Elevation clipping exists to fix a concrete bug found during
 methodology review**: without clipping, Hatton (the maximum-elevation
 city) maps to `normalized_elevation = 1.0` exactly, giving
 `InverseElevation = 0` and, since Hatton is inland, `Vulnerability = 0`
+
 - meaning Hatton would be classified "Low" risk regardless of rainfall,
-by construction rather than evidence. Clipping to [0.05, 0.95] ensures
-no city can reach exactly 0 or 1.
+  by construction rather than evidence. Clipping to [0.05, 0.95] ensures
+  no city can reach exactly 0 or 1.
 
 **Weights are equal (0.5/0.5) because no historical flood inventory or
 expert panel exists to fit differential weights** (the two standard
@@ -124,25 +125,25 @@ the same fixed proportion of severe days.
 
 Approved boundaries and their fitted RiskScore cutoffs (training period):
 
-| Class | Percentile | Fitted RiskScore cutoff |
-|---|---|---|
-| Extreme | top 0.5% | >= 0.1984 |
-| High | 98.0-99.5% | >= 0.1206 |
-| Medium | 95.0-98.0% | >= 0.0824 |
-| Low | bottom 95.0% | below 0.0824 |
+| Class   | Percentile   | Fitted RiskScore cutoff |
+| ------- | ------------ | ----------------------- |
+| Extreme | top 0.5%     | >= 0.1984               |
+| High    | 98.0-99.5%   | >= 0.1206               |
+| Medium  | 95.0-98.0%   | >= 0.0824               |
+| Low     | bottom 95.0% | below 0.0824            |
 
 Resulting class distribution (measured, not assumed):
 
-| Class | Train count | Train % | Test count | Test % |
-|---|---:|---:|---:|---:|
-| Low | 103,992 | 94.996% | 36,183 | 95.495% |
-| Medium | 3,278 | 2.994% | 1,172 | 3.093% |
-| High | 1,652 | 1.509% | 447 | 1.180% |
-| Extreme | 548 | 0.501% | 88 | 0.232% |
+| Class   | Train count | Train % | Test count |  Test % |
+| ------- | ----------: | ------: | ---------: | ------: |
+| Low     |     103,992 | 94.996% |     36,183 | 95.495% |
+| Medium  |       3,278 |  2.994% |      1,172 |  3.093% |
+| High    |       1,652 |  1.509% |        447 |  1.180% |
+| Extreme |         548 |  0.501% |         88 |  0.232% |
 
 This is a materially healthier distribution than the original label (548
 Extreme training examples vs. 8 previously; 88 Extreme test examples vs.
-15 across the *entire* old dataset combined) - a direct, measured
+15 across the _entire_ old dataset combined) - a direct, measured
 consequence of the global-threshold fix, not a target chosen to produce
 this outcome.
 
@@ -153,7 +154,7 @@ isn't a warning - it has no lead time. `X(t) -> Y(t+1)` requires the
 model to forecast risk before the triggering rainfall is fully observed,
 which is the actual operational task. Mechanically: for each city, rows
 are sorted by `End_Date`; `X(t)` is one row's features and `Y(t+1)` is
-the *next* row's `Flood_Risk`, rather than either row leaking into the
+the _next_ row's `Flood_Risk`, rather than either row leaking into the
 other's own column set.
 
 **This means the model is implicitly trying to forecast next-day
@@ -224,9 +225,10 @@ help.
 ## 9. Train/test split
 
 **Primary**: chronological, per city, `End_Date` year <= 2019 -> train,
->= 2020 -> test. No shuffling. 109,470 train pairs, 37,890 test pairs.
-The single boundary-straddling pair per city (t = 2019-12-31, t+1 =
-2020-01-01) is dropped from both splits.
+
+> = 2020 -> test. No shuffling. 109,470 train pairs, 37,890 test pairs.
+> The single boundary-straddling pair per city (t = 2019-12-31, t+1 =
+> 2020-01-01) is dropped from both splits.
 
 **Secondary (mandatory)**: walk-forward validation across 6 folds
 (`ML/walkforward_validate.py`), each fold refitting rainfall
@@ -241,6 +243,58 @@ Train 2010-2019 -> Test 2020
 Train 2010-2020 -> Test 2021
 Train 2010-2021 -> Test 2022
 ```
+
+### 9.1 Hyperparameter selection (validation-only)
+
+Hyperparameters are selected **inside the training period only**. The
+training years are split again into an inner training period (2010-2017)
+and a validation period (2018-2019). Six candidate configurations per
+algorithm are fitted on the inner training period and scored on the
+validation period by macro-F1 (`ML/tune_hyperparameters.py`). The winning
+configuration per algorithm is then transcribed by hand into
+`ML/model_selector.py`, refitted on the full 2010-2019 training period,
+and only then evaluated on the 2020-2023 test period, once.
+
+The 2020-2023 test period is not read, scored or inspected at any point
+during selection. It is a locked final holdout, opened after the
+configuration is fixed.
+
+The full search, all eighteen candidates with their validation scores and
+the selected row flagged, is recorded in
+`ML/reports/hyperparameter_search.csv` so the selection can be audited
+without rerunning it.
+
+**Selected configurations** (see `ML/model_selector.py`):
+
+| Model        | Configuration                                                          | Validation macro-F1 |
+| ------------ | ---------------------------------------------------------------------- | ------------------: |
+| RandomForest | `max_depth=20, min_samples_leaf=2`                                     |              0.5778 |
+| XGBoost      | `max_depth=5, min_child_weight=5, subsample=0.8, colsample_bytree=0.8` |              0.5147 |
+| LightGBM     | `max_depth=10, min_child_samples=30`                                   |              0.5175 |
+
+All three use `n_estimators=100` and `random_state=42`; XGBoost and
+LightGBM use `learning_rate=0.1`. RandomForest and LightGBM use
+`class_weight="balanced"`; XGBoost receives an equivalent balanced
+`sample_weight` computed from `y_train` at fit time.
+
+**Note on an earlier version of this pipeline.** A previous
+configuration was chosen by comparing candidates on the test period and
+preferring the option that narrowed the train/test macro-F1 gap. That is
+test-guided model selection, and it made the reported comparison
+unreliable regardless of how the resulting numbers looked. The procedure
+was replaced with the validation-only protocol described above and every
+model was reselected and re-evaluated from scratch. This note is kept
+deliberately rather than deleted, because the project's rule is to record
+what was actually done, including the parts that had to be corrected.
+
+### 9.2 Residual train/test gap
+
+Selection now optimises validation macro-F1, not the size of the
+train/test gap. The selected RandomForest therefore retains a
+train/test macro-F1 gap of roughly 0.31. This is reported as a
+limitation of the selected model rather than presented as a quantity the
+methodology controlled, since controlling it was what produced the
+leakage described above.
 
 ## 10. Baselines
 
@@ -258,27 +312,39 @@ Train 2010-2021 -> Test 2022
 All values below are the actual output of `ML/train_models.py` against
 the dataset described in §4 - none are estimated.
 
-| Model | Accuracy | Macro-F1 | Macro Precision | Macro Recall | Weighted F1 | High Recall | Extreme Recall | ROC-AUC |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Majority Baseline | 0.9549 | 0.2442 | 0.2387 | 0.2500 | 0.9329 | 0.0000 | 0.0000 | - |
-| Persistence Baseline | 0.9613 | **0.6307** | 0.6307 | 0.6307 | 0.9613 | 0.4922 | 0.5682 | - |
-| Seasonal Baseline | 0.9549 | 0.2442 | 0.2387 | 0.2500 | 0.9329 | 0.0000 | 0.0000 | - |
-| **Random Forest (selected)** | 0.9222 | **0.5626** | 0.5181 | 0.6604 | 0.9382 | 0.4676 | 0.5682 | 0.9586 |
-| XGBoost | 0.8954 | 0.5308 | 0.4780 | 0.6693 | 0.9218 | 0.4944 | 0.6023 | 0.9620 |
-| LightGBM | 0.9047 | 0.5276 | 0.4732 | 0.6591 | 0.9271 | 0.5190 | 0.5455 | 0.9596 |
+| Model                        | Accuracy |   Macro-F1 | Macro Precision | Macro Recall | Weighted F1 | High Recall | Extreme Recall | ROC-AUC |
+| ---------------------------- | -------: | ---------: | --------------: | -----------: | ----------: | ----------: | -------------: | ------: |
+| Majority Baseline            |   0.9549 |     0.2442 |          0.2387 |       0.2500 |      0.9329 |      0.0000 |         0.0000 |       - |
+| Persistence Baseline         |   0.9613 | **0.6307** |          0.6307 |       0.6307 |      0.9613 |      0.4922 |         0.5682 |       - |
+| Seasonal Baseline            |   0.9549 |     0.2442 |          0.2387 |       0.2500 |      0.9329 |      0.0000 |         0.0000 |       - |
+| **Random Forest (selected)** |   0.9496 | **0.5780** |          0.5533 |       0.6106 |      0.9531 |      0.4183 |         0.5682 |  0.9519 |
+| XGBoost                      |   0.8954 |     0.5308 |          0.4780 |       0.6693 |      0.9218 |      0.4944 |         0.6023 |  0.9620 |
+| LightGBM                     |   0.9056 |     0.5170 |          0.4660 |       0.6382 |      0.9276 |      0.4676 |         0.5455 |  0.9597 |
 
-All three algorithms are regularized (`max_depth` / min-leaf constraints —
-see `ML/model_selector.py`, which records the train/test overfitting gap
-each hyperparameter config closed and, for XGBoost and LightGBM, a
-higher-raw-score alternative that was tested and rejected for being *more*
-overfit). XGBoost's Extreme recall (0.6023) and LightGBM's High recall
-(0.5190) are each the best of the three as a result.
+ROC-AUC above is one-versus-rest under **weighted** averaging, which is
+what the dashboard and manifest have always reported. Macro-averaged
+one-versus-rest AUC is now computed alongside it
+(`ML/reports/metrics.json`, `roc_auc_macro`): 0.9478 for Random Forest,
+0.9542 for XGBoost, 0.9530 for LightGBM. Both are recorded because
+weighted averaging is support-weighted and therefore dominated by the
+Low class, which holds roughly 95% of the rows; macro averaging gives
+each of the four classes equal weight and is the figure comparable to
+macro-F1. Either way, AUC on this target is far above macro-F1 because
+AUC scores the full probability ranking while macro-F1 depends on the
+thresholded decisions actually issued, so a high AUC here should not be
+read as usable warning performance.
 
-Random Forest's macro-F1 (0.5626) leads XGBoost's (0.5308) and LightGBM's
-(0.5276) by more than the 0.02 tie margin, so Random Forest is selected
+All three algorithms are regularized through `max_depth` and minimum-leaf
+constraints. Those constraints were chosen on the validation period held
+out from within the training years, never on the test period; see §9.1 for
+the protocol and `ML/reports/hyperparameter_search.csv` for the full
+candidate list and scores.
+
+Random Forest's macro-F1 (0.5780) leads XGBoost's (0.5308) and LightGBM's
+(0.5170) by more than the 0.02 tie margin, so Random Forest is selected
 on macro-F1 alone (`ML/reports/production_model.json`, version 1.1).
 
-**Persistence still beats all three trained models on macro-F1** (0.5626
+**Persistence still beats all three trained models on macro-F1** (0.5780
 best-of-three vs. persistence's 0.6307). This is the single most
 important, and least comfortable, finding in this document — see §12.
 
@@ -289,18 +355,25 @@ particular accuracy number), the result above is reported as measured:
 
 - None of Random Forest, XGBoost or LightGBM beat the persistence
   baseline's macro-F1 (0.6307) in the primary split, and **the same
-  pattern holds in every one of the 6 walk-forward folds without
-  exception** (§13) - this is not a one-off artifact of the 2020-2023
-  test window.
+  pattern holds in 5 of the 6 walk-forward folds** (§13), so this is not
+  a one-off artifact of the 2020-2023 test window. The single exception
+  is the 2018 fold, where Random Forest reaches 0.6054 against
+  persistence's 0.5857.
 - This is consistent with, and largely explained by, the §7 finding:
   with ~0.85 correlation between consecutive `Rainfall_3Day` windows
   baked into the feature/target relationship by construction, "assume
   tomorrow looks like today" is a very hard baseline to beat using only
   a 3-day rolling accumulation as the rainfall signal.
-- What the class-imbalance fix (§8) demonstrably did work: LightGBM's
-  ROC-AUC recovered from 0.51 (near-random, under the old unweighted
-  same-day setup) to 0.96, and High/Extreme recall are no longer zero
-  for any of the three trained models.
+- What the class-imbalance fix (§8) demonstrably did work: High and
+  Extreme recall are non-zero for all three trained models, and macro
+  recall sits above macro precision for the selected Random Forest
+  (0.6106 against 0.5533), which is the expected shape for a
+  class-weighted model in a warning setting where a missed event costs
+  more than a false alarm. An earlier note here compared LightGBM's
+  ROC-AUC against a near-random 0.51 under an unweighted same-day setup;
+  that configuration no longer exists in the pipeline and the comparison
+  is not reproducible from the current code, so it has been removed
+  rather than carried forward unverified.
 - **Honest interpretation**: at a 1-day lead time, with only 3-day
   rolling rainfall accumulation (no daily rainfall, no river level yet
   available), these three tree-ensemble models do not add forecasting
@@ -315,18 +388,22 @@ particular accuracy number), the result above is reported as measured:
 Mean across the 6 folds (`ML/reports/walkforward_results.csv` has the
 per-fold breakdown):
 
-| Model | Mean Accuracy | Mean Macro-F1 | Mean High Recall | Mean Extreme Recall |
-|---|---:|---:|---:|---:|
-| Majority Baseline | 0.9536 | 0.2440 | 0.0000 | 0.0000 |
-| **Persistence Baseline** | 0.9595 | **0.6170** | 0.4906 | 0.5441 |
-| Seasonal Baseline | 0.9536 | 0.2440 | 0.0000 | 0.0000 |
-| Random Forest | 0.9176 | 0.5744 | 0.4924 | 0.5817 |
-| XGBoost | 0.8890 | 0.5409 | 0.5115 | 0.5918 |
-| LightGBM | 0.8973 | 0.5391 | 0.5090 | 0.6030 |
+| Model                    | Mean Accuracy | Mean Macro-F1 | Mean High Recall | Mean Extreme Recall |
+| ------------------------ | ------------: | ------------: | ---------------: | ------------------: |
+| Majority Baseline        |        0.9536 |        0.2440 |           0.0000 |              0.0000 |
+| **Persistence Baseline** |        0.9595 |    **0.6170** |           0.4906 |              0.5441 |
+| Seasonal Baseline        |        0.9536 |        0.2440 |           0.0000 |              0.0000 |
+| Random Forest            |        0.9458 |        0.5771 |           0.4565 |              0.4975 |
+| XGBoost                  |        0.8890 |        0.5409 |           0.5115 |              0.5918 |
+| LightGBM                 |        0.9016 |        0.5366 |           0.5038 |              0.5748 |
 
-Persistence has the highest macro-F1 in every individual fold as well as
-in the mean — confirming §11–12 is not specific to the 2020–2023 test
-window.
+Persistence has the highest macro-F1 in the mean and in 5 of the 6
+individual folds, confirming §11 and §12 are not specific to the
+2020-2023 test window. The exception is the 2018 fold (train through
+2017), where Random Forest reaches 0.6054 against persistence's 0.5857.
+The per-fold ranking is printed by `ML/walkforward_validate.py` at the
+end of its run so the claim can be checked directly rather than read off
+the table.
 
 ## 14. Model selection
 
@@ -337,8 +414,8 @@ recall as a second tie-break). Implemented in
 `ML/model_selector.py::select_best_model`.
 
 Applied to §11's results: Random Forest has the highest raw macro-F1
-(0.5626), and neither XGBoost (0.5308) nor LightGBM (0.5276) is within
-the 0.02 tie margin of it (both trail by ~0.03), so the tie-break rule
+(0.5780), and neither XGBoost (0.5308) nor LightGBM (0.5170) is within
+the 0.02 tie margin of it (they trail by 0.047 and 0.061), so the tie-break rule
 never activates — **Random Forest is selected outright on macro-F1**,
 with no recall-based override needed. The frozen artifact is
 `ML/models/best_model.pkl`; its manifest is
@@ -350,7 +427,11 @@ with no recall-based override needed. The frozen artifact is
 **Secondary**: Accuracy, macro precision, macro recall, weighted F1,
 per-class precision/recall (`ML/reports/metrics.json`'s
 `classification_report`), confusion matrix
-(`ML/reports/confusion_matrices/`), ROC-AUC (OVR, weighted).
+(`ML/reports/confusion_matrices/`), ROC-AUC (OVR) under both weighted
+and macro averaging, impurity-based and permutation feature importance,
+and block-bootstrap confidence intervals against the persistence
+baseline (`ML/compute_statistics.py` ->
+`ML/reports/uncertainty_analysis.json`).
 
 ## 16. DMC river-gauge data - Phase 2 plan
 
@@ -457,7 +538,7 @@ Risk_Level(t) = global-percentile classification of RiskScore(t)   # §4 thresho
 
 It reuses the **exact §3 Hazard x Vulnerability construction and the §4
 global percentile thresholds** - the only difference from the training
-label is that it is *not* shifted to t+1 (§6 step 12). Per §5, the
+label is that it is _not_ shifted to t+1 (§6 step 12). Per §5, the
 same-day RiskScore needs no forecast: `Vulnerability` is static and
 `Rainfall_3Day(t)` is already observed.
 
@@ -468,7 +549,7 @@ same-day RiskScore needs no forecast: `Vulnerability` is static and
   period, from `ML/data/processed_dataset.csv`). Re-run that script only
   when `ML/prepare_dataset.py` itself changes. Per-city `Vulnerability`
   is taken from the processed dataset (which used the raw historical
-  `Elevation` column), *not* recomputed from `ML/utils.py::ELEVATION_MAP`,
+  `Elevation` column), _not_ recomputed from `ML/utils.py::ELEVATION_MAP`,
   so the index matches the frozen model's own labels.
 - **No model touched.** `backend/services/live_risk_service.py` never
   loads `best_model.pkl` or any encoder. There is **no

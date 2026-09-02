@@ -1,16 +1,16 @@
 {
-  "trained_at": "2026-09-01T10:05:26.264533+00:00",
+  "trained_at": "2026-09-01T10:42:41.469351+00:00",
   "selection_metric": "macro_f1",
   "best_model": "RandomForest",
   "selection_reason": "highest macro-F1 (0.5780)",
-  "mlflow_run_id": "2f24123919a14af486c5f50e26c6d657",
+  "mlflow_run_id": "a832d0d0d479436c8dabff2bbb787f2d",
   "train_file": "ML/data/train_dataset.csv",
   "test_file": "ML/data/test_dataset.csv",
   "dataset": {
     "train_rows": 109470,
     "test_rows": 37890
   },
-  "training_duration_sec": 22.646280527114868,
+  "training_duration_sec": 37.32550621032715,
   "models": {
     "RandomForest": {
       "accuracy": 0.9496173132752705,
@@ -23,8 +23,9 @@
       "high_risk_recall": 0.41834451901565994,
       "extreme_risk_recall": 0.5681818181818182,
       "roc_auc": 0.9519340476836294,
-      "training_time_sec": 4.839521169662476,
-      "prediction_time_sec": 0.1725771427154541,
+      "roc_auc_macro": 0.947804282348373,
+      "training_time_sec": 5.1676201820373535,
+      "prediction_time_sec": 0.158372163772583,
       "confusion_matrix": [
         [
           50,
@@ -104,8 +105,40 @@
         "Elevation": 0.05368458688448662,
         "Coastal_Flag": 0.040917829580362636
       },
+      "permutation_importance": {
+        "City_Encoded": {
+          "mean_drop": -0.0023934892892285785,
+          "std": 0.003474529772815071,
+          "share": 0.0
+        },
+        "Rainfall_3Day": {
+          "mean_drop": 0.3151101221231922,
+          "std": 0.001212681393726861,
+          "share": 0.6484
+        },
+        "Avg_Temperature": {
+          "mean_drop": 0.007636751440936474,
+          "std": 0.006965695120464921,
+          "share": 0.0157
+        },
+        "Avg_WindSpeed": {
+          "mean_drop": -0.0009484167574290048,
+          "std": 0.004877919222135563,
+          "share": 0.0
+        },
+        "Elevation": {
+          "mean_drop": 0.029461433791071245,
+          "std": 0.007599649455724871,
+          "share": 0.0606
+        },
+        "Coastal_Flag": {
+          "mean_drop": 0.13378361662300225,
+          "std": 0.011132993743507942,
+          "share": 0.2753
+        }
+      },
       "status": "Trained",
-      "mlflow_run_id": "e2978513e2894a8685cec0c14cc576f8"
+      "mlflow_run_id": "4aa81742dc574b3993797bbc78c90573"
     },
     "XGBoost": {
       "accuracy": 0.8954341514911586,
@@ -118,8 +151,9 @@
       "high_risk_recall": 0.49440715883668906,
       "extreme_risk_recall": 0.6022727272727273,
       "roc_auc": 0.9619869831350837,
-      "training_time_sec": 0.969066858291626,
-      "prediction_time_sec": 0.021799325942993164,
+      "roc_auc_macro": 0.9541551653865971,
+      "training_time_sec": 1.1226952075958252,
+      "prediction_time_sec": 0.033387184143066406,
       "confusion_matrix": [
         [
           53,
@@ -199,8 +233,40 @@
         "Elevation": 0.08619635552167892,
         "Coastal_Flag": 0.381648987531662
       },
+      "permutation_importance": {
+        "City_Encoded": {
+          "mean_drop": 0.0012645983582537435,
+          "std": 0.0020983423066153117,
+          "share": 0.0027
+        },
+        "Rainfall_3Day": {
+          "mean_drop": 0.2685096502106848,
+          "std": 0.0014151220292215611,
+          "share": 0.5766
+        },
+        "Avg_Temperature": {
+          "mean_drop": 0.04809568918404875,
+          "std": 0.005579366416761154,
+          "share": 0.1033
+        },
+        "Avg_WindSpeed": {
+          "mean_drop": 0.005109204406758061,
+          "std": 0.002946551819395005,
+          "share": 0.011
+        },
+        "Elevation": {
+          "mean_drop": 0.0034048041928198105,
+          "std": 0.0028264050483604868,
+          "share": 0.0073
+        },
+        "Coastal_Flag": {
+          "mean_drop": 0.13929637409309198,
+          "std": 0.008762835672976109,
+          "share": 0.2991
+        }
+      },
       "status": "Trained",
-      "mlflow_run_id": "ec9c3299a61c4279965e56069ec24c84"
+      "mlflow_run_id": "c14e982b71ec406790a7c8f88cea0e67"
     },
     "LightGBM": {
       "accuracy": 0.9055951438374241,
@@ -213,8 +279,9 @@
       "high_risk_recall": 0.46756152125279643,
       "extreme_risk_recall": 0.5454545454545454,
       "roc_auc": 0.9597232774671234,
-      "training_time_sec": 2.7747068405151367,
-      "prediction_time_sec": 0.07937169075012207,
+      "roc_auc_macro": 0.9530299121655278,
+      "training_time_sec": 2.9096946716308594,
+      "prediction_time_sec": 0.11114645004272461,
       "confusion_matrix": [
         [
           48,
@@ -294,8 +361,40 @@
         "Elevation": 580.0,
         "Coastal_Flag": 405.0
       },
+      "permutation_importance": {
+        "City_Encoded": {
+          "mean_drop": -0.0007436917861045611,
+          "std": 0.0026820234343597985,
+          "share": 0.0
+        },
+        "Rainfall_3Day": {
+          "mean_drop": 0.2584767293347541,
+          "std": 0.001612045451757479,
+          "share": 0.6028
+        },
+        "Avg_Temperature": {
+          "mean_drop": 0.031017320681491056,
+          "std": 0.006791868088402057,
+          "share": 0.0723
+        },
+        "Avg_WindSpeed": {
+          "mean_drop": 0.003756535476727296,
+          "std": 0.005216658936700903,
+          "share": 0.0088
+        },
+        "Elevation": {
+          "mean_drop": -3.451996467926932e-05,
+          "std": 0.007000939599124091,
+          "share": 0.0
+        },
+        "Coastal_Flag": {
+          "mean_drop": 0.13557812644885692,
+          "std": 0.007726008883881966,
+          "share": 0.3162
+        }
+      },
       "status": "Trained",
-      "mlflow_run_id": "a344466d23f943b4aa129c03463f21ad"
+      "mlflow_run_id": "c7c778b819c341eb90f7e888925e609a"
     }
   }
 }

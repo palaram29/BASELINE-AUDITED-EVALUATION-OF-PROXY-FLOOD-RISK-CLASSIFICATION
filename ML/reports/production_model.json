@@ -2,7 +2,7 @@
   "model": "RandomForest",
   "version": "1.1",
   "status": "frozen",
-  "frozen_at": "2026-09-01T10:05:26.264533+00:00",
+  "frozen_at": "2026-09-01T10:42:41.469351+00:00",
   "selection_reason": "highest macro-F1 (0.5780)",
   "training_period": "2010-2023",
   "dataset": {
@@ -27,7 +27,8 @@
     "weighted_f1": 0.9530943110739544,
     "high_risk_recall": 0.41834451901565994,
     "extreme_risk_recall": 0.5681818181818182,
-    "roc_auc": 0.9519340476836294
+    "roc_auc": 0.9519340476836294,
+    "roc_auc_macro": 0.947804282348373
   },
   "artifacts": {
     "model_file": "best_model.pkl",
