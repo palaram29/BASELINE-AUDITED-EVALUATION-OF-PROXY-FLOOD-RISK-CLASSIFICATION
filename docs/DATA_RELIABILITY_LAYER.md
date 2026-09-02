@@ -32,7 +32,7 @@ reliability_score = 0.25 x Completeness
 ```
 
 - **Completeness** (`reliability/completeness.py`) - expected-vs-received
-  record counts over a rolling window. The expected cadence is *derived*
+  record counts over a rolling window. The expected cadence is _derived_
   from that source's own historical timestamp gaps (median inter-arrival
   time), not a hard-coded interval, so a source with a naturally sparser
   reporting rhythm isn't penalized for it.
@@ -44,7 +44,7 @@ reliability_score = 0.25 x Completeness
   checks (nulls, duplicates, invalid timestamps, outliers by z-score).
   Never drops a row - only flags it, so raw data is preserved for audit.
 - **Historical Reliability** (`reliability/historical.py`) - an
-  exponential moving average of a source's *own past* composite scores,
+  exponential moving average of a source's _own past_ composite scores,
   seeded with a configured default when there's no history yet. Built only
   from prior observations, never the one currently being scored, so it
   can't be circular/leaky.
@@ -101,10 +101,10 @@ also configurable.
 `ML/train_models.py --feature-set {baseline|reliability_aware}` trains all
 three algorithms (Random Forest, XGBoost, LightGBM) on two column sets:
 
-| Feature set | Columns |
-|---|---|
-| `baseline` (production default) | `Rainfall_3Day, Avg_Temperature, Avg_WindSpeed, Elevation, Coastal_Flag` |
-| `reliability_aware` | baseline + `Weather_Reliability, River_Reliability, Overall_Data_Reliability` |
+| Feature set                     | Columns                                                                       |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| `baseline` (production default) | `Rainfall_3Day, Avg_Temperature, Avg_WindSpeed, Elevation, Coastal_Flag`      |
+| `reliability_aware`             | baseline + `Weather_Reliability, River_Reliability, Overall_Data_Reliability` |
 
 The live prediction pipeline always serves the **baseline** model
 (unchanged frozen-model policy, `ML_METHODOLOGY_AND_LIMITATIONS.md` §18) -
@@ -125,16 +125,16 @@ conditions** built by `reliability/degradation.py` - pure, in-memory
 transforms that never touch `ML/data/*.csv`, `ML/models/`, or any database
 table:
 
-| Condition | Transform |
-|---|---|
-| `normal` | untouched test set (control) |
-| `missing_10` / `missing_20` / `missing_30` | 10% / 20% / 30% of numeric values replaced with `NaN`, uniformly at random |
-| `delayed` | 50% of rows get a simulated 240-minute arrival delay recorded (feeds the timeliness component) |
-| `invalid` | 10% of numeric values replaced with corrupted out-of-range values (large negative or absurdly large), modelling sensor faults |
+| Condition                                  | Transform                                                                                                                     |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `normal`                                   | untouched test set (control)                                                                                                  |
+| `missing_10` / `missing_20` / `missing_30` | 10% / 20% / 30% of numeric values replaced with `NaN`, uniformly at random                                                    |
+| `delayed`                                  | 50% of rows get a simulated 240-minute arrival delay recorded (feeds the timeliness component)                                |
+| `invalid`                                  | 10% of numeric values replaced with corrupted out-of-range values (large negative or absurdly large), modelling sensor faults |
 
 This tests the actual research hypothesis: does giving the model explicit
 reliability scores as input features let it partially compensate when the
-*other* features it depends on are missing, late, or corrupted - i.e. does
+_other_ features it depends on are missing, late, or corrupted - i.e. does
 the model learn to trust a low-reliability reading less?
 
 ## 6. Results - reported as measured, not adjusted
@@ -145,40 +145,58 @@ project's existing rule (`ML_METHODOLOGY_AND_LIMITATIONS.md` §12: report
 what the numbers show, not what would look best), here is the actual
 macro-F1 for each condition, algorithm, and feature set:
 
-| Condition | Random Forest (baseline -> rel-aware) | XGBoost (baseline -> rel-aware) | LightGBM (baseline -> rel-aware) |
-|---|---:|---:|---:|
-| normal | 0.5626 -> 0.5618 (-0.001) | 0.5308 -> 0.5059 (-0.025) | 0.5276 -> 0.4161 (-0.112) |
-| missing_10 | 0.5540 -> 0.5563 (+0.002) | 0.5246 -> 0.5004 (-0.024) | 0.5266 -> 0.4137 (-0.113) |
-| missing_20 | 0.5343 -> 0.5391 (+0.005) | 0.5083 -> 0.4765 (-0.032) | 0.5105 -> 0.4029 (-0.108) |
-| missing_30 | 0.5136 -> 0.5163 (+0.003) | 0.4841 -> 0.4505 (-0.034) | 0.4898 -> 0.3904 (-0.099) |
-| delayed | 0.5626 -> 0.5610 (-0.002) | 0.5308 -> 0.5058 (-0.025) | 0.5276 -> 0.4153 (-0.112) |
-| invalid | 0.4272 -> 0.4354 (+0.008) | 0.3994 -> 0.3757 (-0.024) | 0.3953 -> 0.3184 (-0.077) |
+| Condition  | Random Forest (baseline -> rel-aware) | XGBoost (baseline -> rel-aware) | LightGBM (baseline -> rel-aware) |
+| ---------- | ------------------------------------: | ------------------------------: | -------------------------------: |
+| normal     |             0.5780 -> 0.5625 (-0.016) |       0.5308 -> 0.5059 (-0.025) |        0.5170 -> 0.3932 (-0.124) |
+| missing_10 |             0.5649 -> 0.5596 (-0.005) |       0.5246 -> 0.5004 (-0.024) |        0.5129 -> 0.3976 (-0.115) |
+| missing_20 |             0.5402 -> 0.5328 (-0.007) |       0.5083 -> 0.4765 (-0.032) |        0.4975 -> 0.3861 (-0.111) |
+| missing_30 |             0.5214 -> 0.5185 (-0.003) |       0.4841 -> 0.4505 (-0.034) |        0.4800 -> 0.3753 (-0.105) |
+| delayed    |             0.5780 -> 0.5638 (-0.014) |       0.5308 -> 0.5058 (-0.025) |        0.5170 -> 0.3906 (-0.126) |
+| invalid    |             0.4359 -> 0.4228 (-0.013) |       0.3994 -> 0.3757 (-0.024) |        0.3898 -> 0.2972 (-0.093) |
 
 **Honest interpretation:**
 
-- **Random Forest** (the algorithm this project's model selector actually
-  picks, `ML_METHODOLOGY_AND_LIMITATIONS.md` §14) is the only one of the
-  three where reliability-aware features help, and only under degraded
-  conditions - a small but consistent macro-F1 gain under `missing_10/20/30`
-  and `invalid` (+0.002 to +0.008), with a negligible loss under `normal`
-  and `delayed` (-0.001 to -0.002). This is a modest, not dramatic,
-  robustness improvement.
-- **XGBoost and LightGBM get consistently worse macro-F1 with
-  reliability-aware features, in every single condition** - a small
-  regression for XGBoost (-0.02 to -0.03) and a large one for LightGBM
-  (-0.08 to -0.11). Several of these runs show higher High/Extreme-risk
-  *recall* under reliability_aware (e.g. XGBoost's High recall goes from
-  0.494 to 0.702 in the `normal` condition), suggesting the added features
-  push these two algorithms toward over-predicting elevated risk at a
-  precision cost large enough to hurt macro-F1 overall - a trade-off, not
-  an unambiguous improvement.
-- **Net finding**: reliability-aware features are not a universal win.
-  They provide a small, real robustness benefit specifically for the
-  production-selected Random Forest model under degraded-data conditions,
-  which is evidence in favor of the research hypothesis for that one
-  algorithm - but they measurably hurt XGBoost and especially LightGBM.
-  This is reported as measured; no result here was cherry-picked or the
-  methodology adjusted to reach a cleaner conclusion.
+- **Every model loses macro-F1 in every condition** once the
+  reliability-aware features are added. Random Forest loses 0.003 to
+  0.016, XGBoost 0.024 to 0.034, and LightGBM 0.093 to 0.126. There is no
+  condition and no algorithm where the added features help.
+- Several runs show higher High and Extreme recall under
+  `reliability_aware` while macro-F1 falls. LightGBM's High recall rises
+  from 0.4676 to 0.8322 in the `normal` condition while its macro-F1 drops
+  0.124, and XGBoost's rises from 0.4944 to 0.7025 with the same
+  directional loss. The added features are pushing these algorithms toward
+  over-predicting elevated risk at a precision cost, rather than helping
+  them separate the classes.
+- **The cause is in the training data, not the models.** Measured over the
+  109,470 training rows, `River_Reliability` is the constant 0.750 in
+  100% of rows, `Weather_Reliability` equals 1.000 in 108,480 rows
+  (99.1%), varying only while the historical component warms up, and
+  `Overall_Data_Reliability` correlates with `Weather_Reliability` at
+  0.99999. The undamaged test split is more extreme still: all three
+  features take exactly one value each across all 37,890 rows. The
+  configuration therefore hands the models one constant feature, one that
+  is constant for 99.1% of rows, and one near-duplicate.
+- **Net finding**: this experiment does not test the research hypothesis.
+  No model could learn to condition on reliability, because reliability
+  did not vary during training; degradation is then injected only at
+  evaluation time, where those features do move but nothing has been
+  learned that could use them. The uniform direction of the losses is
+  consistent with that account, since admitting near-constant collinear
+  features as split candidates should degrade every learner rather than
+  help any of them. The correct conclusion is that the hypothesis was
+  **not identifiable under this training distribution**, not that
+  reliability-aware learning was tested and failed. The repair is §7.2:
+  apply matched degradation to the training split as well, keeping a
+  clean-trained control. This is reported as measured; no result here was
+  cherry-picked or the methodology adjusted to reach a cleaner conclusion.
+
+An earlier version of this section reported a small macro-F1 gain for
+Random Forest under degraded conditions and read it as evidence in favour
+of the hypothesis for that one algorithm. Those numbers came from a
+hyperparameter configuration selected on the test period, which has since
+been replaced (`ML_METHODOLOGY_AND_LIMITATIONS.md` §9.1). Under
+validation-only selection the gain does not survive, and the result is
+uniform across all three algorithms.
 
 ## 7. Limitations
 
@@ -187,9 +205,13 @@ macro-F1 for each condition, algorithm, and feature set:
    for days, or a specific field consistently miscalibrated) may behave
    differently than uniform random corruption/missingness.
 2. Reliability-aware feature values themselves are computed from the same
-   (undegraded) historical data the baseline model trains on - there is no
-   simulated *training-time* degradation, only test-time. Training under
-   degraded conditions is a natural extension not yet implemented.
+   (undegraded) historical data the baseline model trains on, so there is
+   no simulated _training-time_ degradation, only test-time. This is not a
+   minor gap: as §6 shows, it leaves the reliability features constant or
+   near-constant throughout training and makes the hypothesis
+   unidentifiable rather than merely hard to detect. Training under matched
+   degraded conditions, with a clean-trained control retained for
+   comparison, is the required repair and is not yet implemented.
 3. As with every other component in this system, no ground-truth
    flood-incident record exists to validate reliability scores against
    real outcomes (`ML_METHODOLOGY_AND_LIMITATIONS.md` §17.1) - reliability
