@@ -7,6 +7,7 @@ import Home from "../pages/Home";
 import Weather from "../pages/Weather";
 import Rivers from "../pages/Rivers";
 import Forecast from "../pages/Forecast";
+import Safety from "../pages/Safety";
 import MapPage from "../pages/MapPage";
 import Notifications from "../pages/Notifications";
 import Login from "../pages/Login";
@@ -24,6 +25,7 @@ function AppRoutes() {
           <Route path="/weather" element={<Weather />} />
           <Route path="/rivers" element={<Rivers />} />
           <Route path="/forecast" element={<Forecast />} />
+          <Route path="/safety" element={<Safety />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route

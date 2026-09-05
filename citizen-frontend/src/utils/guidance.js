@@ -48,3 +48,68 @@ export const EMERGENCY_CONTACTS = [
 
 export const guidanceFor = (normalizedRisk) =>
   RISK_GUIDANCE[normalizedRisk] || RISK_GUIDANCE.Low;
+
+// Standing, risk-independent precaution guide for the dedicated Safety
+// page - what to do before, during, and after a flood. Unlike
+// RISK_GUIDANCE this isn't keyed to a forecast tier; it's the general
+// reference a resident can read at any time.
+export const PRECAUTION_SECTIONS = [
+  {
+    id: "before",
+    title: "Before a flood",
+    intro: "Preparing ahead of time is the biggest factor in staying safe.",
+    items: [
+      "Know your area's flood history and identify the nearest safe high ground.",
+      "Prepare an emergency kit (see checklist below) and keep it somewhere easy to grab.",
+      "Keep important documents (ID, deeds, insurance) in a waterproof bag or plastic folder.",
+      "Agree on a family meeting point and an out-of-area contact everyone can reach.",
+      "Save the Disaster Management Centre hotline (117) and your local authority's number.",
+      "Charge your phone and any power banks whenever heavy rain is forecast.",
+      "Check that gutters and drains near your home are clear of debris.",
+    ],
+  },
+  {
+    id: "during",
+    title: "During a flood",
+    intro: "If floodwater is rising near you, act early and don't wait for it to reach your door.",
+    items: [
+      "Move to higher ground or an upper floor as soon as you're told to, or as soon as water starts rising.",
+      "Turn off electricity and gas at the mains if it's safe to reach them.",
+      "Never walk or drive through moving floodwater — 15cm of fast water can knock an adult over.",
+      "Avoid contact with floodwater where possible; it can be contaminated with sewage or chemicals.",
+      "Keep your emergency kit and phone with you at all times.",
+      "Listen to the radio, DMC updates, or local authority announcements for evacuation instructions.",
+      "If trapped, move to the highest available point and call 117 or 119 for rescue.",
+    ],
+  },
+  {
+    id: "after",
+    title: "After a flood",
+    intro: "Floodwater can leave hazards behind even after it recedes — take care returning home.",
+    items: [
+      "Don't return home until local authorities confirm it's safe.",
+      "Avoid floodwater and mud — treat any cuts or wounds promptly to prevent infection.",
+      "Have your electricity and gas supply checked by a professional before switching them back on.",
+      "Boil or treat drinking water until you're told the local supply is safe again.",
+      "Photograph any damage for insurance before you start cleaning up.",
+      "Watch for structural damage, loose wiring, and displaced wildlife (snakes) in and around the home.",
+      "Check on elderly or vulnerable neighbours who may need help recovering.",
+    ],
+  },
+];
+
+// A starter emergency kit checklist. Kept separate from PRECAUTION_SECTIONS
+// so the Safety page can render it as interactive checkboxes rather than a
+// plain list.
+export const EMERGENCY_KIT_ITEMS = [
+  "Drinking water (at least 3 litres per person)",
+  "Non-perishable food (2-3 days' supply)",
+  "Torch and spare batteries",
+  "Power bank, fully charged",
+  "First-aid kit and regular medication",
+  "Copies of ID, insurance, and other important documents (in a waterproof bag)",
+  "Cash (ATMs and cards may not work during a flood)",
+  "Whistle, to signal for help",
+  "Change of clothes and a raincoat",
+  "Any essentials for infants, elderly family members, or pets",
+];

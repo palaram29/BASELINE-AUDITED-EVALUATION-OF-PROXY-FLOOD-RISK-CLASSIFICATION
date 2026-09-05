@@ -1,4 +1,5 @@
-import { FiCheckCircle, FiAlertTriangle, FiAlertOctagon } from "react-icons/fi";
+import { Link } from "react-router-dom";
+import { FiCheckCircle, FiAlertTriangle, FiAlertOctagon, FiChevronRight } from "react-icons/fi";
 import { normalizeRisk, riskLabel, riskTheme } from "../utils/risk";
 import { guidanceFor } from "../utils/guidance";
 import { formatDate } from "../utils/format";
@@ -69,6 +70,14 @@ function RiskHero({ city, alert }) {
             This is a next-day risk forecast from a machine-learning model, not an official
             evacuation order. Always follow instructions from the Disaster Management Centre.
           </p>
+
+          <Link
+            to="/safety"
+            className="mt-3 inline-flex items-center gap-1 text-sm font-semibold underline underline-offset-2"
+          >
+            Full flood safety guide
+            <FiChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
         </>
       ) : null}
     </section>

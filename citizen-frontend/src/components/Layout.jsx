@@ -1,5 +1,5 @@
 import { NavLink, Link, Outlet } from "react-router-dom";
-import { FiHome, FiCloudRain, FiActivity, FiCalendar, FiUser, FiLogIn } from "react-icons/fi";
+import { FiHome, FiCloudRain, FiActivity, FiCalendar, FiShield, FiUser, FiLogIn } from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
 import NotificationBell from "./NotificationBell";
 
@@ -10,6 +10,7 @@ const TABS = [
   { to: "/weather", label: "Weather", icon: FiCloudRain },
   { to: "/rivers", label: "Rivers", icon: FiActivity },
   { to: "/forecast", label: "Forecast", icon: FiCalendar },
+  { to: "/safety", label: "Safety", icon: FiShield },
 ];
 
 function Layout() {
