@@ -16,6 +16,7 @@ data flow, database schema, and how to run everything are below.
 | [MLOPS.md](MLOPS.md) | Model-version registry, drift/data-quality/prediction monitoring, retraining alerts, promotion/rollback, and what is still planned |
 | [DATA_RELIABILITY_LAYER.md](DATA_RELIABILITY_LAYER.md) | Per-source reliability scoring (completeness/timeliness/validity/history) and the degraded-data research experiment |
 | [FRONTENDS.md](FRONTENDS.md) | The operator/research console (`flood-frontend/`) and the public citizen app (`citizen-frontend/`), including the Today / Tomorrow risk toggle |
+| [CITIZEN_SAFETY_AND_SHELTERS.md](CITIZEN_SAFETY_AND_SHELTERS.md) | The citizen Safety page (precaution guide, emergency-kit checklist) and the operator-curated flood-shelter directory + nearest-shelter finder |
 
 The root [`README.md`](../README.md) is the project's public overview and
 install guide; this folder is the design/reference detail behind it.
@@ -167,6 +168,12 @@ it scores the day the features are for.
 |---|---|
 | `users` | Citizen-app registration: `full_name`, `email` (unique), `phone`, `password_hash` (bcrypt), `alert_city`, `last_alerted_risk` (notification watermark), `created_at` |
 | `alert_notifications` | One row per in-app flood alert delivered to a user; `ON DELETE CASCADE` from `users` |
+
+### Citizen safety
+
+| Table | Purpose |
+|---|---|
+| `shelters` | Operator-curated flood shelters — `name`, `type`, `latitude`/`longitude`, `city`, `capacity`, `contact_phone`, `is_active`. Backs the citizen app's nearest-shelter finder and map pins. See [CITIZEN_SAFETY_AND_SHELTERS.md](CITIZEN_SAFETY_AND_SHELTERS.md) |
 
 ### Data-reliability layer
 

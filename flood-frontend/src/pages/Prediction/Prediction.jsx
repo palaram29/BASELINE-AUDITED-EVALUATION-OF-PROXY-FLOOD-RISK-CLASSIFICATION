@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import usePrediction from "../../hooks/usePrediction";
 import useLiveRisk from "../../hooks/useLiveRisk";
+import useTomorrowComparison from "../../hooks/useTomorrowComparison";
 import useWeather from "../../hooks/useWeather";
 import useRiver from "../../hooks/useRiver";
 import PageHeader from "../../components/common/PageHeader";
@@ -21,6 +22,7 @@ import { riskTone } from "../../utils/riskTone";
 function Prediction() {
   const { prediction, loading, error } = usePrediction();
   const { liveRisk, error: liveRiskError } = useLiveRisk();
+  const { comparison } = useTomorrowComparison();
   const { weather, error: weatherError } = useWeather();
   const { river, error: riverError } = useRiver();
   const [search, setSearch] = useState("");
@@ -30,6 +32,18 @@ function Prediction() {
     const query = search.toLowerCase();
     return prediction.filter((item) => item.City.toLowerCase().includes(query));
   }, [prediction, search]);
+
+  // City -> persistence forecast, joined onto the existing ML-sourced
+  // filteredPrediction rows below rather than replacing them, so a
+  // comparison-endpoint outage degrades to "no persistence column" instead
+  // of losing the whole table.
+  const persistenceByCity = useMemo(() => {
+    const map = {};
+    comparison.forEach((row) => {
+      map[row.City] = row.Persistence_Forecast;
+    });
+    return map;
+  }, [comparison]);
 
   return (
     <div className="space-y-8">
@@ -56,7 +70,7 @@ function Prediction() {
         </Card>
       ) : view === "tomorrow" ? (
         <div className="space-y-6">
-          <Card title="Predicted risk by city" subtitle="Next-day flood-risk tier">
+          <Card title="Predicted risk by city" subtitle="Persistence baseline vs. the frozen ML model, next-day">
             {filteredPrediction.length ? (
               <div className="-mx-2 overflow-x-auto rounded-xl border border-line sm:mx-0">
                 <table className="data-table min-w-full">
@@ -67,7 +81,8 @@ function Prediction() {
                       <th>Temp</th>
                       <th>Wind</th>
                       <th>Predicted for</th>
-                      <th>Predicted risk</th>
+                      <th>Persistence forecast</th>
+                      <th>ML forecast (experimental)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -78,6 +93,15 @@ function Prediction() {
                         <td>{item.Avg_Temperature} °C</td>
                         <td>{item.Avg_WindSpeed} km/h</td>
                         <td className="text-muted">{item.Predicted_For_Date || "—"}</td>
+                        <td>
+                          {persistenceByCity[item.City] ? (
+                            <Badge tone={riskTone(persistenceByCity[item.City])}>
+                              {persistenceByCity[item.City]}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
+                        </td>
                         <td>
                           <Badge tone={riskTone(item.Predicted_Risk)}>{item.Predicted_Risk}</Badge>
                         </td>
@@ -90,6 +114,14 @@ function Prediction() {
               <EmptyState title="No forecasts" description="No prediction matches that search yet." />
             )}
           </Card>
+
+          <p className="text-xs text-muted">
+            Across the primary evaluation split, six walk-forward folds, a target-sensitivity
+            sweep, and a duplicate-series robustness check, the persistence baseline has
+            outperformed the frozen ML model on macro-F1 in every test run to date (see
+            docs/ML_METHODOLOGY_AND_LIMITATIONS.md). The ML forecast is retained here for
+            monitoring and future retraining decisions, not as the recommended figure.
+          </p>
 
           <RiskChart prediction={filteredPrediction} />
         </div>

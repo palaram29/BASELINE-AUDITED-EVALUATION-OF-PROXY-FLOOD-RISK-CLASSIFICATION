@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import Card from "../components/common/Card";
 import EmergencyContacts from "../components/EmergencyContacts";
 import EmergencyKitChecklist from "../components/EmergencyKitChecklist";
+import ShelterFinder from "../components/ShelterFinder";
 import { PRECAUTION_SECTIONS } from "../utils/guidance";
 
 function Safety() {
@@ -37,6 +38,8 @@ function Safety() {
           </ul>
         </Card>
       ))}
+
+      <ShelterFinder homeCity={user?.alert_city} />
 
       <EmergencyKitChecklist />
 

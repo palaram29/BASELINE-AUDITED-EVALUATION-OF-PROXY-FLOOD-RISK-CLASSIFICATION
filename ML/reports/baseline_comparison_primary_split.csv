@@ -1,0 +1,5 @@
+Baseline,Macro_F1,Weighted_F1,Accuracy,High_Recall,Extreme_Recall
+MajorityBaseline,0.2442,0.9329,0.9549,0.0,0.0
+PersistenceBaseline,0.6307,0.9613,0.9613,0.4922,0.5682
+SeasonalBaseline,0.2442,0.9329,0.9549,0.0,0.0
+MarkovBaseline,0.5105,0.9444,0.9596,0.4922,0.5682

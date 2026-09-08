@@ -14,7 +14,15 @@ from ML.utils import resolve_model_paths
 # WEATHER API
 # =====================================================
 
-WEATHER_API_URL = "https://api.weatherapi.com/v1/current.json"
+# forecast.json, not current.json: current.json's "current" block is an
+# instantaneous reading (rain falling in roughly the last hour), while
+# training data (Rainfall_3Day in ML/data/processed_dataset.csv) was built
+# from actual DAILY rainfall totals. forecast.json (days=1) additionally
+# returns forecast.forecastday[0].day.totalprecip_mm - the accumulating
+# total for the current calendar day - which matches that "daily total"
+# semantics far more closely than a single instantaneous reading. See
+# backend/weather_collector.py and docs/DATA_PIPELINE.md.
+WEATHER_API_URL = "https://api.weatherapi.com/v1/forecast.json"
 
 # =====================================================
 # ML MODEL FILES

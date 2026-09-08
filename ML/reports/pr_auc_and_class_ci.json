@@ -1,0 +1,38 @@
+{
+  "model": "RandomForestClassifier",
+  "resamples": 2000,
+  "block_unit": "calendar month",
+  "seed": 42,
+  "pr_auc_per_class": {
+    "Extreme": 0.4502,
+    "High": 0.3525,
+    "Low": 0.9967,
+    "Medium": 0.3128
+  },
+  "recall_ci_high_extreme": {
+    "High": {
+      "n_test_rows": 447,
+      "point_recall": 0.4183,
+      "ci_95": [
+        0.3265,
+        0.5108
+      ],
+      "valid_resamples": 2000
+    },
+    "Extreme": {
+      "n_test_rows": 88,
+      "point_recall": 0.5682,
+      "ci_95": [
+        0.42,
+        0.6897
+      ],
+      "valid_resamples": 2000
+    }
+  },
+  "test_class_counts": {
+    "Low": 36183,
+    "Medium": 1172,
+    "High": 447,
+    "Extreme": 88
+  }
+}

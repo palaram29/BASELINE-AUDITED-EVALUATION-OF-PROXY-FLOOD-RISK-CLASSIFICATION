@@ -1,6 +1,6 @@
 """
 Baselines the trained models must beat to demonstrate genuine forecasting
-value, per docs/ML_METHODOLOGY_AND_LIMITATIONS.md. All three are computed
+value, per docs/ML_METHODOLOGY_AND_LIMITATIONS.md. All four are computed
 using ONLY information available at prediction time - none of them peek
 at test-period labels or features to build themselves.
 
@@ -13,6 +13,18 @@ at test-period labels or features to build themselves.
   most common Flood_Risk. Applied to test rows by their own City/month.
   Uses only training-period label history - never a test-period label
   or environmental feature.
+- Markov: a first-order state-transition model. Estimates
+  P(Flood_Risk(t+1) = j | Flood_Risk(t) = i) from TRAINING data only
+  (every train row already carries both Flood_Risk_Previous_Day = state
+  at t and Flood_Risk = state at t+1), then predicts each test row's
+  next state as argmax_j P(j | current state), where "current state" is
+  that test row's OWN Flood_Risk_Previous_Day. Unlike persistence, which
+  always predicts "no change", Markov can predict a transition when the
+  training data shows that state usually changes - it is the natural
+  "smarter than persistence but still no environmental features" comparator
+  the supervisor review (Priority 6) asked for, so a reviewer can see
+  whether the trained ensembles beat something more sophisticated than
+  naive repetition, not just naive repetition itself.
 """
 
 import pandas as pd
@@ -117,9 +129,53 @@ def seasonal_baseline(train_df, test_df, labels):
     return result
 
 
+def markov_baseline(train_df, test_df, labels):
+    """First-order Markov chain: P(next state | current state) estimated
+    from (Flood_Risk_Previous_Day -> Flood_Risk) transition counts in
+    TRAINING data only. Each test row is predicted from its own
+    Flood_Risk_Previous_Day via the trained transition matrix's argmax -
+    no training data lookup by City/date, no environmental features, and
+    no test-period label ever touched during estimation."""
+
+    transition_counts = (
+        train_df.groupby(["Flood_Risk_Previous_Day", "Flood_Risk"])
+        .size()
+        .unstack(fill_value=0)
+    )
+    # Every label that appears anywhere must be a column, even if it was
+    # never observed as a "next" state in training, so lookups never KeyError.
+    for label in labels:
+        if label not in transition_counts.columns:
+            transition_counts[label] = 0
+    transition_counts = transition_counts[labels]
+
+    # Most likely next state given each observed current state.
+    most_likely_next = transition_counts.idxmax(axis=1)
+
+    overall_majority = train_df["Flood_Risk"].mode()[0]
+
+    def lookup(current_state):
+        return most_likely_next.get(current_state, overall_majority)
+
+    y_pred = test_df["Flood_Risk_Previous_Day"].map(lookup)
+
+    logger.info(
+        f"Markov baseline: transition matrix estimated from "
+        f"{len(train_df)} training rows over {len(most_likely_next)} observed "
+        f"current-states; {overall_majority} fallback for unseen states"
+    )
+
+    result = _score(test_df["Flood_Risk"], y_pred, labels)
+    result["name"] = "MarkovBaseline"
+    result["model"] = None
+    result["transition_matrix"] = transition_counts.to_dict()
+    return result
+
+
 def compute_all_baselines(train_df, test_df, labels):
     return [
         majority_baseline(train_df, test_df, labels),
         persistence_baseline(test_df, labels),
         seasonal_baseline(train_df, test_df, labels),
+        markov_baseline(train_df, test_df, labels),
     ]

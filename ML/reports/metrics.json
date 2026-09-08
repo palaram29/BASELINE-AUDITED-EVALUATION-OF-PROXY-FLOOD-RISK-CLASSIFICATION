@@ -1,16 +1,16 @@
 {
-  "trained_at": "2026-09-01T10:42:41.469351+00:00",
+  "trained_at": "2026-09-08T07:04:18.942616+00:00",
   "selection_metric": "macro_f1",
   "best_model": "RandomForest",
   "selection_reason": "highest macro-F1 (0.5780)",
-  "mlflow_run_id": "a832d0d0d479436c8dabff2bbb787f2d",
+  "mlflow_run_id": "2da831425efc4a169233e17bff4c8178",
   "train_file": "ML/data/train_dataset.csv",
   "test_file": "ML/data/test_dataset.csv",
   "dataset": {
     "train_rows": 109470,
     "test_rows": 37890
   },
-  "training_duration_sec": 37.32550621032715,
+  "training_duration_sec": 46.43132781982422,
   "models": {
     "RandomForest": {
       "accuracy": 0.9496173132752705,
@@ -24,8 +24,8 @@
       "extreme_risk_recall": 0.5681818181818182,
       "roc_auc": 0.9519340476836294,
       "roc_auc_macro": 0.947804282348373,
-      "training_time_sec": 5.1676201820373535,
-      "prediction_time_sec": 0.158372163772583,
+      "training_time_sec": 12.910847902297974,
+      "prediction_time_sec": 0.46038246154785156,
       "confusion_matrix": [
         [
           50,
@@ -138,7 +138,7 @@
         }
       },
       "status": "Trained",
-      "mlflow_run_id": "4aa81742dc574b3993797bbc78c90573"
+      "mlflow_run_id": "5edbc20338f346e688299034fd5eacf5"
     },
     "XGBoost": {
       "accuracy": 0.8954341514911586,
@@ -152,8 +152,8 @@
       "extreme_risk_recall": 0.6022727272727273,
       "roc_auc": 0.9619869831350837,
       "roc_auc_macro": 0.9541551653865971,
-      "training_time_sec": 1.1226952075958252,
-      "prediction_time_sec": 0.033387184143066406,
+      "training_time_sec": 0.7802934646606445,
+      "prediction_time_sec": 0.022321224212646484,
       "confusion_matrix": [
         [
           53,
@@ -266,7 +266,7 @@
         }
       },
       "status": "Trained",
-      "mlflow_run_id": "c14e982b71ec406790a7c8f88cea0e67"
+      "mlflow_run_id": "150b29b4317c4b44a06fd4e967e3a9e4"
     },
     "LightGBM": {
       "accuracy": 0.9055951438374241,
@@ -280,8 +280,8 @@
       "extreme_risk_recall": 0.5454545454545454,
       "roc_auc": 0.9597232774671234,
       "roc_auc_macro": 0.9530299121655278,
-      "training_time_sec": 2.9096946716308594,
-      "prediction_time_sec": 0.11114645004272461,
+      "training_time_sec": 3.2503626346588135,
+      "prediction_time_sec": 0.061311960220336914,
       "confusion_matrix": [
         [
           48,
@@ -394,7 +394,7 @@
         }
       },
       "status": "Trained",
-      "mlflow_run_id": "c7c778b819c341eb90f7e888925e609a"
+      "mlflow_run_id": "71ac57c1920246bfb175c8e837fa646d"
     }
   }
 }

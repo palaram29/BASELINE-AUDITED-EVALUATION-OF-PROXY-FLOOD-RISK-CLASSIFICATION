@@ -11,10 +11,13 @@ FastAPI app: `backend/app.py` — `http://127.0.0.1:8000`, Swagger at
   Tokens are HS256, `sub` = user id, 7-day expiry
   (`backend/services/auth_service.py`).
 - **No auth** on everything else, including `/mlops/*`, `/reliability/*`,
-  and `/admin/users`. The operator console (`flood-frontend/`) is trusted
-  read-only tooling with no login of its own; these routers follow that
-  same convention rather than adding an admin-auth layer. `/admin/users`
-  only ever *reads* the `users` table.
+  `/admin/users`, and `/shelters/*`. The operator console
+  (`flood-frontend/`) is trusted tooling with no login of its own; these
+  routers follow that same convention rather than adding an admin-auth
+  layer. `/admin/users` only ever *reads* the `users` table — `/shelters`
+  is the one exception that allows writes with no auth in front of them;
+  see [CITIZEN_SAFETY_AND_SHELTERS.md](CITIZEN_SAFETY_AND_SHELTERS.md) for
+  why that was accepted.
 
 CORS allows `localhost`/`127.0.0.1` on ports `5173` and `5174`.
 
@@ -152,3 +155,20 @@ into a higher tier (Moderate/High/Critical). Delivery is in-app only.
 | Method | Path | Description |
 |---|---|---|
 | GET | `/admin/users` | Every citizen-app registration, newest first: name, email, phone, alert city, notification count + last-notified time, `last_alerted_risk`, and the **current** live risk for their alert city. Read-only, no auth (see top of page). |
+
+---
+
+## Flood shelters (`/shelters`)
+
+See [CITIZEN_SAFETY_AND_SHELTERS.md](CITIZEN_SAFETY_AND_SHELTERS.md).
+No road-network data exists in this project, so "nearest" is real
+straight-line distance, not a routed distance — turn-by-turn navigation
+is handed off to the `maps_url` (Google Maps).
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/shelters` | Every shelter, active or not |
+| GET | `/shelters/nearest?lat=&lon=` | Active shelters near a point, nearest first, each with `distance_km`, `city_risk_level`/`city_risk_label` (from that shelter's own city's current forecast), and `maps_url` |
+| POST | `/shelters` | Create. Body: `name`, `type`, `latitude`, `longitude`, `city`, `capacity?`, `contact_phone?`, `is_active` (default `true`) |
+| PUT | `/shelters/{id}` | Partial update; `404` if the id doesn't exist |
+| DELETE | `/shelters/{id}` | Hard delete; `404` if the id doesn't exist |

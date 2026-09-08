@@ -23,8 +23,17 @@ not fail the pipeline, since the t+1 forecast is already done).
 ## 1. Weather collection — `backend/weather_collector.py`
 
 - For each of the 30 cities in `backend/config.py::CITIES`, calls
-  WeatherAPI (`current.json`) and reads `precip_mm`, `temp_c`,
-  `wind_kph`.
+  WeatherAPI (`forecast.json`, `days=1`) and reads
+  `forecast.forecastday[0].day.totalprecip_mm` (today's accumulating
+  daily rainfall total) plus `current.temp_c`/`current.wind_kph`.
+  Previously read `current.precip_mm` (an instantaneous, roughly
+  last-hour reading) — this understated live rainfall by roughly an
+  order of magnitude relative to the training data's true daily totals
+  and was pushing nearly every live prediction toward "Low" regardless
+  of actual conditions. `totalprecip_mm` is still a same-day
+  accumulator (settles to the true total only once the day has fully
+  elapsed) rather than a retrospective daily total, but it is a
+  like-for-like daily quantity, not a single-hour snapshot.
 - Appends new rows to `weather_data`, **deduplicated per (`Date`, `City`)**
   — so more frequent runs never produce more than one weather row per
   city per day.

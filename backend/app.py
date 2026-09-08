@@ -15,6 +15,7 @@ from backend.routes.alerts import router as alerts_router
 from backend.routes.notifications import router as notifications_router
 from backend.routes.reliability import router as reliability_router
 from backend.routes.admin import router as admin_router
+from backend.routes.shelters import router as shelters_router
 from backend.scheduler import start_scheduler
 from database.db_connection import (
     ensure_mlops_tables,
@@ -22,6 +23,7 @@ from database.db_connection import (
     ensure_ml_features_reliability_columns,
     ensure_notifications_schema,
     ensure_live_risk_results_table,
+    ensure_shelters_table,
 )
 
 from fastapi import FastAPI
@@ -42,6 +44,7 @@ def _start_live_pipeline_scheduler():
     ensure_ml_features_reliability_columns()
     ensure_notifications_schema()
     ensure_live_risk_results_table()
+    ensure_shelters_table()
     start_scheduler()
 
 app.add_middleware(
@@ -74,6 +77,7 @@ app.include_router(alerts_router)
 app.include_router(notifications_router)
 app.include_router(reliability_router)
 app.include_router(admin_router)
+app.include_router(shelters_router)
 
 @app.get("/")
 def home():

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
 import useLiveData from "../hooks/useLiveData";
-import { getLatestPrediction, getLiveRisk } from "../services/dataService";
+import { getTomorrowComparison, getLiveRisk } from "../services/dataService";
 import Card from "../components/common/Card";
 import Badge from "../components/common/Badge";
 import Spinner from "../components/common/Spinner";
@@ -19,7 +19,11 @@ function Forecast() {
   const [search, setSearch] = useState("");
   const [view, setView] = useState("tomorrow");
 
-  const tomorrow = useLiveData(getLatestPrediction, { intervalMs: 60000, initial: [] });
+  // Tomorrow now shows BOTH forecasts: persistence (primary - see
+  // backend/services/prediction_service.get_tomorrow_forecast_comparison)
+  // and the frozen ML model (secondary, always disclaimed). Field names
+  // come from that combined endpoint, not the old /prediction/latest shape.
+  const tomorrow = useLiveData(getTomorrowComparison, { intervalMs: 60000, initial: [] });
   const today = useLiveData(getLiveRisk, { intervalMs: 60000, initial: [] });
   const active = view === "today" ? today : tomorrow;
   const { data, loading, error, lastUpdated, refresh } = active;
@@ -33,7 +37,14 @@ function Forecast() {
     return [...filtered]
       .map((item) => ({
         City: item.City,
-        rawRisk: view === "today" ? item.Risk_Level : item.Predicted_Risk,
+        // Tomorrow's figure is the persistence forecast (primary, per the
+        // paper's own results and the supervisor-review decision). The ML
+        // forecast is still returned by /prediction/tomorrow-comparison for
+        // other consumers (e.g. the operator console) but isn't shown here -
+        // repeating it under an already-matching badge added no information
+        // for a citizen, and disagreement between the two would just read
+        // as conflicting guidance with no way to know which to trust.
+        rawRisk: view === "today" ? item.Risk_Level : item.Persistence_Forecast,
         rainfall: item.Rainfall_3Day,
       }))
       .sort((a, b) => {
@@ -57,7 +68,7 @@ function Forecast() {
           <p className="mt-1 text-sm text-slate-500">
             {view === "today"
               ? "A rule-based risk index from current rainfall and each area's flood exposure. Not a model prediction, and not an official warning."
-              : `A next-day risk forecast from the prediction model${forecastDate ? ` for ${formatDate(forecastDate)}` : ""}. Not an official warning.`}
+              : `Our forecast for tomorrow, based on today's conditions${forecastDate ? ` (${formatDate(forecastDate)})` : ""}. Not an official warning.`}
           </p>
         </div>
         <ViewToggle value={view} onChange={setView} />

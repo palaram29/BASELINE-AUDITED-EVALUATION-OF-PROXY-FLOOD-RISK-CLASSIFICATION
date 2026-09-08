@@ -9,6 +9,7 @@ import {
   FiServer,
   FiShield,
   FiUsers,
+  FiHome,
   FiInfo,
 } from "react-icons/fi";
 
@@ -43,6 +44,7 @@ export const NAV_GROUPS = [
     label: "Administration",
     items: [
       { to: "/users", label: "User Management", icon: FiUsers, description: "Citizen-app registrations and their area risk" },
+      { to: "/shelters", label: "Shelters", icon: FiHome, description: "Manage flood shelters shown on the citizen safety page" },
       { to: "/about", label: "About", icon: FiInfo, description: "About this research platform" },
     ],
   },

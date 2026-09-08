@@ -72,13 +72,26 @@ for city in CITIES:
             f"{WEATHER_API_URL}"
             f"?key={API_KEY}"
             f"&q={city}"
+            f"&days=1"
         )
 
         response = requests.get(url, timeout=30)
 
         data = response.json()
 
-        rainfall = data["current"]["precip_mm"]
+        # Daily rainfall total, not the instantaneous "current" reading -
+        # see the comment on WEATHER_API_URL in backend/config.py for why
+        # this fixes a train/serve mismatch that was making almost every
+        # live prediction come out "Low" regardless of actual conditions
+        # (live Rainfall averaged ~2mm/day under the old instantaneous
+        # reading vs. ~17.85mm/day in the training data it's compared
+        # against). Still an approximation while the day is in progress -
+        # WeatherAPI accumulates actual rain so far today and fills in a
+        # same-day forecast for the remainder, settling to the true
+        # observed total only once the day has fully elapsed - but this is
+        # a like-for-like "day so far" quantity, not a single-hour snapshot,
+        # so it is far closer to the training data's semantics than before.
+        rainfall = data["forecast"]["forecastday"][0]["day"]["totalprecip_mm"]
 
         temperature = data["current"]["temp_c"]
 

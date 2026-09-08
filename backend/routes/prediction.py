@@ -2,7 +2,8 @@ from fastapi import APIRouter
 
 from backend.services.prediction_service import (
     get_latest_predictions,
-    get_prediction_history
+    get_prediction_history,
+    get_tomorrow_forecast_comparison
 )
 from backend.services.live_risk_service import (
     get_latest_live_risk,
@@ -42,3 +43,17 @@ def live_prediction():
 def live_prediction_history():
 
     return get_live_risk_history()
+
+
+@router.get("/tomorrow-comparison")
+def tomorrow_forecast_comparison():
+    """Both forecasts for tomorrow, side by side: the persistence
+    baseline (primary, per the paper's headline result and the
+    supervisor-review decision to serve both) and the frozen ML model
+    (secondary, always carrying an experimental-model disclaimer).
+
+    See backend/services/prediction_service.get_tomorrow_forecast_comparison
+    for how the two are combined; neither underlying computation changes.
+    """
+
+    return get_tomorrow_forecast_comparison()

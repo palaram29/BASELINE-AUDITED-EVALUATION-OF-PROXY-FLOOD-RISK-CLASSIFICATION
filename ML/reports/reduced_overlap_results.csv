@@ -1,0 +1,4 @@
+Lead_Days,Train_Rows,Test_Rows,Boundary_Pairs_Dropped,Persistence_Macro_F1,RF_Macro_F1,Persistence_Wins,Persistence_Margin
+1,109470,37890,30,0.6307,0.578,True,0.0527
+2,109440,37860,60,0.4312,0.3741,True,0.057
+3,109410,37830,90,0.2931,0.2724,True,0.0207

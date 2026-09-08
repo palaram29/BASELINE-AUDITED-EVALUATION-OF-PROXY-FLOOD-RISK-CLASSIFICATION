@@ -33,6 +33,7 @@ No authentication. Every screen polls its endpoint every 30 s
 | `/mlops` | **MLOps** | `/mlops/*` — production model, model registry, training history, drift, data quality, prediction distribution, retraining alerts, health rollup, promote/rollback |
 | `/reliability` | **Data Reliability** | `/reliability/*` — overall + per-source scores, history chart, validation-flags audit table |
 | `/users` | **User Management** | `/admin/users` — every citizen-app registration, their notification history and current area risk; read-only |
+| `/shelters` | **Shelters** | `/shelters` (GET/POST/PUT/DELETE) — create/edit/retire flood shelters shown on the citizen safety page; location set by clicking a map, not typed. See [CITIZEN_SAFETY_AND_SHELTERS.md](CITIZEN_SAFETY_AND_SHELTERS.md) |
 | `/about` | **About** | static |
 
 The Navbar's live-status pill: `live` only when the scheduler's last run
@@ -55,6 +56,7 @@ every 60 s. Auth token is stored under its own localStorage key
 | `/weather` | **Weather** | — | Latest weather per city, in plain language |
 | `/rivers` | **Rivers** | — | Latest river-gauge levels and DMC status per station |
 | `/forecast` | **Forecast** | `/prediction/latest`, `/prediction/live` | **Today / Tomorrow** toggle — "Flood risk right now" (rule-based same-day index) or "Tomorrow's flood risk" (next-day ML forecast) per city, sorted by risk, with a search box; both flagged "not an official warning" |
+| `/safety` | **Safety** | — | Before/during/after flood precaution guide, an interactive emergency-kit checklist (localStorage), and a nearest-shelter finder (`/shelters/nearest`) with Google Maps directions. See [CITIZEN_SAFETY_AND_SHELTERS.md](CITIZEN_SAFETY_AND_SHELTERS.md) |
 | `/alerts` | **Notifications** | JWT | Your in-app flood-alert history; opening the screen marks them read |
 | `/account` | **Account** | JWT | Edit profile (name/email/phone), change alert area, link to alert history, and a "danger zone" to permanently delete the account (password required) |
 | `/login`, `/register` | | — | Email/password; registration also picks an alert city |

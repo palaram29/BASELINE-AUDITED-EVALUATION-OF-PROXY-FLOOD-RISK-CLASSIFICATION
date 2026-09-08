@@ -38,7 +38,7 @@ function SummarySection({ dashboard }) {
         tone={riversAtRisk > 0 ? "orange" : "green"}
       />
       <SummaryCard
-        title="High-risk predictions"
+        title="High-risk (ML forecast)"
         value={highRiskPredictions}
         icon={FiAlertTriangle}
         tone={highRiskPredictions > 0 ? "red" : "green"}

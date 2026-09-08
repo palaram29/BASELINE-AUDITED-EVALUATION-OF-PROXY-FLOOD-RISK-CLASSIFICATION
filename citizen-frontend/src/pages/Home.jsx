@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FiBell, FiChevronRight, FiMaximize2 } from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
 import useLiveData from "../hooks/useLiveData";
-import { getMyAlert, getLatestPrediction, getLatestRiver, getLiveRisk } from "../services/dataService";
+import { getMyAlert, getLatestPrediction, getLatestRiver, getLiveRisk, getShelters } from "../services/dataService";
 import RiskHero from "../components/RiskHero";
 import NationalSnapshot from "../components/NationalSnapshot";
 import EmergencyContacts from "../components/EmergencyContacts";
@@ -34,6 +34,7 @@ function Home() {
   } = useLiveData(getLatestPrediction, { intervalMs: 60000, initial: [] });
   const { data: rivers } = useLiveData(getLatestRiver, { intervalMs: 60000, initial: [] });
   const { data: liveRisk } = useLiveData(getLiveRisk, { intervalMs: 60000, initial: [] });
+  const { data: shelters } = useLiveData(getShelters, { intervalMs: 60000, initial: [] });
 
   if (authLoading) return <Spinner label="Loading…" />;
 
@@ -81,6 +82,7 @@ function Home() {
             <LazyRiskMap
               predictions={predictions || []}
               rivers={rivers || []}
+              shelters={shelters || []}
               homeCity={user?.alert_city || null}
             />
           </div>

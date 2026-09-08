@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FiCrosshair, FiMapPin } from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
 import useLiveData from "../hooks/useLiveData";
-import { getLatestPrediction, getLatestRiver } from "../services/dataService";
+import { getLatestPrediction, getLatestRiver, getShelters } from "../services/dataService";
 import Card from "../components/common/Card";
 import ErrorMessage from "../components/common/ErrorMessage";
 import DataFreshness from "../components/common/DataFreshness";
@@ -25,6 +25,7 @@ function MapPage() {
     intervalMs: 60000,
     initial: [],
   });
+  const { data: shelters } = useLiveData(getShelters, { intervalMs: 60000, initial: [] });
 
   const showMyLocation = () => {
     setGeoError("");
@@ -77,6 +78,7 @@ function MapPage() {
             eager
             predictions={predictions || []}
             rivers={rivers || []}
+            shelters={shelters || []}
             myLocation={myLocation}
             homeCity={user?.alert_city || null}
           />
@@ -98,6 +100,10 @@ function MapPage() {
           <span className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-full border-2 border-slate-500 bg-white" />
             River gauge
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full bg-green-600" />
+            Flood shelter
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-full border-2 border-white bg-blue-600 ring-2 ring-blue-200" />

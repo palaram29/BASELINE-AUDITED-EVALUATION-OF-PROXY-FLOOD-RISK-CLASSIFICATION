@@ -1,0 +1,4 @@
+Check,N_Rows,Persistence_Macro_F1,RF_Macro_F1,Persistence_Margin,Persistence_Wins,Delta_CI_Low,Delta_CI_High,Persistence_Win_Rate_Pct
+All 30 cities (reference),37890,0.6307,0.578,0.0527,True,,,
+15 independent series only,18945,0.6339,0.6002,0.0336,True,,,
+Cluster-aware block bootstrap (RF - Persistence delta),37890,0.6307,0.578,,,0.024,0.0875,0.0

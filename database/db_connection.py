@@ -364,6 +364,38 @@ def ensure_data_reliability_tables():
         ))
 
 
+def ensure_shelters_table():
+    """Idempotently create the shelters table backing the citizen "nearest
+    shelter" feature and its operator-console management screen. Safe to
+    call on every startup.
+
+    Deliberately a plain operator-editable table, not a fixed seed list:
+    real shelter designation changes per flood event (a school or temple
+    opened as a relief center today may not be one tomorrow), so an
+    operator (backend/routes/shelters.py, flood-frontend's Shelters page)
+    needs to add/update/retire entries in real time. is_active lets a
+    shelter be retired without losing its row history."""
+
+    with engine.begin() as conn:
+        conn.execute(text(
+            """
+            CREATE TABLE IF NOT EXISTS shelters (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                type TEXT NOT NULL DEFAULT 'other',
+                latitude DOUBLE PRECISION NOT NULL,
+                longitude DOUBLE PRECISION NOT NULL,
+                city TEXT NOT NULL,
+                capacity INTEGER,
+                contact_phone TEXT,
+                is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+            """
+        ))
+
+
 def ensure_ml_features_reliability_columns():
     """Idempotently add the reliability-aware feature columns to
     ml_features - see backend/generate_ml_features.py. Existing rows get

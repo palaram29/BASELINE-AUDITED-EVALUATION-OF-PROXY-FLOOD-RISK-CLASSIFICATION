@@ -42,6 +42,19 @@ const youAreHereIcon = L.divIcon({
   iconAnchor: [7, 7],
 });
 
+const shelterIcon = L.divIcon({
+  className: "",
+  html:
+    '<div style="width:22px;height:22px;border-radius:9999px;background:#16a34a;' +
+    'border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.35);' +
+    'display:flex;align-items:center;justify-content:center;font-size:12px;">🏠</div>',
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+});
+
+const shelterMapsUrl = (lat, lon) =>
+  `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`;
+
 // Recenters the map when the target coordinate changes (e.g. the user
 // grants location, or their saved area loads).
 function Recenter({ center, zoom }) {
@@ -61,7 +74,11 @@ function districtStyle(risk) {
   };
 }
 
-function RiskMap({ predictions = [], rivers = [], myLocation = null, homeCity = null }) {
+function RiskMap({ predictions = [], rivers = [], shelters = [], myLocation = null, homeCity = null }) {
+  const activeShelters = shelters.filter(
+    (shelter) => shelter.is_active && shelter.latitude != null && shelter.longitude != null
+  );
+
   const districtRisk = districtRiskMap(predictions);
 
   const cityPoints = predictions
@@ -185,6 +202,45 @@ function RiskMap({ predictions = [], rivers = [], myLocation = null, homeCity = 
                   </div>
                 </Popup>
               </CircleMarker>
+            ))}
+          </LayerGroup>
+        </LayersControl.Overlay>
+
+        <LayersControl.Overlay checked name="Flood shelters">
+          <LayerGroup>
+            {activeShelters.map((shelter) => (
+              <Marker key={shelter.id} position={[shelter.latitude, shelter.longitude]} icon={shelterIcon}>
+                <Tooltip direction="top" offset={[0, -10]}>
+                  {shelter.name}
+                </Tooltip>
+                <Popup>
+                  <div style={{ minWidth: 180 }}>
+                    <strong>{shelter.name}</strong>
+                    <br />
+                    {shelter.city}
+                    {shelter.capacity ? (
+                      <>
+                        <br />
+                        Capacity: {shelter.capacity}
+                      </>
+                    ) : null}
+                    {shelter.contact_phone ? (
+                      <>
+                        <br />
+                        {shelter.contact_phone}
+                      </>
+                    ) : null}
+                    <br />
+                    <a
+                      href={shelterMapsUrl(shelter.latitude, shelter.longitude)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Get directions
+                    </a>
+                  </div>
+                </Popup>
+              </Marker>
             ))}
           </LayerGroup>
         </LayersControl.Overlay>

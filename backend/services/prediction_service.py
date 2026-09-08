@@ -73,6 +73,56 @@ def get_latest_predictions():
     return df.to_dict(orient="records")
 
 
+def get_tomorrow_forecast_comparison():
+    """Both forecasts for TOMORROW, side by side, per the paper's Table III
+    finding that persistence outperforms the trained Random Forest model
+    on every primary/walk-forward/sensitivity/robustness check run (see
+    ML/reports/*.csv) and the resulting supervisor-review decision
+    (Option A, "serve both"):
+
+      - Persistence_Forecast: today's own rule-based risk index (see
+        backend/services/live_risk_service.py) under the persistence
+        assumption that tomorrow looks like today. This is NOT a new
+        computation - it is the existing /prediction/live value, exposed
+        here under its forecasting role for tomorrow rather than only as
+        a same-day snapshot.
+      - ML_Forecast: the frozen Random Forest t+1 prediction (existing
+        /prediction/latest value), carrying the note below every time it
+        is returned so no caller can present it without the disclaimer.
+
+    Both come from independently-computed, already-existing sources -
+    this function only joins them per city. Nothing here retrains,
+    reloads, or reinterprets either underlying computation.
+    """
+
+    from backend.services.live_risk_service import get_latest_live_risk
+
+    ml_rows = {r["City"]: r for r in get_latest_predictions()}
+    persistence_rows = {r["City"]: r for r in get_latest_live_risk()}
+
+    cities = sorted(set(ml_rows) | set(persistence_rows))
+    combined = []
+    for city in cities:
+        ml = ml_rows.get(city)
+        persist = persistence_rows.get(city)
+
+        combined.append({
+            "City": city,
+            "Predicted_For_Date": ml.get("Predicted_For_Date") if ml else None,
+            "Persistence_Forecast": persist.get("Risk_Level") if persist else None,
+            "Persistence_Basis_Date": persist.get("Date") if persist else None,
+            "ML_Forecast": ml.get("Predicted_Risk") if ml else None,
+            "ML_Probability": ml.get("Probability") if ml else None,
+            "ML_Model_Used": ml.get("Model_Used") if ml else None,
+            "ML_Note": (
+                "Experimental model \u2014 no demonstrated incremental skill "
+                "over persistence."
+            ),
+        })
+
+    return combined
+
+
 def get_prediction_history():
 
     query = _LATEST_FEATURES_CTE + """
