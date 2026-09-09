@@ -1,0 +1,109 @@
+train_year_end,model,params,inner_val_macro_f1,selected
+2016,RandomForest,"{'max_depth': None, 'min_samples_leaf': 1}",0.5271,False
+2016,RandomForest,"{'max_depth': 10, 'min_samples_leaf': 5}",0.5429,False
+2016,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 5}",0.5602,False
+2016,RandomForest,"{'max_depth': 20, 'min_samples_leaf': 2}",0.5684,True
+2016,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 20}",0.5456,False
+2016,RandomForest,"{'max_depth': 8, 'min_samples_leaf': 10}",0.534,False
+2016,XGBoost,{'max_depth': 6},0.5352,False
+2016,XGBoost,"{'max_depth': 5, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5386,False
+2016,XGBoost,"{'max_depth': 4, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5358,False
+2016,XGBoost,"{'max_depth': 3, 'min_child_weight': 1}",0.5329,False
+2016,XGBoost,"{'max_depth': 8, 'min_child_weight': 10, 'subsample': 0.8}",0.5544,True
+2016,XGBoost,"{'max_depth': 5, 'min_child_weight': 20, 'subsample': 0.6, 'colsample_bytree': 0.6}",0.5464,False
+2016,LightGBM,{'max_depth': -1},0.5583,False
+2016,LightGBM,"{'max_depth': 6, 'min_child_samples': 30}",0.5585,False
+2016,LightGBM,"{'max_depth': 10, 'min_child_samples': 30}",0.5523,False
+2016,LightGBM,"{'max_depth': 4, 'min_child_samples': 50}",0.5401,False
+2016,LightGBM,"{'max_depth': 6, 'min_child_samples': 100}",0.5558,False
+2016,LightGBM,"{'max_depth': 8, 'min_child_samples': 20}",0.5633,True
+2017,RandomForest,"{'max_depth': None, 'min_samples_leaf': 1}",0.5224,False
+2017,RandomForest,"{'max_depth': 10, 'min_samples_leaf': 5}",0.5549,False
+2017,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 5}",0.5739,True
+2017,RandomForest,"{'max_depth': 20, 'min_samples_leaf': 2}",0.5606,False
+2017,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 20}",0.5634,False
+2017,RandomForest,"{'max_depth': 8, 'min_samples_leaf': 10}",0.5585,False
+2017,XGBoost,{'max_depth': 6},0.5363,False
+2017,XGBoost,"{'max_depth': 5, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5407,False
+2017,XGBoost,"{'max_depth': 4, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.548,False
+2017,XGBoost,"{'max_depth': 3, 'min_child_weight': 1}",0.5542,True
+2017,XGBoost,"{'max_depth': 8, 'min_child_weight': 10, 'subsample': 0.8}",0.551,False
+2017,XGBoost,"{'max_depth': 5, 'min_child_weight': 20, 'subsample': 0.6, 'colsample_bytree': 0.6}",0.5529,False
+2017,LightGBM,{'max_depth': -1},0.5551,True
+2017,LightGBM,"{'max_depth': 6, 'min_child_samples': 30}",0.5457,False
+2017,LightGBM,"{'max_depth': 10, 'min_child_samples': 30}",0.5478,False
+2017,LightGBM,"{'max_depth': 4, 'min_child_samples': 50}",0.5456,False
+2017,LightGBM,"{'max_depth': 6, 'min_child_samples': 100}",0.546,False
+2017,LightGBM,"{'max_depth': 8, 'min_child_samples': 20}",0.5489,False
+2018,RandomForest,"{'max_depth': None, 'min_samples_leaf': 1}",0.4952,False
+2018,RandomForest,"{'max_depth': 10, 'min_samples_leaf': 5}",0.5653,False
+2018,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 5}",0.5755,True
+2018,RandomForest,"{'max_depth': 20, 'min_samples_leaf': 2}",0.5472,False
+2018,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 20}",0.5604,False
+2018,RandomForest,"{'max_depth': 8, 'min_samples_leaf': 10}",0.5601,False
+2018,XGBoost,{'max_depth': 6},0.5163,False
+2018,XGBoost,"{'max_depth': 5, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5292,False
+2018,XGBoost,"{'max_depth': 4, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5435,False
+2018,XGBoost,"{'max_depth': 3, 'min_child_weight': 1}",0.5547,True
+2018,XGBoost,"{'max_depth': 8, 'min_child_weight': 10, 'subsample': 0.8}",0.5083,False
+2018,XGBoost,"{'max_depth': 5, 'min_child_weight': 20, 'subsample': 0.6, 'colsample_bytree': 0.6}",0.5374,False
+2018,LightGBM,{'max_depth': -1},0.5184,False
+2018,LightGBM,"{'max_depth': 6, 'min_child_samples': 30}",0.5125,False
+2018,LightGBM,"{'max_depth': 10, 'min_child_samples': 30}",0.5164,False
+2018,LightGBM,"{'max_depth': 4, 'min_child_samples': 50}",0.5316,True
+2018,LightGBM,"{'max_depth': 6, 'min_child_samples': 100}",0.5081,False
+2018,LightGBM,"{'max_depth': 8, 'min_child_samples': 20}",0.5176,False
+2019,RandomForest,"{'max_depth': None, 'min_samples_leaf': 1}",0.5423,False
+2019,RandomForest,"{'max_depth': 10, 'min_samples_leaf': 5}",0.5434,False
+2019,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 5}",0.5605,False
+2019,RandomForest,"{'max_depth': 20, 'min_samples_leaf': 2}",0.5778,True
+2019,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 20}",0.5346,False
+2019,RandomForest,"{'max_depth': 8, 'min_samples_leaf': 10}",0.5307,False
+2019,XGBoost,{'max_depth': 6},0.4931,False
+2019,XGBoost,"{'max_depth': 5, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5147,True
+2019,XGBoost,"{'max_depth': 4, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5079,False
+2019,XGBoost,"{'max_depth': 3, 'min_child_weight': 1}",0.4935,False
+2019,XGBoost,"{'max_depth': 8, 'min_child_weight': 10, 'subsample': 0.8}",0.502,False
+2019,XGBoost,"{'max_depth': 5, 'min_child_weight': 20, 'subsample': 0.6, 'colsample_bytree': 0.6}",0.5009,False
+2019,LightGBM,{'max_depth': -1},0.5018,False
+2019,LightGBM,"{'max_depth': 6, 'min_child_samples': 30}",0.5104,False
+2019,LightGBM,"{'max_depth': 10, 'min_child_samples': 30}",0.5175,True
+2019,LightGBM,"{'max_depth': 4, 'min_child_samples': 50}",0.5039,False
+2019,LightGBM,"{'max_depth': 6, 'min_child_samples': 100}",0.5017,False
+2019,LightGBM,"{'max_depth': 8, 'min_child_samples': 20}",0.5085,False
+2020,RandomForest,"{'max_depth': None, 'min_samples_leaf': 1}",0.5434,False
+2020,RandomForest,"{'max_depth': 10, 'min_samples_leaf': 5}",0.556,False
+2020,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 5}",0.5727,True
+2020,RandomForest,"{'max_depth': 20, 'min_samples_leaf': 2}",0.5708,False
+2020,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 20}",0.5517,False
+2020,RandomForest,"{'max_depth': 8, 'min_samples_leaf': 10}",0.5505,False
+2020,XGBoost,{'max_depth': 6},0.5157,False
+2020,XGBoost,"{'max_depth': 5, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.539,False
+2020,XGBoost,"{'max_depth': 4, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5333,False
+2020,XGBoost,"{'max_depth': 3, 'min_child_weight': 1}",0.5421,True
+2020,XGBoost,"{'max_depth': 8, 'min_child_weight': 10, 'subsample': 0.8}",0.5342,False
+2020,XGBoost,"{'max_depth': 5, 'min_child_weight': 20, 'subsample': 0.6, 'colsample_bytree': 0.6}",0.5273,False
+2020,LightGBM,{'max_depth': -1},0.5059,False
+2020,LightGBM,"{'max_depth': 6, 'min_child_samples': 30}",0.5118,False
+2020,LightGBM,"{'max_depth': 10, 'min_child_samples': 30}",0.5165,True
+2020,LightGBM,"{'max_depth': 4, 'min_child_samples': 50}",0.5066,False
+2020,LightGBM,"{'max_depth': 6, 'min_child_samples': 100}",0.5115,False
+2020,LightGBM,"{'max_depth': 8, 'min_child_samples': 20}",0.5132,False
+2021,RandomForest,"{'max_depth': None, 'min_samples_leaf': 1}",0.5705,False
+2021,RandomForest,"{'max_depth': 10, 'min_samples_leaf': 5}",0.581,False
+2021,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 5}",0.5844,False
+2021,RandomForest,"{'max_depth': 20, 'min_samples_leaf': 2}",0.5901,True
+2021,RandomForest,"{'max_depth': 15, 'min_samples_leaf': 20}",0.5717,False
+2021,RandomForest,"{'max_depth': 8, 'min_samples_leaf': 10}",0.5722,False
+2021,XGBoost,{'max_depth': 6},0.5491,False
+2021,XGBoost,"{'max_depth': 5, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5564,True
+2021,XGBoost,"{'max_depth': 4, 'min_child_weight': 5, 'subsample': 0.8, 'colsample_bytree': 0.8}",0.5536,False
+2021,XGBoost,"{'max_depth': 3, 'min_child_weight': 1}",0.5547,False
+2021,XGBoost,"{'max_depth': 8, 'min_child_weight': 10, 'subsample': 0.8}",0.5413,False
+2021,XGBoost,"{'max_depth': 5, 'min_child_weight': 20, 'subsample': 0.6, 'colsample_bytree': 0.6}",0.5563,False
+2021,LightGBM,{'max_depth': -1},0.5325,False
+2021,LightGBM,"{'max_depth': 6, 'min_child_samples': 30}",0.5222,False
+2021,LightGBM,"{'max_depth': 10, 'min_child_samples': 30}",0.5313,False
+2021,LightGBM,"{'max_depth': 4, 'min_child_samples': 50}",0.5289,False
+2021,LightGBM,"{'max_depth': 6, 'min_child_samples': 100}",0.5329,True
+2021,LightGBM,"{'max_depth': 8, 'min_child_samples': 20}",0.5261,False

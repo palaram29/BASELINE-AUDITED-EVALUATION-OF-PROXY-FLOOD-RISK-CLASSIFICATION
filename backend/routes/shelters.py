@@ -1,15 +1,27 @@
 """Shelter management (operator console) and nearest-shelter lookup
-(citizen app). No auth check - same convention as backend/routes/admin.py,
-mlops.py and reliability.py: this is trusted operator tooling with no
-login of its own. See backend/services/shelter_service.py for why
-"nearest" is straight-line ranking + a Maps hand-off, not road routing.
+(citizen app). Read endpoints (list, nearest) stay open, since the
+citizen app must browse shelters without logging in.
+
+Write endpoints (create, update, delete) require an X-Operator-Key
+header matching OPERATOR_API_KEY. The operator console has no session
+login of its own anywhere (see docs/ML_METHODOLOGY_AND_LIMITATIONS.md -
+this is a deliberate, documented architectural decision, not an
+oversight), so backend/routes/auth.py's citizen-account login is the
+wrong mechanism to reuse here: it would require an operator to hold a
+citizen alert-city account just to manage shelters, and the operator
+console has no citizen-login flow to obtain that token at all. A shared
+operator key is a smaller, honestly-scoped fix for a research prototype
+that closes the specific gap the supervisor review flagged - unrestricted
+public write access - without inventing a full session-auth system
+across the whole console. See backend/routes/operator_auth.py.
 """
 
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from backend.routes.operator_auth import require_operator_key
 from backend.services import shelter_service
 
 router = APIRouter(prefix="/shelters", tags=["Shelters"])
@@ -50,12 +62,12 @@ def nearest_shelters(
     return shelter_service.nearest_shelters(lat, lon)
 
 
-@router.post("")
+@router.post("", dependencies=[Depends(require_operator_key)])
 def create_shelter(payload: ShelterIn):
     return shelter_service.create_shelter(payload.model_dump())
 
 
-@router.put("/{shelter_id}")
+@router.put("/{shelter_id}", dependencies=[Depends(require_operator_key)])
 def update_shelter(shelter_id: int, payload: ShelterUpdate):
     updated = shelter_service.update_shelter(shelter_id, payload.model_dump(exclude_unset=True))
     if not updated:
@@ -63,7 +75,7 @@ def update_shelter(shelter_id: int, payload: ShelterUpdate):
     return updated
 
 
-@router.delete("/{shelter_id}")
+@router.delete("/{shelter_id}", dependencies=[Depends(require_operator_key)])
 def delete_shelter(shelter_id: int):
     deleted = shelter_service.delete_shelter(shelter_id)
     if not deleted:
