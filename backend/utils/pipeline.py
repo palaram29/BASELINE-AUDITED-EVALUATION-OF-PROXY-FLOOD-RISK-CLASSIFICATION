@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from backend.utils.logger import logger
 
 
@@ -6,7 +7,7 @@ def run_step(script_name):
     logger.info(f"Running {script_name}")
 
     result = subprocess.run(
-        ["python", script_name],
+        [sys.executable, script_name],
         capture_output=True,
         text=True
     )

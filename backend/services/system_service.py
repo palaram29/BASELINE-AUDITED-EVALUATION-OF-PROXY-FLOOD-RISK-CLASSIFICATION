@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from backend.utils.logger import logger
 
 
@@ -7,7 +8,7 @@ def run_weather():
     logger.info("Starting weather collection")
 
     result = subprocess.run(
-        ["python", "backend/weather_collector.py"],
+        [sys.executable, "backend/weather_collector.py"],
         capture_output=True,
         text=True
     )
@@ -30,7 +31,7 @@ def run_river():
     logger.info("Starting river scraping")
 
     result = subprocess.run(
-        ["python", "backend/river_scraper.py", "--once"],
+        [sys.executable, "backend/river_scraper.py", "--once"],
         capture_output=True,
         text=True
     )
@@ -53,7 +54,7 @@ def run_ml():
     logger.info("Generating ML features")
 
     result = subprocess.run(
-        ["python", "backend/generate_ml_features.py"],
+        [sys.executable, "backend/generate_ml_features.py"],
         capture_output=True,
         text=True
     )
@@ -76,7 +77,7 @@ def run_prediction():
     logger.info("Running flood prediction")
 
     result = subprocess.run(
-        ["python", "backend/predict_flood.py"],
+        [sys.executable, "backend/predict_flood.py"],
         capture_output=True,
         text=True
     )

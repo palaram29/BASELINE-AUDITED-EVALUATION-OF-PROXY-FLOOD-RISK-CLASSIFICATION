@@ -81,19 +81,23 @@ CONDITIONS = {
 REPORT_METRICS = ("accuracy", "macro_f1", "high_risk_recall", "extreme_risk_recall")
 
 
-def _apply_condition(test_df, condition):
+def _apply_condition(test_df, condition, random_state=42):
     """Non-destructive: returns a NEW DataFrame (+ the delay column name,
-    if any). `test_df` itself is never modified."""
+    if any). `test_df` itself is never modified. random_state is threaded
+    through to reliability/degradation.py's simulators (default 42,
+    unchanged from before) so ML/run_reliability_experiments_multiseed.py
+    can rerun every condition under different injected-degradation draws
+    without touching this function's default single-seed behaviour."""
 
     kind = condition["kind"]
     if kind == "none":
         return test_df.copy(), None
     if kind == "missing":
-        return simulate_missing(test_df, condition["pct"], columns=DEGRADED_ENV_COLUMNS), None
+        return simulate_missing(test_df, condition["pct"], columns=DEGRADED_ENV_COLUMNS, random_state=random_state), None
     if kind == "invalid":
-        return simulate_invalid(test_df, condition["pct"], columns=DEGRADED_ENV_COLUMNS), None
+        return simulate_invalid(test_df, condition["pct"], columns=DEGRADED_ENV_COLUMNS, random_state=random_state), None
     if kind == "delayed":
-        degraded = simulate_delay(test_df, minutes=condition["minutes"], pct=condition["pct"])
+        degraded = simulate_delay(test_df, minutes=condition["minutes"], pct=condition["pct"], random_state=random_state)
         return degraded, "simulated_delay_minutes"
     raise ValueError(f"Unknown condition kind: {kind}")
 

@@ -94,14 +94,14 @@ def check_new_pdf():
         logger.info("Starting extraction...")
 
         result = subprocess.run(
-            ["python", "backend/extract_river_data.py"],
+            [sys.executable, "backend/extract_river_data.py"],
             capture_output=True,
             text=True
         )
 
         # Run River Risk Engine
         risk_result = subprocess.run(
-            ["python", "backend/river_risk_engine.py"],
+            [sys.executable, "backend/river_risk_engine.py"],
             capture_output=True,
             text=True
         )

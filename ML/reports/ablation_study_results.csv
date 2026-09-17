@@ -1,0 +1,7 @@
+Feature_Subset,N_Features,Macro_F1
+Rainfall only,1,0.4892
+Vulnerability only (elevation+coastal),2,0.2231
+Weather non-label (temp+wind),2,0.3034
+Label ingredients (rainfall+vulnerability),3,0.4852
+Full feature set,5,0.578
+Full set minus label ingredients,2,0.3034

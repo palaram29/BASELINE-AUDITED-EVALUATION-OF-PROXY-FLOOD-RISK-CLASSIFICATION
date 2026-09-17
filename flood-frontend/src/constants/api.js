@@ -10,4 +10,4 @@ export const API_BASE_URL = "http://127.0.0.1:8000";
 // flagged, but a value shipped in frontend source is still visible to
 // anyone who inspects the built bundle - it is not a substitute for
 // real per-operator authentication in a production deployment.
-export const OPERATOR_API_KEY = "REPLACE_WITH_YOUR_OPERATOR_API_KEY";
+export const OPERATOR_API_KEY = "GdDPns-5fa2e2Pns7_FYoKDOjNhOLytJT78kG9C4xdQ";

@@ -1,0 +1,49 @@
+{
+  "environment": {
+    "python": "3.13.15",
+    "platform": "win32",
+    "processor": "Intel64 Family 6 Model 197 Stepping 2, GenuineIntel",
+    "cpu_count": 16,
+    "os": "Windows-11-10.0.26200-SP0",
+    "ram_gb": "unknown (pip install psutil for this)"
+  },
+  "inference": {
+    "model_load_ms": 830.53,
+    "single_row": {
+      "n": 100,
+      "mean": 4.592712999437936,
+      "median": 3.9586999992025085,
+      "p95": 7.626099992194213,
+      "min": 3.267799998866394,
+      "max": 16.73609999124892
+    },
+    "batch_30": {
+      "n": 100,
+      "mean": 4.6227790010743774,
+      "median": 4.113599999982398,
+      "p95": 7.643300006748177,
+      "min": 3.302199998870492,
+      "max": 8.59929999569431
+    }
+  },
+  "api": null,
+  "pipeline": {
+    "Weather collection": {
+      "seconds": 0.079,
+      "ok": false
+    },
+    "River scrape+parse": {
+      "seconds": 0.063,
+      "ok": false
+    },
+    "Feature generation": {
+      "seconds": 0.052,
+      "ok": false
+    },
+    "Batch prediction": {
+      "seconds": 0.056,
+      "ok": false
+    },
+    "_total_seconds": 0.25
+  }
+}

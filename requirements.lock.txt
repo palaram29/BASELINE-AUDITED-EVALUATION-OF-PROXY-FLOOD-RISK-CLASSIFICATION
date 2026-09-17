@@ -65,7 +65,13 @@ jsonschema-specifications==2025.9.1
 jupyter_client==8.9.1
 jupyter_core==5.9.1
 kiwisolver==1.5.0
-lightgbm==4.7.0
+# Pinned below 4.7.0 deliberately: newer LightGBM wheels were blocked by
+# Windows Smart App Control (WinError 4551, native DLL not yet trusted by
+# reputation) on at least one contributor's machine; 4.1.0 loads cleanly.
+# If you hit "An Application Control policy has blocked this file" on
+# `from lightgbm import LGBMClassifier`, this is why - reinstall with
+# `pip install lightgbm==4.1.0` rather than assuming the package is broken.
+lightgbm==4.1.0
 lxml==6.1.0
 Mako==1.3.10
 MarkupSafe==3.0.3
